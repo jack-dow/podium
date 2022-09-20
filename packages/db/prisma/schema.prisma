@@ -1,17 +1,75 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id      String @id @default(cuid())
-    title   String
-    content String
+model exercises {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  name               String
+  instructions       String?
+  equipment          String
+  category           String
+  muscles            String[]             @default([])
+  user               String               @db.Uuid
+  users              users                @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  plan_exercises     plan_exercises[]
+  template_exercises template_exercises[]
+}
+
+model plan_exercises {
+  exercise_id String    @db.Uuid
+  plan_id     String    @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  name        String
+  day         Int?      @db.SmallInt
+  sets        String
+  reps        String
+  notes       String?
+  exercises   exercises @relation(fields: [exercise_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  plans       plans     @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([exercise_id, plan_id])
+}
+
+model plans {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  name           String           @unique
+  days           Int
+  plan_exercises plan_exercises[]
+  users          users[]
+}
+
+model template_exercises {
+  exercise_id String    @db.Uuid
+  template_id String    @db.Uuid
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  reps        String
+  sets        String
+  notes       String?
+  exercises   exercises @relation(fields: [exercise_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  templates   templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([exercise_id, template_id])
+}
+
+model templates {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  name               String
+  template_exercises template_exercises[]
+}
+
+model users {
+  id        String      @id @db.Uuid
+  name      String
+  plan      String?     @db.Uuid
+  email     String
+  plans     plans?      @relation(fields: [plan], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exercises exercises[]
 }

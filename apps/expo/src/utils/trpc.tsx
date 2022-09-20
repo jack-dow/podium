@@ -1,5 +1,5 @@
 import { createTRPCReact } from "@trpc/react";
-import type { AppRouter } from "@acme/api";
+import type { AppRouter } from "@podium/api";
 /**
  * A set of typesafe hooks for consuming your API.
  */
@@ -17,7 +17,8 @@ const getBaseUrl = () => {
    * you don't have anything else running on it, or you'd have to change it.
    */
   const localhost = Constants.manifest?.debuggerHost?.split(":")[0];
-  if (!localhost) throw new Error("failed to get localhost, configure it manually");
+  if (!localhost)
+    throw new Error("failed to get localhost, configure it manually");
   return `http://${localhost}:3000`;
 };
 
@@ -27,7 +28,7 @@ const getBaseUrl = () => {
  */
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { transformer } from "@acme/api/transformer";
+import { transformer } from "@podium/api/transformer";
 
 export const TRPCProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

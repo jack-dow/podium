@@ -1,4 +1,6 @@
 {
+  "name": "podium",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -6,7 +8,7 @@
   ],
   "scripts": {
     "postinstall": "turbo run postinstall",
-    "db-push": "npm run db-push -w @acme/db",
+    "db-push": "npm run db-push -w @podium/db",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "clean": "find . -name node_modules -o -name .next -o -name .expo -type d -prune | xargs rm -rf",
@@ -16,5 +18,7 @@
   "devDependencies": {
     "prettier": "latest",
     "turbo": "latest"
+  },
+  "dependencies": {
   }
 }

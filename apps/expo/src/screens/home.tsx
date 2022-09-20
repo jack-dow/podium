@@ -1,93 +1,34 @@
-import { SafeAreaView, View, Text, TouchableOpacity, TextInput } from "react-native";
-import { FlashList } from "@shopify/flash-list";
-import type { inferProcedureOutput } from "@trpc/server";
-import type { AppRouter } from "@acme/api";
-import { trpc } from "../utils/trpc";
-import React from "react";
+import { Platform, SafeAreaView, StatusBar, Text, View } from 'react-native';
+import React from 'react';
 
-const PostCard: React.FC<{
-  post: inferProcedureOutput<AppRouter["post"]["all"]>[number];
-}> = ({ post }) => {
-  return (
-    <View className="p-4 border-2 border-gray-500 rounded-lg">
-      <Text className="text-xl font-semibold text-gray-800">{post.title}</Text>
-      <Text className="text-gray-600">{post.content}</Text>
-    </View>
-  );
-};
-
-const CreatePost: React.FC = () => {
-  const utils = trpc.useContext();
-  const { mutate } = trpc.post.create.useMutation({
-    async onSuccess() {
-      await utils.post.all.invalidate();
-    },
-  });
-
-  const [title, onChangeTitle] = React.useState("");
-  const [content, onChangeContent] = React.useState("");
-
-  return (
-    <View className="p-4 border-t-2 border-gray-500 flex flex-col">
-      <TextInput
-        className="border-2 border-gray-500 rounded p-2 mb-2"
-        onChangeText={onChangeTitle}
-        placeholder="Title"
-      />
-      <TextInput
-        className="border-2 border-gray-500 rounded p-2 mb-2"
-        onChangeText={onChangeContent}
-        placeholder="Content"
-      />
-      <TouchableOpacity
-        className="bg-indigo-500 rounded p-2"
-        onPress={() => {
-          mutate({
-            title,
-            content,
-          });
-        }}
-      >
-        <Text className="text-white font-semibold">Publish post</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+import { Button } from '@/components/buttons/Button';
+import { EmailInput } from '@/components/inputs/EmailInput';
+import { PasswordInput } from '@/components/inputs/PasswordInput';
 
 export const HomeScreen = () => {
-  const postQuery = trpc.post.all.useQuery();
-  const [showPost, setShowPost] = React.useState<string | null>(null);
-
   return (
-    <SafeAreaView>
-      <View className="h-full w-full p-4">
-        <Text className="text-5xl font-bold mx-auto pb-2">
-          Create <Text className="text-indigo-500">T3</Text> Turbo
-        </Text>
-
-        <View className="py-2">
-          {showPost ? (
-            <Text>
-              <Text className="font-semibold">Selected post:</Text>
-              {showPost}
+    <SafeAreaView style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }} className="h-full">
+      <View className="relative h-full flex-1 overflow-hidden py-8 px-4 sm:px-6 lg:px-8">
+        <View className="relative flex flex-1 flex-col items-center justify-center pt-12 pb-16">
+          <View className="mb-6 sm:mx-auto sm:w-full sm:max-w-md">
+            <Text className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</Text>
+            <Text className="mt-4 text-center text-sm text-gray-600">
+              Don&apos;t have an account?
+              {/* Don&apos;t have an account? <Anchor href="/register">Register now</Anchor> */}
             </Text>
-          ) : (
-            <Text className="italic font-semibold">Press on a post</Text>
-          )}
+          </View>
+          <View className="w-full pb-4">
+            <EmailInput label="Email address" />
+          </View>
+          <View className="w-full pb-4">
+            <PasswordInput label="Password" />
+          </View>
+          <View className="w-full">
+            <Button color="slate" fullWidth>
+              Sign in to your account
+            </Button>
+          </View>
         </View>
-
-        <FlashList
-          data={postQuery.data}
-          estimatedItemSize={20}
-          ItemSeparatorComponent={() => <View className="h-2" />}
-          renderItem={(p) => (
-            <TouchableOpacity onPress={() => setShowPost(p.item.id)}>
-              <PostCard post={p.item} />
-            </TouchableOpacity>
-          )}
-        />
-
-        <CreatePost />
       </View>
     </SafeAreaView>
   );
