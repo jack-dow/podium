@@ -1,22 +1,27 @@
-import clsx from 'clsx';
-import React, { forwardRef } from 'react';
-import { Text } from 'react-native';
+import React from 'react';
+import type { SxProp, Theme } from 'dripsy';
+import { Text } from 'dripsy';
 
 export interface LabelProps {
   children?: React.ReactNode;
-  visuallyHidden?: boolean;
+  sx?: SxProp;
+  size?: keyof Theme['fontSizes'];
 }
 
-export const Label = forwardRef<Text, LabelProps>(({ children, visuallyHidden = false, ...props }, ref) => {
+export const Label: React.FC<LabelProps> = ({ children, size = 'sm', sx }) => {
   return (
     <Text
-      ref={ref}
-      {...props}
-      className={clsx('block select-none text-sm font-semibold leading-6 text-gray-900', visuallyHidden && 'sr-only')}
+      variant={size}
+      sx={{
+        fontWeight: 'semibold',
+        color: 'text-normal',
+        lineHeight: 24,
+        ...sx,
+      }}
     >
       {children}
     </Text>
   );
-});
+};
 
 Label.displayName = 'Label';

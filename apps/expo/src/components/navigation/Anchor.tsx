@@ -1,20 +1,48 @@
-import type { MotiPressableProps } from 'moti/interactions';
-import { MotiPressable } from 'moti/interactions';
-import { forwardRef } from 'react';
-import { Text } from 'react-native';
+import type { Theme } from 'dripsy';
+import { Text } from 'dripsy';
+import { Pressable } from 'react-native';
 
-interface AnchorProps extends MotiPressableProps {
+type InteractiveColors = {
+  [K in keyof Theme['colors']]: K extends `interactive-${infer C}-${string}` ? C : never;
+}[keyof Theme['colors']];
+
+interface AnchorProps {
   /** Link label */
   children: string;
 
-  className?: never;
+  /** Controls anchor appearance */
+  variant?: InteractiveColors;
+
+  /** Controls the font-size of the anchor */
+  size?: keyof Theme['fontSizes'];
+
+  /** Controls what happens when the anchor is pressed */
+  onPress?: () => void;
 }
 
-export const Anchor: React.FC<AnchorProps> = (props) => {
+export const Anchor: React.FC<AnchorProps> = ({ children, size = 'sm', variant = 'primary', ...props }) => {
   return (
-    <MotiPressable {...props}>
-      <Text className="font-medium text-sky-600">{props.children}</Text>
-    </MotiPressable>
+    <Pressable
+      style={{
+        paddingTop: 4,
+        paddingBottom: 4,
+        marginTop: -4,
+      }}
+      {...props}
+    >
+      {({ pressed }) => (
+        <Text
+          variants={[size]}
+          sx={{
+            fontWeight: 'medium',
+            color: pressed ? `interactive-${variant}-active` : `interactive-${variant}-normal`,
+            textDecorationLine: pressed ? 'underline' : 'none',
+          }}
+        >
+          {children}
+        </Text>
+      )}
+    </Pressable>
   );
 };
 

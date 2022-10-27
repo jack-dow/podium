@@ -1,30 +1,27 @@
-// src/server/router/context.ts
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type * as trpc from '@trpc/server';
 import type * as trpcNext from '@trpc/server/adapters/next';
-import { prisma } from '@podium/db';
+
+interface CreateContextOptions {
+  // session: Session | null
+}
 
 /**
- * Replace this with an object if you want to pass things to createContextInner
+ * Inner function for `createContext` where we create the context.
+ * This is useful for testing when we don't want to mock Next.js' request/response
  */
-type CreateContextOptions = Record<string, never>;
+export async function createContextInner(_opts: CreateContextOptions) {
+  return {};
+}
 
-/** Use this helper for:
- *  - testing, where we dont have to Mock Next.js' req/res
- *  - trpc's `createSSGHelpers` where we don't have req/res
- */
-export const createContextInner = async (opts: CreateContextOptions) => {
-  return {
-    prisma,
-  };
-};
+export type Context = trpc.inferAsyncReturnType<typeof createContextInner>;
 
 /**
- * This is the actual context you'll use in your router
+ * Creates context for an incoming request
  * @link https://trpc.io/docs/context
- **/
-export const createContext = async (opts: trpcNext.CreateNextContextOptions) => {
-  console.log({ opts });
-  return await createContextInner({});
-};
+ */
+export async function createContext(opts: trpcNext.CreateNextContextOptions): Promise<Context> {
+  // for API-response caching see https://trpc.io/docs/caching
 
-export type Context = trpc.inferAsyncReturnType<typeof createContext>;
+  return await createContextInner({});
+}

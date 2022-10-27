@@ -5,17 +5,18 @@
   "types": "./index.ts",
   "license": "MIT",
   "scripts": {
-    "dev": "prisma studio",
+    "dev": "prisma studio --port 5556",
+    "clean": "rm -rf .turbo node_modules",
     "db-push": "prisma db push",
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^4.2.1"
+    "@prisma/client": "^4.4.0"
   },
   "devDependencies": {
     "eslint": "^8.23.1",
-    "eslint-config-podium": "*",
-    "prisma": "^4.2.1",
+    "eslint-config-podium": "workspace:*",
+    "prisma": "^4.4.0",
     "typescript": "4.7.4"
   }
 }

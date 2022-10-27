@@ -1,28 +1,37 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
-import { View } from 'react-native';
+import { Pressable } from 'react-native';
+import clsx from 'clsx';
 import type { InputProps } from './Input';
 import { Input } from './Input';
-import { Label } from './Label';
+import { EyeIcon } from '@/assets/icons/mini/Eye';
+import { EyeSlashIcon } from '@/assets/icons/mini/EyeSlash';
 
-interface PasswordInputProps extends InputProps {
-  label: string;
-  labelHidden?: boolean;
-}
+interface PasswordInputProps extends InputProps {}
 
-export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(({ label, labelHidden, ...props }, ref) => {
+export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(({ ...props }, ref) => {
+  const [passwordVisible, setPasswordVisible] = useState(true);
   return (
-    <View className="space-y-1">
-      <Label visuallyHidden={labelHidden}>{label}</Label>
-      <Input
-        ref={ref}
-        {...props}
-        autoComplete="password"
-        keyboardType="visible-password"
-        textContentType="password"
-        accessibilityLabel="password"
-      />
-    </View>
+    <Input
+      ref={ref}
+      {...props}
+      autoCapitalize="none"
+      autoCorrect={false}
+      autoComplete="password"
+      textContentType="password"
+      accessibilityLabel="password"
+      secureTextEntry={passwordVisible}
+      enablesReturnKeyAutomatically
+      rightIcon={
+        <Pressable onPress={() => setPasswordVisible(!passwordVisible)}>
+          {passwordVisible ? (
+            <EyeSlashIcon className={clsx(props.invalid ? 'text-red-600' : 'text-slate-900')} />
+          ) : (
+            <EyeIcon className={clsx(props.invalid ? 'text-red-600' : 'text-slate-900')} />
+          )}
+        </Pressable>
+      }
+    />
   );
 });
 

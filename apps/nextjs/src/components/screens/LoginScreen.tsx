@@ -23,7 +23,10 @@ export const LoginScreen = () => {
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setIsLoading(true);
 
-    const { session, error } = await supabase.auth.signIn({
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signInWithPassword({
       email,
       password,
     });

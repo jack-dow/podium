@@ -1,70 +1,125 @@
-import clsx from 'clsx';
-import { Text, View } from 'moti';
+import type { SxProp, Theme } from 'dripsy';
+import { Text, View, styled, useDripsyTheme } from 'dripsy';
 import { MotiPressable } from 'moti/interactions';
 import { useMemo } from 'react';
+import { SpinnerIcon } from '@/assets/icons/Spinner';
+
+type InteractiveColors = {
+  [K in keyof Theme['colors']]: K extends `interactive-${infer C}-${string}` ? C : never;
+}[keyof Theme['colors']];
 
 const styles = {
   button: {
-    colors: {
-      default: clsx('border-gray-300 bg-white shadow-sm', 'hover:bg-gray-50 focus:ring-sky-600'),
-      slate: clsx('border-transparent bg-slate-900 ', 'hover:bg-slate-700 focus:ring-slate-700'),
-      sky: clsx('border-transparent bg-sky-600', 'hover:bg-sky-800 focus:ring-sky-600'),
-    },
     sizes: {
-      xs: clsx('rounded-md py-2 px-2.5 text-sm'),
-      sm: clsx('rounded-md py-2.5 px-3 text-sm'),
-      md: clsx('rounded-md py-2.5 px-4 text-sm'),
-      lg: clsx('rounded-md py-2.5 px-4 text-base'),
+      'xs': { py: 8, px: 10 },
+      'sm': { py: 10, px: 12 },
+      'md': { py: 10, px: 16, minHeight: 42 },
+      'lg': { py: 10, px: 16 },
+      'compact-xs': { py: 4, px: 5 },
+      'compact-sm': { py: 4, px: 5 },
+      'compact-md': { py: 4, px: 7 },
+      'compact-lg': { py: 4, px: 7 },
     },
   },
   text: {
-    default: 'text-gray-700',
-    slate: 'text-white',
-    sky: 'text-white',
+    sizes: {
+      xs: 'xs',
+      sm: 'sm',
+      md: 'sm',
+      lg: 'base',
+    },
   },
 } as const;
 
 interface ButtonProps {
   children?: React.ReactNode;
 
-  /** Button color */
-  color?: keyof typeof styles.button.colors;
+  /** Adds icon before button label  */
+  leftIcon?: React.ReactNode;
+
+  /** Adds icon after button label  */
+  rightIcon?: React.ReactNode;
+
+  /** Controls button appearance */
+  variant?: InteractiveColors;
 
   /** Button size */
-  size?: keyof typeof styles.button.sizes;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 
-  /** Sets button width to 100% of parent element */
-  fullWidth?: boolean;
+  /** Reduces vertical and horizontal spacing */
+  compact?: boolean;
+
+  /** Controls what happens when the button is pressed */
+  onPress?: () => void;
+
+  /** Lowers opacity to 0.5 and disables button */
+  disabled?: boolean;
+
+  /** Adds loading spinner to indicate loading state */
+  loading?: boolean;
+
+  /** Apply custom styles to the button */
+  sx?: SxProp;
 }
 
-export const Button: React.FC<ButtonProps> = ({ children, color = 'default', size = 'md', fullWidth, ...props }) => {
+const DripsyMotiPressable = styled(MotiPressable)();
+
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  sx,
+  compact,
+  loading,
+  leftIcon,
+  rightIcon,
+  ...props
+}) => {
+  const { theme } = useDripsyTheme();
   return (
-    <MotiPressable
+    <DripsyMotiPressable
+      {...props}
       transition={{
         type: 'timing',
         duration: 100,
       }}
       animate={useMemo(
         () =>
-          ({ pressed }) => {
+          ({ hovered, pressed }) => {
             'worklet';
             return {
-              opacity: pressed ? 0.75 : 1,
+              backgroundColor: pressed
+                ? theme.colors[`interactive-${variant}-active`]
+                : hovered
+                ? theme.colors[`interactive-${variant}-hover`]
+                : theme.colors[`interactive-${variant}-normal`],
+              borderColor: hovered
+                ? theme.colors[`interactive-${variant}-border-hover`]
+                : theme.colors[`interactive-${variant}-border`],
             };
           },
-        [],
+        [variant, theme.colors],
       )}
+      sx={{
+        userSelect: 'none',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderRadius: 'md',
+        opacity: props.disabled || loading ? 0.5 : 1,
+        // width: fullWidth ? '100%' : undefined,
+        ...styles.button.sizes[compact ? (`compact-${size}` as const) : size],
+        ...sx,
+      }}
     >
-      <View
-        className={clsx(
-          'inline-flex select-none justify-center border font-medium transition duration-100',
-          styles.button.colors[color],
-          styles.button.sizes[size],
-          fullWidth && 'w-full',
-        )}
-      >
-        <Text className={clsx('text-center', styles.text[color])}>{children}</Text>
+      <View sx={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        {(leftIcon || loading) && <View sx={{ mr: 'sm', ml: '-xs' }}>{loading ? <SpinnerIcon /> : leftIcon}</View>}
+
+        <Text variants={[styles.text.sizes[size]]} sx={{ textAlign: 'center', color: `interactive-${variant}-text` }}>
+          {children}
+        </Text>
+
+        {rightIcon && <View sx={{ mr: 'sm', ml: '-xs' }}>{rightIcon}</View>}
       </View>
-    </MotiPressable>
+    </DripsyMotiPressable>
   );
 };

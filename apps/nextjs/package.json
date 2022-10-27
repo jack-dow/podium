@@ -5,14 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "clean": "rm -rf .next .turbo node_modules",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.1",
-    "@podium/api": "*",
-    "@podium/db": "*",
-    "@podium/tailwind-config": "*",
+    "@podium/api": "workspace:*",
+    "@podium/db": "workspace:*",
+    "@podium/tw": "workspace:*",
     "@supabase/supabase-js": "^2.0.0-rc.10",
     "@tanstack/react-query": "^4.2.3",
     "@trpc/client": "10.0.0-proxy-alpha.64",
@@ -36,7 +37,7 @@
     "@typescript-eslint/parser": "^5.33.0",
     "autoprefixer": "^10.4.7",
     "eslint": "8.22.0",
-    "eslint-config-podium": "*",
+    "eslint-config-podium": "workspace:*",
     "next-transpile-modules": "^9.0.0",
     "postcss": "^8.4.14",
     "tailwindcss": "^3.1.6",

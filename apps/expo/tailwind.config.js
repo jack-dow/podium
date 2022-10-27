@@ -1,4 +1,4 @@
-const config = require('@podium/tailwind-config');
+const config = require('@podium/tw');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = config;
