@@ -40,7 +40,7 @@ export type RootStackParamList = {
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
-const App = () => {
+export const App = () => {
   const session = useAuthSession();
   const { setSession } = useAuthAPI();
 

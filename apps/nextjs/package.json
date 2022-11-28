@@ -7,45 +7,39 @@
     "build": "next build",
     "clean": "rm -rf .next .turbo node_modules",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.4",
     "@podium/api": "workspace:*",
     "@podium/db": "workspace:*",
-    "@podium/tw": "workspace:*",
+    "@podium/tailwind-config": "workspace:*",
     "@supabase/auth-helpers-nextjs": "^0.5.2",
     "@supabase/auth-helpers-react": "^0.3.1",
     "@supabase/supabase-js": "^2.1.0",
     "@tanstack/react-query": "^4.16.1",
     "@trpc/client": "10.1.0",
-    "@trpc/next": "10.1.0",
+    "@trpc/next": "^10.1.0",
     "@trpc/react-query": "^10.1.0",
-    "@trpc/server": "10.1.0",
+    "@trpc/server": "^10.1.0",
     "clsx": "^1.2.1",
     "date-fns": "^2.29.3",
-    "next": "13.0.4",
+    "next": "^13.0.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.39.5",
     "react-hot-toast": "^2.4.0",
-    "zod": "^3.19.1"
+    "zod": "^3.18.0"
   },
   "devDependencies": {
-    "@types/node": "18.11.9",
-    "@types/react": "18.0.25",
-    "@types/react-dom": "18.0.9",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
+    "@types/node": "^18.11.9",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.9",
     "autoprefixer": "^10.4.13",
-    "eslint": "8.28.0",
-    "eslint-config-podium": "workspace:*",
-    "next-transpile-modules": "^10.0.0",
+    "eslint": "^8.28.0",
     "postcss": "^8.4.19",
     "tailwindcss": "^3.2.4",
-    "typescript": "4.9.3"
-  },
-  "ct3aMetadata": {
-    "initVersion": "6.0.0-next.e267c33"
+    "typescript": "^4.9.3"
   }
 }

@@ -2,10 +2,6 @@ import type { Template, TemplateExercise, TemplateSet } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { env } from './env';
 
-
-
-
-
 declare global {
   // allow global `var` declarations
   // eslint-disable-next-line no-var, vars-on-top

@@ -11,12 +11,6 @@ const config = getDefaultConfig(projectRoot);
 // Add the additional `cjs` extension to the resolver
 config.resolver.sourceExts.push('cjs');
 
-// Setup react native svg
-config.transformer = {
-  ...config.transformer,
-  abelTransformerPath: require.resolve('react-native-svg-transformer'),
-};
-
 // 1. Watch all files within the monorepo
 config.watchFolders = [workspaceRoot];
 // 2. Let Metro know where to resolve packages and in what order

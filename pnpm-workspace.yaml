@@ -3,5 +3,4 @@ packages:
   - apps/nextjs
   - packages/api
   - packages/db
-  - packages/tw
-  - packages/eslint-config-podium
+  - packages/config/*
