@@ -1,13 +1,16 @@
-// src/server/router/index.ts
-import { TRPCError } from '@trpc/server';
-import { t } from '../trpc';
+import { router } from '../trpc';
+import { exerciseRouter } from './exercise';
+import { profileRouter } from './profile';
+import { templateExerciseRouter } from './templateExercise';
+import { templateRouter } from './template';
+import { templateSetRouter } from './templateSet';
 
-import { exercisesRouter } from './exercises';
-import { profilesRouter } from './profiles';
-
-export const appRouter = t.router({
-  exercises: exercisesRouter,
-  profiles: profilesRouter,
+export const appRouter = router({
+  exercise: exerciseRouter,
+  profile: profileRouter,
+  template: templateRouter,
+  templateExercise: templateExerciseRouter,
+  templateSet: templateSetRouter,
 });
 
 // export type definition of API

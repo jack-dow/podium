@@ -1,24 +1,39 @@
-import { Text, View } from 'dripsy';
 import React from 'react';
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Text, View } from 'react-native';
+
 import { Button } from '@/components/buttons/Button';
-import { supabase } from '@/lib/supabase';
 import type { RootStackParamList } from '@/_app';
 
 import { Anchor } from '@/components/navigation/Anchor';
 import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { useTheme } from '@/themes';
+import { responsive } from '@/responsive';
+import { supabase } from '@/lib/supabsae';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-export const HomeScreen = ({ navigation, route }: Props) => {
+export const HomeScreen = ({ navigation }: Props) => {
+  const { spacing } = useTheme();
   return (
     <SafeAreaView>
-      <View sx={{ position: 'relative', flex: 1, px: ['md', null, 'lg'], pt: 'md', pb: 'xl' }}>
+      <View
+        style={{
+          position: 'relative',
+          flex: 1,
+          paddingHorizontal: responsive({ base: spacing.md, md: spacing.lg }),
+          paddingTop: spacing.md,
+          paddingBottom: spacing.xl,
+        }}
+      >
         <Text>Hello world!</Text>
-        <View sx={{ py: 6 }}>
+        <View style={{ paddingVertical: 6 }}>
           <Anchor size="lg" onPress={() => navigation.navigate('Exercises')}>
             Exercises
+          </Anchor>
+          <Anchor size="lg" onPress={() => navigation.navigate('TemplateEditor', { templateId: 'new' })}>
+            Templates
           </Anchor>
         </View>
         <Button
@@ -27,7 +42,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
             supabase.auth.signOut();
           }}
         >
-          Logout!
+          <Button.Text>Logout!</Button.Text>
         </Button>
       </View>
     </SafeAreaView>

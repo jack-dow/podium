@@ -1,18 +1,23 @@
-import type { SxProp } from 'dripsy';
-import { SafeAreaView as DripsySAV } from 'dripsy';
-import { Platform, StatusBar } from 'react-native';
+import { SafeAreaView as SAV } from 'react-native-safe-area-context';
+import { PortalProvider } from '@gorhom/portal';
+import type { StylesAsProp } from 'react-native';
+import { useTheme } from '@/themes';
 
-export const SafeAreaView: React.FC<{ children: React.ReactNode; sx?: SxProp }> = ({ sx, children }) => {
+export const SafeAreaView: React.FC<{ children: React.ReactNode; style?: StylesAsProp }> = ({ children, style }) => {
+  const theme = useTheme();
   return (
-    <DripsySAV
-      sx={{
-        bg: 'background-primary',
-        height: '100%',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-        ...sx,
-      }}
+    <SAV
+      style={[
+        {
+          backgroundColor: theme.colors.background.primary,
+          height: '100%',
+          position: 'relative',
+          flex: 1,
+        },
+        style,
+      ]}
     >
-      {children}
-    </DripsySAV>
+      <PortalProvider>{children}</PortalProvider>
+    </SAV>
   );
 };

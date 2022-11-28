@@ -1,20 +1,11 @@
-import type { SxProp } from 'dripsy';
-import { DripsySvg } from '../DripsySvg';
+import { Icon, type IconProps } from '../Icon';
 
 export const MiniIcon = (iconName: string, children: React.ReactNode) => {
-  const icon = ({ sx }: { sx?: SxProp }) => {
+  const icon = ({ size = 'md', ...props }: Omit<IconProps, 'children' | 'style'>) => {
     return (
-      <DripsySvg
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        sx={{
-          width: 20,
-          height: 20,
-          ...sx,
-        }}
-      >
+      <Icon viewBox="0 0 20 20" fill="currentColor" {...props} size={size}>
         {children}
-      </DripsySvg>
+      </Icon>
     );
   };
   icon.displayName = `${iconName}Mini`;

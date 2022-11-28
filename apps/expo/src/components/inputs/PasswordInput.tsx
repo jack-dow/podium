@@ -1,7 +1,6 @@
 import { forwardRef, useState } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
 import { Pressable } from 'react-native';
-import clsx from 'clsx';
 import type { InputProps } from './Input';
 import { Input } from './Input';
 import { EyeIcon } from '@/assets/icons/mini/Eye';
@@ -9,7 +8,7 @@ import { EyeSlashIcon } from '@/assets/icons/mini/EyeSlash';
 
 interface PasswordInputProps extends InputProps {}
 
-export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(({ ...props }, ref) => {
+export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(({ invalid, ...props }, ref) => {
   const [passwordVisible, setPasswordVisible] = useState(true);
   return (
     <Input
@@ -21,14 +20,17 @@ export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(({ ...p
       textContentType="password"
       accessibilityLabel="password"
       secureTextEntry={passwordVisible}
+      invalid={invalid}
       enablesReturnKeyAutomatically
       rightIcon={
         <Pressable onPress={() => setPasswordVisible(!passwordVisible)}>
-          {passwordVisible ? (
-            <EyeSlashIcon className={clsx(props.invalid ? 'text-red-600' : 'text-slate-900')} />
-          ) : (
-            <EyeIcon className={clsx(props.invalid ? 'text-red-600' : 'text-slate-900')} />
-          )}
+          {({ pressed }) => {
+            if (passwordVisible) {
+              return <EyeSlashIcon variant={invalid ? 'danger' : 'primary'} active={pressed} />;
+            } else {
+              return <EyeIcon variant={invalid ? 'danger' : 'primary'} active={pressed} />;
+            }
+          }}
         </Pressable>
       }
     />

@@ -1,5 +1,4 @@
-import { Text, View } from 'dripsy';
-import { ScrollView } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import React, { useEffect } from 'react';
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,12 +8,15 @@ import { trpc } from '@/utils/trpc';
 import { Anchor } from '@/components/navigation/Anchor';
 import type { RootStackParamList } from '@/_app';
 import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { useTheme } from '@/themes';
+import { responsive } from '@/responsive';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Exercises'>;
 
 export const ExercisesScreen = ({ navigation }: Props) => {
   const { data, isLoading, refetch } = trpc.exercises.all.useQuery({ limit: 50 });
   const isFocused = useIsFocused();
+  const { shadows, colors, borderWeights, spacing, fontWeights, fontSizes, utils } = useTheme();
 
   useEffect(() => {
     if (isFocused) {
@@ -27,7 +29,9 @@ export const ExercisesScreen = ({ navigation }: Props) => {
       <Layout
         title="Exercises"
         description="Here you can manage the exercises that are referenced in your plans and single workouts"
-        titleRightSection={<Anchor onPress={() => navigation.navigate('ExerciseNew')}>New exercise</Anchor>}
+        titleRightSection={
+          <Anchor onPress={() => navigation.navigate('ExerciseEditor', { exerciseId: 'new' })}>New exercise</Anchor>
+        }
       >
         <ScrollView>
           {isLoading ? (
@@ -39,28 +43,34 @@ export const ExercisesScreen = ({ navigation }: Props) => {
               return (
                 <View
                   key={exercise.id}
-                  sx={{
-                    boxShadow: 'base',
-                    borderWidth: 1,
-                    borderColor: 'border-primary',
+                  style={{
+                    ...shadows.base,
+                    borderWidth: borderWeights.light,
+                    borderColor: colors.border.primary.normal,
                     borderBottomWidth: isLast ? 1 : 0,
-                    borderTopRightRadius: isFirst ? 'md' : 0,
-                    borderTopLeftRadius: isFirst ? 'md' : 0,
-                    borderBottomRightRadius: isLast ? 'md' : 0,
-                    borderBottomLeftRadius: isLast ? 'md' : 0,
+                    borderTopRightRadius: isFirst ? spacing.base : 0,
+                    borderTopLeftRadius: isFirst ? spacing.base : 0,
+                    borderBottomRightRadius: isLast ? spacing.base : 0,
+                    borderBottomLeftRadius: isLast ? spacing.base : 0,
+                    padding: spacing.sm,
                   }}
                 >
-                  <View sx={{ p: 'md', px: [null, 'lg'] }}>
-                    <View sx={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ padding: spacing.base, paddingHorizontal: responsive({ base: 0, sm: spacing.lg }) }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Text
-                        variants={['lg', 'truncated', 'normal']}
-                        sx={{ fontWeight: 'medium', textTransform: 'capitalize' }}
+                        style={{
+                          fontWeight: fontWeights.medium,
+                          textTransform: 'capitalize',
+                          fontSize: fontSizes.xl,
+                          color: colors.text.primary.normal,
+                          ...utils.truncated,
+                        }}
                       >
                         {exercise.name}
                       </Text>
                       <Anchor
                         onPress={() => {
-                          navigation.navigate('ExerciseId', { exerciseId: exercise.id });
+                          navigation.navigate('ExerciseEditor', { exerciseId: exercise.id });
                         }}
                       >
                         Edit

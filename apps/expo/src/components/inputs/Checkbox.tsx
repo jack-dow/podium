@@ -1,26 +1,27 @@
-import type { SxProp, Theme } from 'dripsy';
-import { Pressable, Text, View, useDripsyTheme } from 'dripsy';
-import { motify } from 'moti';
+import { MotiView } from 'moti';
 import { useEffect, useState } from 'react';
 
 import Svg, { Path } from 'react-native-svg';
 import Animated, { Easing, useAnimatedProps } from 'react-native-reanimated';
-
-const MotiView = motify(View)();
-const MotiPressable = motify(Pressable)();
+import { Text, View } from 'react-native';
+import { MotiPressable } from 'moti/interactions';
+import type { Theme } from '@/themes';
+import { useTheme } from '@/themes';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+const sizes = {
+  sm: 20,
+  md: 24,
+};
 
 interface CheckboxProps {
   checked?: boolean;
   indeterminate?: boolean;
   onPress?: (checked: boolean) => void;
-  radius?: Theme['radii'];
+  radius?: keyof Theme['radii'];
   label?: string;
-  styles?: {
-    wrapper?: SxProp;
-    checkbox?: SxProp;
-  };
+  size?: keyof typeof sizes;
 }
 
 export const Checkbox: React.FC<CheckboxProps> = ({
@@ -29,29 +30,29 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   indeterminate = false,
   onPress,
   label,
-  styles,
+  size = 'md',
   ...props
 }) => {
   const [isChecked, setIsChecked] = useState(checked || false);
-  const { theme } = useDripsyTheme();
+  const { radii, colors, spacing } = useTheme();
 
   useEffect(() => {
     if (typeof checked === 'boolean' && checked !== isChecked) {
       setIsChecked(checked);
     }
   }, [isChecked, checked]);
+
   return (
-    <View sx={{ flexDirection: 'row', alignItems: 'center', ...styles?.wrapper }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <MotiPressable
-        sx={{
-          width: 24,
-          height: 24,
+        style={{
+          width: sizes[size],
+          height: sizes[size],
           borderWidth: 1,
-          borderRadius: radius,
+          borderRadius: radii[radius],
           alignItems: 'center',
           justifyContent: 'center',
-          borderColor: isChecked ? 'transparent' : 'border-primary',
-          ...styles?.checkbox,
+          borderColor: isChecked ? 'transparent' : colors.border.primary.normal,
         }}
         onPress={() => {
           if (onPress) {
@@ -63,28 +64,28 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         <MotiView
           animate={{
             opacity: isChecked ? 1 : 0,
-            borderColor: theme.colors['border-primary-active'],
-            backgroundColor: theme.colors['interactive-primary-normal'],
+            borderColor: colors.border.primary.active,
+            backgroundColor: colors.interactive.primary.normal,
           }}
           transition={{
             type: 'timing',
             duration: 100,
             easing: Easing.ease,
           }}
-          sx={{
-            width: 24,
-            height: 24,
+          style={{
+            width: sizes[size],
+            height: sizes[size],
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderRadius: radius,
+            borderRadius: radii[radius],
             opacity: 0,
           }}
         >
           <CheckIcon indeterminate={indeterminate} />
         </MotiView>
       </MotiPressable>
-      {label && <Text sx={{ pl: 'md' }}>{label}</Text>}
+      {label && <Text style={{ paddingLeft: spacing.base }}>{label}</Text>}
     </View>
   );
 };

@@ -1,17 +1,13 @@
-import type { Theme } from 'dripsy';
-import { Text } from 'dripsy';
-import { Pressable } from 'react-native';
-
-type InteractiveColors = {
-  [K in keyof Theme['colors']]: K extends `interactive-${infer C}-${string}` ? C : never;
-}[keyof Theme['colors']];
+import { Pressable, Text } from 'react-native';
+import type { Theme } from '@/themes';
+import { useTheme } from '@/themes';
 
 interface AnchorProps {
   /** Link label */
   children: string;
 
   /** Controls anchor appearance */
-  variant?: InteractiveColors;
+  variant?: keyof Theme['colors']['interactive'];
 
   /** Controls the font-size of the anchor */
   size?: keyof Theme['fontSizes'];
@@ -21,21 +17,15 @@ interface AnchorProps {
 }
 
 export const Anchor: React.FC<AnchorProps> = ({ children, size = 'sm', variant = 'primary', ...props }) => {
+  const { colors, fontSizes, fontWeights } = useTheme();
   return (
-    <Pressable
-      style={{
-        paddingTop: 4,
-        paddingBottom: 4,
-        marginTop: -4,
-      }}
-      {...props}
-    >
+    <Pressable {...props}>
       {({ pressed }) => (
         <Text
-          variants={[size]}
-          sx={{
-            fontWeight: 'medium',
-            color: pressed ? `interactive-${variant}-active` : `interactive-${variant}-normal`,
+          style={{
+            fontSize: fontSizes[size],
+            fontWeight: fontWeights.medium,
+            color: pressed ? colors.interactive[variant].active : colors.interactive[variant].normal,
             textDecorationLine: pressed ? 'underline' : 'none',
           }}
         >

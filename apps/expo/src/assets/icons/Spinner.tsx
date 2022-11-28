@@ -1,16 +1,32 @@
-import clsx from 'clsx';
 import { MotiView } from 'moti';
 import * as React from 'react';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-export const SpinnerIcon: React.FC<{ className?: string }> = ({ className, ...props }) => (
+const styles = StyleSheet.create({
+  sm: {
+    width: 20,
+    height: 20,
+  },
+  md: {
+    width: 24,
+    height: 24,
+  },
+});
+
+export const SpinnerIcon: React.FC<{ size?: keyof typeof styles; style?: StyleProp<ViewStyle | TextStyle> }> = ({
+  size = 'md',
+  style,
+  ...props
+}) => (
   <MotiView
     from={{ rotate: '0deg' }}
     animate={{ rotate: '360deg' }}
     transition={{ type: 'timing', loop: true, duration: 1000, easing: Easing.linear, repeatReverse: false }}
   >
-    <Svg fill="none" viewBox="0 0 24 24" {...props} className={clsx('h-5 w-5 text-white', className)}>
+    <Svg fill="none" viewBox="0 0 24 24" {...props} style={[{ color: 'white' }, styles[size], style]}>
       <Circle cx={12} cy={12} r={10} stroke="currentColor" />
       <Path
         fill="currentColor"

@@ -1,20 +1,11 @@
-import type { SxProp } from 'dripsy';
-import { DripsySvg } from '../DripsySvg';
+import { Icon, type IconProps } from '../Icon';
 
 export const SolidIcon = (iconName: string, children: React.ReactNode) => {
-  const icon = ({ sx }: { sx?: SxProp }) => {
+  const icon = ({ ...props }: Omit<IconProps, 'children' | 'style'>) => {
     return (
-      <DripsySvg
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        sx={{
-          width: 24,
-          height: 24,
-          ...sx,
-        }}
-      >
+      <Icon viewBox="0 0 24 24" fill="currentColor" {...props} style={{ width: 24, height: 24 }}>
         {children}
-      </DripsySvg>
+      </Icon>
     );
   };
   icon.displayName = `${iconName}Solid`;

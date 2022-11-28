@@ -7,66 +7,95 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model exercises {
-  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at         DateTime             @default(now()) @db.Timestamptz(6)
-  name               String
-  instructions       String?
-  user               String               @db.Uuid
-  profiles           profiles             @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  plan_exercises     plan_exercises[]
-  template_exercises template_exercises[]
+model PlanExercise {
+  exerciseId String   @db.Uuid
+  planId     String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  name       String
+  day        Int?     @db.SmallInt
+  sets       String
+  reps       String
+  notes      String?
+  id         String   @id(map: "plan_exercises_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  Exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Plan       Plan     @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model plan_exercises {
-  exercise_id String    @db.Uuid
-  plan_id     String    @db.Uuid
-  created_at  DateTime  @default(now()) @db.Timestamptz(6)
-  name        String
-  day         Int?      @db.SmallInt
-  sets        String
-  reps        String
-  notes       String?
-  exercises   exercises @relation(fields: [exercise_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  plans       plans     @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([exercise_id, plan_id])
+model TemplateSet {
+  templateExerciseId String           @db.Uuid
+  templateId         String           @db.Uuid
+  createdAt          DateTime         @default(now()) @db.Timestamptz(6)
+  id                 String           @id(map: "template_sets_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  position           Int              @db.SmallInt
+  userId             String           @db.Uuid
+  reps               String           @default("'1'::text")
+  type               set
+  tempalteExercise   TemplateExercise @relation(fields: [templateExerciseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  template           Template         @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile            Profile          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model plans {
-  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  name           String           @unique
-  days           Int
-  plan_exercises plan_exercises[]
-  profiles       profiles[]
+model Exercise {
+  id                String             @id(map: "exercises_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt         DateTime           @default(now()) @db.Timestamptz(6)
+  name              String
+  instructions      String?
+  userId            String             @db.Uuid
+  profile           Profile            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  planExercises     PlanExercise[]
+  templateExercises TemplateExercise[]
 }
 
-model template_exercises {
-  exercise_id String    @db.Uuid
-  template_id String    @db.Uuid
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  reps        String
-  sets        String
-  notes       String?
-  exercises   exercises @relation(fields: [exercise_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  templates   templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([exercise_id, template_id])
+model Plan {
+  id        String         @id(map: "plans_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt DateTime       @default(now()) @db.Timestamptz(6)
+  name      String         @unique(map: "plans_name_key")
+  days      Int
+  exercises PlanExercise[]
+  profiles  Profile[]
 }
 
-model templates {
-  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at         DateTime             @default(now()) @db.Timestamptz(6)
-  name               String
-  template_exercises template_exercises[]
+model Profile {
+  id                String             @id(map: "users_pkey") @db.Uuid
+  name              String
+  planId            String?            @db.Uuid
+  email             String?
+  plan              Plan?              @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exercises         Exercise[]
+  templates         Template[]
+  templateExercises TemplateExercise[]
+  templateSets      TemplateSet[]
 }
 
-model profiles {
-  id        String      @id(map: "users_pkey") @db.Uuid
-  name      String
-  plan      String?     @db.Uuid
-  email     String?
-  plans     plans?      @relation(fields: [plan], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  exercises exercises[]
+model Template {
+  id                String             @id(map: "templates_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt         DateTime           @default(now()) @db.Timestamptz(6)
+  name              String
+  userId            String             @db.Uuid
+  profile           Profile            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  templateExercises TemplateExercise[]
+  templateSets      TemplateSet[]
+}
+
+model TemplateExercise {
+  exerciseId   String        @db.Uuid
+  templateId   String        @db.Uuid
+  createdAt    DateTime?     @default(now()) @db.Timestamptz(6)
+  notes        String?
+  id           String        @id(map: "template_exercises_pkey") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  position     Int           @db.SmallInt
+  userId       String        @db.Uuid
+  exercise     Exercise      @relation(fields: [exerciseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  template     Template      @relation(fields: [templateId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile      Profile       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  templateSets TemplateSet[]
+}
+
+enum set {
+  warmup
+  working
+  failure
+  dropset
+  backoff
+  cooldown
 }

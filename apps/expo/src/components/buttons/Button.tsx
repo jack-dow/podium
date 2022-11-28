@@ -1,39 +1,13 @@
-import type { SxProp, Theme } from 'dripsy';
-import { Text, View, styled, useDripsyTheme } from 'dripsy';
 import { MotiPressable } from 'moti/interactions';
-import { useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import type { StylesAsProp } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+
 import { SpinnerIcon } from '@/assets/icons/Spinner';
-
-type InteractiveColors = {
-  [K in keyof Theme['colors']]: K extends `interactive-${infer C}-${string}` ? C : never;
-}[keyof Theme['colors']];
-
-const styles = {
-  button: {
-    sizes: {
-      'xs': { py: 8, px: 10 },
-      'sm': { py: 10, px: 12 },
-      'md': { py: 10, px: 16, minHeight: 42 },
-      'lg': { py: 10, px: 16 },
-      'compact-xs': { py: 4, px: 5 },
-      'compact-sm': { py: 4, px: 5 },
-      'compact-md': { py: 4, px: 7 },
-      'compact-lg': { py: 4, px: 7 },
-    },
-  },
-  text: {
-    sizes: {
-      xs: 'xs',
-      sm: 'sm',
-      md: 'sm',
-      lg: 'base',
-    },
-  },
-} as const;
+import type { Theme } from '@/themes';
+import { useTheme } from '@/themes';
 
 interface ButtonProps {
-  children?: React.ReactNode;
-
   /** Adds icon before button label  */
   leftIcon?: React.ReactNode;
 
@@ -41,10 +15,10 @@ interface ButtonProps {
   rightIcon?: React.ReactNode;
 
   /** Controls button appearance */
-  variant?: InteractiveColors;
+  variant?: keyof Theme['colors']['interactive'];
 
   /** Button size */
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: keyof ReturnType<typeof textSizes> & keyof typeof buttonSizes;
 
   /** Reduces vertical and horizontal spacing */
   compact?: boolean;
@@ -58,68 +32,120 @@ interface ButtonProps {
   /** Adds loading spinner to indicate loading state */
   loading?: boolean;
 
-  /** Apply custom styles to the button */
-  sx?: SxProp;
+  /** Applies custom styles to the button  */
+  style?: StylesAsProp;
 }
 
-const DripsyMotiPressable = styled(MotiPressable)();
+type ButtonContextProps = Required<Pick<ButtonProps, 'variant' | 'size'>>;
 
-export const Button: React.FC<ButtonProps> = ({
+const ButtonContext = createContext<ButtonContextProps | null>(null);
+
+const ButtonRoot: React.FC<React.PropsWithChildren<ButtonProps>> = ({
   children,
   variant = 'primary',
   size = 'md',
-  sx,
   compact,
   loading,
   leftIcon,
   rightIcon,
+  style,
   ...props
 }) => {
-  const { theme } = useDripsyTheme();
+  const { spacing, colors, borderWeights, radii } = useTheme();
   return (
-    <DripsyMotiPressable
-      {...props}
-      transition={{
-        type: 'timing',
-        duration: 100,
-      }}
-      animate={useMemo(
-        () =>
-          ({ hovered, pressed }) => {
-            'worklet';
-            return {
-              backgroundColor: pressed
-                ? theme.colors[`interactive-${variant}-active`]
-                : hovered
-                ? theme.colors[`interactive-${variant}-hover`]
-                : theme.colors[`interactive-${variant}-normal`],
-              borderColor: hovered
-                ? theme.colors[`interactive-${variant}-border-hover`]
-                : theme.colors[`interactive-${variant}-border`],
-            };
+    <ButtonContext.Provider value={{ variant, size }}>
+      <MotiPressable
+        {...props}
+        transition={{
+          type: 'timing',
+          duration: 100,
+        }}
+        animate={useMemo(
+          () =>
+            ({ pressed }) => {
+              'worklet';
+              return {
+                backgroundColor: pressed ? colors.interactive[variant].active : colors.interactive[variant].normal,
+
+                borderColor: pressed
+                  ? colors.interactive[variant].border.active
+                  : colors.interactive[variant].border.normal,
+              };
+            },
+          [variant, colors],
+        )}
+        style={[
+          {
+            justifyContent: 'center',
+            borderWidth: borderWeights.light,
+            borderRadius: radii.md,
+            opacity: props.disabled || loading ? 0.5 : 1,
+            ...buttonSizes[compact ? (`compact-${size}` as const) : size],
           },
-        [variant, theme.colors],
-      )}
-      sx={{
-        userSelect: 'none',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderRadius: 'md',
-        opacity: props.disabled || loading ? 0.5 : 1,
-        // width: fullWidth ? '100%' : undefined,
-        ...styles.button.sizes[compact ? (`compact-${size}` as const) : size],
-        ...sx,
-      }}
-    >
-      <View sx={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-        {(leftIcon || loading) && <View sx={{ mr: 'sm', ml: '-xs' }}>{loading ? <SpinnerIcon /> : leftIcon}</View>}
+          style,
+        ]}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+          {(leftIcon || loading) && (
+            <View style={{ marginHorizontal: spacing.sm, marginLeft: -spacing.xs }}>
+              {loading ? <SpinnerIcon size="sm" /> : leftIcon}
+            </View>
+          )}
 
-        <Text variants={[styles.text.sizes[size]]} sx={{ textAlign: 'center', color: `interactive-${variant}-text` }}>
           {children}
-        </Text>
-
-        {rightIcon && <View sx={{ mr: 'sm', ml: '-xs' }}>{rightIcon}</View>}
-      </View>
-    </DripsyMotiPressable>
+          {rightIcon && <View style={{ marginHorizontal: spacing.sm, marginLeft: -spacing.xs }}>{rightIcon}</View>}
+        </View>
+      </MotiPressable>
+    </ButtonContext.Provider>
   );
 };
+
+const buttonSizes = StyleSheet.create({
+  'xs': { paddingVertical: 8, paddingHorizontal: 10 },
+  'sm': { paddingVertical: 10, paddingHorizontal: 12 },
+  'md': { paddingVertical: 10, paddingHorizontal: 16, minHeight: 42 },
+  'lg': { paddingVertical: 10, paddingHorizontal: 16 },
+  'compact-xs': { paddingVertical: 4, paddingHorizontal: 5, px: 5 },
+  'compact-sm': { paddingVertical: 4, paddingHorizontal: 5, px: 5 },
+  'compact-md': { paddingVertical: 4, paddingHorizontal: 7, px: 7 },
+  'compact-lg': { paddingVertical: 4, paddingHorizontal: 7, px: 7 },
+});
+
+function ButtonText({ children }: { children: React.ReactNode }) {
+  const context = useContext(ButtonContext);
+  const { colors, fontSizes } = useTheme();
+
+  if (!context) {
+    throw new Error('[Button] Button Text was used outside of a Button. Please fix this.');
+  }
+
+  return (
+    <Text
+      style={{
+        textAlign: 'center',
+        color: colors.interactive[context.variant].text,
+        ...textSizes(fontSizes)[context.size],
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+const textSizes = (fontSizes: Theme['fontSizes']) => {
+  return StyleSheet.create({
+    xs: {
+      fontSize: fontSizes.xs,
+    },
+    sm: {
+      fontSize: fontSizes.sm,
+    },
+    md: {
+      fontSize: fontSizes.sm,
+    },
+    lg: {
+      fontSize: fontSizes.md,
+    },
+  });
+};
+
+export const Button = Object.assign(ButtonRoot, { Text: ButtonText });

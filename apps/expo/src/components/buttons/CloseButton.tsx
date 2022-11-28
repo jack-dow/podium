@@ -1,24 +1,16 @@
-import type { SxProp } from 'dripsy';
-import { styled } from 'dripsy';
-
 import { MotiPressable } from 'moti/interactions';
 import { useMemo } from 'react';
 import { XMarkIcon } from '@/assets/icons/mini/XMark';
-
-const DripsyMotiPressable = styled(MotiPressable)();
+import { useTheme } from '@/themes';
 
 interface CloseButtonProps {
-  sx?: SxProp;
-  styles?: {
-    wrapper?: SxProp;
-    icon?: SxProp;
-  };
   onPress?: () => void;
 }
 
-export const CloseButton: React.FC<CloseButtonProps> = ({ sx, styles, ...props }) => {
+export const CloseButton: React.FC<CloseButtonProps> = ({ ...props }) => {
+  const { radii } = useTheme();
   return (
-    <DripsyMotiPressable
+    <MotiPressable
       transition={{ type: 'timing', duration: 100 }}
       animate={useMemo(
         () =>
@@ -30,10 +22,10 @@ export const CloseButton: React.FC<CloseButtonProps> = ({ sx, styles, ...props }
           },
         [],
       )}
-      sx={{ borderRadius: 'md', ...styles?.wrapper, ...sx }}
+      style={{ borderRadius: radii.md }}
       {...props}
     >
-      <XMarkIcon sx={{ color: 'icon-active', ...styles?.icon }} />
-    </DripsyMotiPressable>
+      <XMarkIcon variant="primary" />
+    </MotiPressable>
   );
 };

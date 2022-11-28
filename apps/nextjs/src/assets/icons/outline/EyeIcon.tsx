@@ -20,3 +20,4 @@ export const EyeIcon: React.FC<IconProps> = (props) => {
     </svg>,
   );
 };
+

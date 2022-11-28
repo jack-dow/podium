@@ -4,31 +4,35 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { DripsyProvider } from 'dripsy';
 import { TransitionPresets, createStackNavigator } from '@react-navigation/stack';
 import 'react-native-url-polyfill/auto';
-
-import type { Session } from '@supabase/supabase-js';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider } from '@gorhom/portal';
+import { View } from 'react-native';
+import { atom, useAtom } from 'jotai';
 import { TRPCProvider } from './utils/trpc';
 import { HomeScreen } from './screens/Home';
 import { SignInScreen } from './screens/auth/SignIn';
 import { SignUpScreen } from './screens/auth/SignUp';
-import { supabase } from './lib/supabase';
 import { LoadingScreen } from './screens/Loading';
 import { ExercisesScreen } from './screens/Exercises';
-import { darkTheme, theme } from './themes';
-import { ExerciseNewScreen } from './screens/exercises/ExerciseNew';
 import { NotificationProvider } from './components/feedback/Notification';
-import { ExerciseIdScreen } from './screens/exercises/ExerciseId';
+import { ExerciseEditorScreen } from './screens/ExerciseEditor';
+
+import { ThemeProvider, themeLight } from './themes';
+import { SafeAreaView } from './components/layout/SafeAreaView';
+import { TemplateEditorScreen } from './screens/TemplateEditor';
+import { PlaygroundScreen } from './screens/Playground';
+import { useAuthAPI, useAuthSession } from './stores/global/auth';
+import type { Session } from '@/lib/supabsae';
+import { supabase } from '@/lib/supabsae';
 
 export type RootStackParamList = {
+  Playground: undefined;
   Home: undefined;
   Exercises: undefined;
-  ExerciseNew: undefined;
-  ExerciseId: { exerciseId: string };
+  ExerciseEditor: { exerciseId: string };
+  TemplateEditor: { templateId: string };
   SignIn: undefined;
   SignUp: undefined;
   Loading: undefined;
@@ -36,8 +40,21 @@ export type RootStackParamList = {
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
-function Fonts({ children }: { children: React.ReactNode }) {
-  const [loaded] = useFonts({
+const App = () => {
+  const session = useAuthSession();
+  const { setSession } = useAuthAPI();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, [setSession]);
+
+  const [isFontsLoaded] = useFonts({
     InterThin: require('../assets/fonts/Inter/static/Inter-Thin.ttf'),
     InterExtraLight: require('../assets/fonts/Inter/static/Inter-ExtraLight.ttf'),
     InterLight: require('../assets/fonts/Inter/static/Inter-Light.ttf'),
@@ -49,66 +66,44 @@ function Fonts({ children }: { children: React.ReactNode }) {
     InterBlack: require('../assets/fonts/Inter/static/Inter-Black.ttf'),
   });
 
-  return <>{loaded && children}</>;
-}
-
-const App = () => {
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-  }, []);
+  if (!isFontsLoaded) {
+    return <View />;
+  }
 
   return (
-    <Fonts>
-      {/* TRPC */}
-      <TRPCProvider>
-        {/* Dripsy */}
-        <DripsyProvider theme={theme}>
-          {/* Safe Area Manager */}
-          <SafeAreaProvider>
-            {/* Gesture Handler */}
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              {/* Portal Manager */}
-              <PortalProvider>
-                {/* Notification Manager */}
-                <NotificationProvider>
-                  {/* React Navigation */}
-                  <NavigationContainer>
-                    <ExpoStatusBar translucent backgroundColor="transparent" />
-                    <RootStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
-                      {session === undefined ? (
-                        <RootStack.Screen name="Loading" component={LoadingScreen} />
-                      ) : session == null ? (
-                        <>
-                          <RootStack.Screen name="SignIn" component={SignInScreen} />
-                          <RootStack.Screen name="SignUp" component={SignUpScreen} />
-                        </>
-                      ) : (
-                        <>
-                          {/* <RootStack.Screen name="Home" component={HomeScreen} /> */}
-                          <RootStack.Screen name="Exercises" component={ExercisesScreen} />
-                          <RootStack.Screen name="ExerciseNew" component={ExerciseNewScreen} />
-                          <RootStack.Screen name="ExerciseId" component={ExerciseIdScreen} />
-                          {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
-                        </>
-                      )}
-                    </RootStack.Navigator>
-                    {/* </View> */}
-                  </NavigationContainer>
-                </NotificationProvider>
-              </PortalProvider>
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
-        </DripsyProvider>
-      </TRPCProvider>
-    </Fonts>
+    <TRPCProvider>
+      {/* Safe Area Manager */}
+      <SafeAreaProvider>
+        <ThemeProvider value={themeLight}>
+          {/* Gesture Handler */}
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            {/* React Navigation */}
+            <NavigationContainer>
+              <ExpoStatusBar translucent backgroundColor="transparent" />
+              <RootStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
+                {session === undefined ? (
+                  <RootStack.Screen name="Loading" component={LoadingScreen} />
+                ) : session == null ? (
+                  <>
+                    <RootStack.Screen name="SignIn" component={SignInScreen} />
+                    <RootStack.Screen name="SignUp" component={SignUpScreen} />
+                  </>
+                ) : (
+                  <>
+                    {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
+                    {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
+                    {/* <RootStack.Screen name="Home" component={HomeScreen} /> */}
+                    <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
+                    {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
+                    {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
+                  </>
+                )}
+              </RootStack.Navigator>
+            </NavigationContainer>
+          </GestureHandlerRootView>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </TRPCProvider>
   );
 };
 

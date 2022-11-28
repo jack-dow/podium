@@ -1,12 +1,14 @@
 import React from 'react';
-import { View } from 'dripsy';
+import { View } from 'react-native';
 import { Loader } from '@/components/feedback/Loader';
 import { SafeAreaView } from '@/components/layout/SafeAreaView';
 
 export const LoadingScreen = () => {
   return (
-    <SafeAreaView sx={{ flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-      <Loader />
+    <SafeAreaView>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Loader />
+      </View>
     </SafeAreaView>
   );
 };

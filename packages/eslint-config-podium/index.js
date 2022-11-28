@@ -8,6 +8,6 @@ module.exports = {
     '@typescript-eslint/brace-style': ['off'],
     '@typescript-eslint/indent': ['off'],
     'operator-linebreak': 'off',
-    curly: ['error', 'all'],
+    'curly': ['error', 'multi-line', 'consistent'],
   },
 };

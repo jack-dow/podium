@@ -8,7 +8,7 @@ interface LoaderProps {
 
 export const Loader: React.FC<LoaderProps> = ({ size = 54 }) => {
   return (
-    <View className="flex-1 items-center justify-center">
+    <View style={{ position: 'relative', width: size, height: size }}>
       <MotiView
         from={{
           scale: 0,

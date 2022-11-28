@@ -1,23 +1,23 @@
 import { Prisma, prisma } from '@podium/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { t } from '../trpc';
+import { publicProcedure, router } from '../trpc';
 
 /**
- * Default selector for Users.
+ * Default selector for Exercise.
  * It's important to always explicitly say which fields you want to return in order to not leak extra information
  * @see https://github.com/prisma/prisma/issues/9353
  */
-const defaultExerciseSelect = Prisma.validator<Prisma.exercisesSelect>()({
+export const defaultExerciseSelect = Prisma.validator<Prisma.ExerciseSelect>()({
   id: true,
   name: true,
-  created_at: true,
+  createdAt: true,
   instructions: true,
-  user: true,
+  userId: true,
 });
 
-export const exercisesRouter = t.router({
-  all: t.procedure
+export const exerciseRouter = router({
+  all: publicProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).nullish(),
@@ -34,7 +34,7 @@ export const exercisesRouter = t.router({
       const limit = input.limit ?? 50;
       const { cursor } = input;
 
-      const items = await prisma.exercises.findMany({
+      const items = await prisma.exercise.findMany({
         select: defaultExerciseSelect,
         // get an extra item at the end which we'll use as next cursor
         take: limit + 1,
@@ -45,7 +45,7 @@ export const exercisesRouter = t.router({
             }
           : undefined,
         orderBy: {
-          created_at: 'desc',
+          createdAt: 'desc',
         },
       });
 
@@ -63,7 +63,7 @@ export const exercisesRouter = t.router({
       };
     }),
 
-  byId: t.procedure
+  byId: publicProcedure
     .input(
       z.object({
         id: z.string(),
@@ -71,7 +71,8 @@ export const exercisesRouter = t.router({
     )
     .query(async ({ input }) => {
       const { id } = input;
-      const exercise = await prisma.exercises.findUnique({
+
+      const exercise = await prisma.exercise.findUnique({
         where: { id },
         select: defaultExerciseSelect,
       });
@@ -85,52 +86,42 @@ export const exercisesRouter = t.router({
       return exercise;
     }),
 
-  create: t.procedure
+  create: publicProcedure
     .input(
       z.object({
         id: z.string().uuid().optional(),
-        user: z.string().uuid(),
+        userId: z.string().uuid(),
         name: z.string().min(1).max(64),
         instructions: z.string().min(0).max(400).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const exercise = await prisma.exercises.create({
+      const exercise = await prisma.exercise.create({
         data: input,
         select: defaultExerciseSelect,
       });
       return exercise;
     }),
 
-  update: t.procedure
+  update: publicProcedure
     .input(
       z.object({
-        id: z.string().uuid().optional(),
-        user: z.string().uuid().optional(),
+        id: z.string().uuid(),
         name: z.string().min(1).max(64).optional(),
         instructions: z.string().min(0).max(400).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const updatedExercise = await prisma.exercises.update({
-        where: { id: input.id },
-        data: input,
+      const { id, ...updates } = input;
+      const updatedExercise = await prisma.exercise.update({
+        where: { id },
+        data: updates,
         select: defaultExerciseSelect,
       });
       return updatedExercise;
     }),
 
-  delete: t.procedure
-    .input(
-      z.object({
-        id: z.string().uuid().optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const deletedExercise = await prisma.exercises.delete({
-        where: { id: input.id },
-        select: defaultExerciseSelect,
-      });
-      return deletedExercise;
-    }),
+  delete: publicProcedure.input(z.string().uuid()).mutation(async ({ input: id }) => {
+    await prisma.exercise.delete({ where: { id } });
+  }),
 });
