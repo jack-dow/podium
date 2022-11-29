@@ -30,6 +30,5 @@
       "dependsOn": ["^db-generate"],
       "cache": false
     }
-  },
-  "globalEnv": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "DATABASE_URL"]
+  }
 }

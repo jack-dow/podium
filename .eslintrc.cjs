@@ -17,4 +17,9 @@ module.exports = {
     'operator-linebreak': 'off',
     'curly': ['error', 'multi-line', 'consistent'],
   },
+  settings: {
+    tailwindcss: {
+      config: './packages/config/tailwind/index.js',
+    },
+  },
 };

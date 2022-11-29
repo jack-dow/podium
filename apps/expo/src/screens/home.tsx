@@ -3,11 +3,11 @@ import React from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
-import { Button } from '@/components/buttons/Button';
+import { Button } from '@/components/ui/buttons/Button';
 import type { RootStackParamList } from '@/_app';
 
-import { Anchor } from '@/components/navigation/Anchor';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { Anchor } from '@/components/ui/navigation/Anchor';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
 import { useTheme } from '@/themes';
 import { responsive } from '@/responsive';
 import { supabase } from '@/lib/supabsae';

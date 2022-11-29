@@ -8,14 +8,14 @@ import type { TextInput } from 'react-native';
 import { FlatList, Text, View } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { RootStackParamList } from '@/_app';
-import { Layout } from '@/components/layout/Layout';
+import { Layout } from '@/components/ui/layout/Layout';
 import { trpc } from '@/utils/trpc';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
-import { Anchor } from '@/components/navigation/Anchor';
-import { Modal } from '@/components/overlays/Modal';
-import { Alert } from '@/components/feedback/Alert';
-import { Input } from '@/components/inputs/Input';
-import { Button } from '@/components/buttons/Button';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
+import { Anchor } from '@/components/ui/navigation/Anchor';
+import { Modal } from '@/components/ui/overlays/Modal';
+import { Alert } from '@/components/ui/feedback/Alert';
+import { Input } from '@/components/ui/inputs/Input';
+import { Button } from '@/components/ui/buttons/Button';
 import { useTheme } from '@/themes';
 
 interface FormProps {

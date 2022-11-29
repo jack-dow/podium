@@ -10,11 +10,11 @@ import { useAtom } from 'jotai';
 import { SetsAndRepsTab } from './SetsAndReps';
 import { ExerciseSelectTab, stepsCompletedAtom } from './ExerciseSelect';
 import type { RootStackParamList } from '@/_app';
-import { Layout } from '@/components/layout/Layout';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { Layout } from '@/components/ui/layout/Layout';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
 import { useTheme } from '@/themes';
 import { trpc } from '@/utils/trpc';
-import { Loader } from '@/components/feedback/Loader';
+import { Loader } from '@/components/ui/feedback/Loader';
 import { TemplateProvider } from '@/providers/FullTemplateProvider';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions

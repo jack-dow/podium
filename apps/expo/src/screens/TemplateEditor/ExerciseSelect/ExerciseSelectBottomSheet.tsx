@@ -6,12 +6,12 @@ import { Portal } from '@gorhom/portal';
 
 import type { Exercise } from '@podium/db';
 import { useTheme } from '@/themes';
-import { Input } from '@/components/inputs/Input';
-import { Button } from '@/components/buttons/Button';
+import { Input } from '@/components/ui/inputs/Input';
+import { Button } from '@/components/ui/buttons/Button';
 import { SearchIcon } from '@/assets/icons/mini/Search';
-import { Checkbox } from '@/components/inputs/Checkbox';
+import { Checkbox } from '@/components/ui/inputs/Checkbox';
 import { trpc } from '@/utils/trpc';
-import { Loader } from '@/components/feedback/Loader';
+import { Loader } from '@/components/ui/feedback/Loader';
 import { useTemplateAPI, useTemplateExercisesIdsByExerciseId } from '@/providers/FullTemplateProvider';
 
 export const ExerciseSelectBottomSheet = () => {

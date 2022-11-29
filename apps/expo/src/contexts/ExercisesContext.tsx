@@ -1,8 +1,8 @@
 import type { Exercise } from '@podium/db';
 import { Text, View } from 'react-native';
 import { createContext, useContext } from 'react';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
-import { Loader } from '@/components/feedback/Loader';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
+import { Loader } from '@/components/ui/feedback/Loader';
 import createStore from '@/store';
 
 export type ExerciseId = string;

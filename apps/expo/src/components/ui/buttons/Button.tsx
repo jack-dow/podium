@@ -8,10 +8,10 @@ import type { Theme } from '@/themes';
 import { useTheme } from '@/themes';
 
 interface ButtonProps {
-  /** Adds icon before button label  */
+  /** Adds icon before button label */
   leftIcon?: React.ReactNode;
 
-  /** Adds icon after button label  */
+  /** Adds icon after button label */
   rightIcon?: React.ReactNode;
 
   /** Controls button appearance */
@@ -51,7 +51,7 @@ const ButtonRoot: React.FC<React.PropsWithChildren<ButtonProps>> = ({
   style,
   ...props
 }) => {
-  const { spacing, colors, borderWeights, radii } = useTheme();
+  const theme = useTheme();
   return (
     <ButtonContext.Provider value={{ variant, size }}>
       <MotiPressable
@@ -65,35 +65,42 @@ const ButtonRoot: React.FC<React.PropsWithChildren<ButtonProps>> = ({
             ({ pressed }) => {
               'worklet';
               return {
-                backgroundColor: pressed ? colors.interactive[variant].active : colors.interactive[variant].normal,
+                backgroundColor: pressed
+                  ? theme.colors.interactive[variant].active
+                  : theme.colors.interactive[variant].normal,
 
                 borderColor: pressed
-                  ? colors.interactive[variant].border.active
-                  : colors.interactive[variant].border.normal,
+                  ? theme.colors.interactive[variant].border.active
+                  : theme.colors.interactive[variant].border.normal,
               };
             },
-          [variant, colors],
+          [variant, theme.colors],
         )}
         style={[
           {
             justifyContent: 'center',
-            borderWidth: borderWeights.light,
-            borderRadius: radii.md,
+            borderWidth: theme.borderWeights.light,
+            borderRadius: theme.radii.md,
             opacity: props.disabled || loading ? 0.5 : 1,
             ...buttonSizes[compact ? (`compact-${size}` as const) : size],
           },
           style,
         ]}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+          className="text-primary-normal"
+        >
           {(leftIcon || loading) && (
-            <View style={{ marginHorizontal: spacing.sm, marginLeft: -spacing.xs }}>
+            <View style={{ marginHorizontal: theme.spacing.sm, marginLeft: -theme.spacing.xs }}>
               {loading ? <SpinnerIcon size="sm" /> : leftIcon}
             </View>
           )}
 
           {children}
-          {rightIcon && <View style={{ marginHorizontal: spacing.sm, marginLeft: -spacing.xs }}>{rightIcon}</View>}
+          {rightIcon && (
+            <View style={{ marginHorizontal: theme.spacing.sm, marginLeft: -theme.spacing.xs }}>{rightIcon}</View>
+          )}
         </View>
       </MotiPressable>
     </ButtonContext.Provider>

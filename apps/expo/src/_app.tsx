@@ -16,11 +16,11 @@ import { SignInScreen } from './screens/auth/SignIn';
 import { SignUpScreen } from './screens/auth/SignUp';
 import { LoadingScreen } from './screens/Loading';
 import { ExercisesScreen } from './screens/Exercises';
-import { NotificationProvider } from './components/feedback/Notification';
+import { NotificationProvider } from './components/ui/feedback/Notification';
 import { ExerciseEditorScreen } from './screens/ExerciseEditor';
 
 import { ThemeProvider, themeLight } from './themes';
-import { SafeAreaView } from './components/layout/SafeAreaView';
+import { SafeAreaView } from './components/ui/layout/SafeAreaView';
 import { TemplateEditorScreen } from './screens/TemplateEditor';
 import { PlaygroundScreen } from './screens/Playground';
 import { useAuthAPI, useAuthSession } from './stores/global/auth';
@@ -91,9 +91,9 @@ export const App = () => {
                 ) : (
                   <>
                     {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
-                    {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
+                    <RootStack.Screen name="Playground" component={PlaygroundScreen} />
                     {/* <RootStack.Screen name="Home" component={HomeScreen} /> */}
-                    <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
+                    {/* <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} /> */}
                     {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
                     {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
                   </>

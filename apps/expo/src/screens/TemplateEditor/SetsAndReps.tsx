@@ -7,12 +7,12 @@ import 'react-native-get-random-values';
 import { useImmer } from 'use-immer';
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { TabNavigationParamList } from './index';
-import { Button } from '@/components/buttons/Button';
+import { Button } from '@/components/ui/buttons/Button';
 import type { ExerciseId } from '@/contexts/ExercisesContext';
 import type { Theme } from '@/themes';
 import { useTheme } from '@/themes';
 import { trpc } from '@/utils/trpc';
-import { Anchor } from '@/components/navigation/Anchor';
+import { Anchor } from '@/components/ui/navigation/Anchor';
 import { TrashIcon } from '@/assets/icons/mini/Trash';
 import {
   useTemplateAPI,
@@ -24,8 +24,8 @@ import {
   useTemplateSubmissionInformation,
 } from '@/providers/FullTemplateProvider';
 import { ChevronDownIcon } from '@/assets/icons/mini/ChevronDown';
-import { Modal } from '@/components/overlays/Modal';
-import { Dialog } from '@/components/overlays/Dialog';
+import { Modal } from '@/components/ui/overlays/Modal';
+import { Dialog } from '@/components/ui/overlays/Dialog';
 import { useAuthSession } from '@/stores/global/auth';
 
 type SetsAndRepsTabProps = BottomTabScreenProps<TabNavigationParamList, 'SetsAndReps'>;

@@ -5,14 +5,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Controller, useForm } from 'react-hook-form';
 
-import { Button } from '@/components/buttons/Button';
-import { EmailInput } from '@/components/inputs/EmailInput';
-import { PasswordInput } from '@/components/inputs/PasswordInput';
+import { Button } from '@/components/ui/buttons/Button';
+import { EmailInput } from '@/components/ui/inputs/EmailInput';
+import { PasswordInput } from '@/components/ui/inputs/PasswordInput';
 import type { RootStackParamList } from '@/_app';
-import { Anchor } from '@/components/navigation/Anchor';
-import { Input } from '@/components/inputs/Input';
+import { Anchor } from '@/components/ui/navigation/Anchor';
+import { Input } from '@/components/ui/inputs/Input';
 import { trpc } from '@/utils/trpc';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
 import type { Theme } from '@/themes';
 import { useTheme } from '@/themes';
 import { responsive } from '@/responsive';

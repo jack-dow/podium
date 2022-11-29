@@ -3,8 +3,8 @@ import { Text, View } from 'react-native';
 import { createContext, useContext } from 'react';
 import type { ExerciseId } from './ExercisesContext';
 import createStore from '@/store';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
-import { Loader } from '@/components/feedback/Loader';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
+import { Loader } from '@/components/ui/feedback/Loader';
 
 type TemplateSetId = string;
 // type TemplateId = string;

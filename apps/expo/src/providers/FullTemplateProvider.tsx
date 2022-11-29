@@ -10,8 +10,8 @@ import type { SharedValue } from 'react-native-reanimated';
 import { Prisma } from '@podium/db';
 import type { TemplateExercise, TemplateSet } from '@podium/db';
 import { trpc } from '@/utils/trpc';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
-import { Loader } from '@/components/feedback/Loader';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
+import { Loader } from '@/components/ui/feedback/Loader';
 import { useSession } from '@/_app';
 import { useAuthSession } from '@/stores/global/auth';
 

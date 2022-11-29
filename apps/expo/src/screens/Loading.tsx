@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Loader } from '@/components/feedback/Loader';
-import { SafeAreaView } from '@/components/layout/SafeAreaView';
+import { Loader } from '@/components/ui/feedback/Loader';
+import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
 
 export const LoadingScreen = () => {
   return (

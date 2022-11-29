@@ -9,9 +9,9 @@ import { ExerciseSelectBottomSheet } from './ExerciseSelectBottomSheet';
 import { ExerciseSelectList } from './ExerciseSelectList';
 import { useTheme } from '@/themes';
 
-import { Input } from '@/components/inputs/Input';
-import { Alert } from '@/components/feedback/Alert';
-import { Button } from '@/components/buttons/Button';
+import { Input } from '@/components/ui/inputs/Input';
+import { Alert } from '@/components/ui/feedback/Alert';
+import { Button } from '@/components/ui/buttons/Button';
 import { useTemplateAPI, useTemplateExerciseIds, useTemplateName } from '@/providers/FullTemplateProvider';
 
 type ExerciseSelectTabProps = BottomTabScreenProps<TabNavigationParamList, 'ExerciseSelect'>;
