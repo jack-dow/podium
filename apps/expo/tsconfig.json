@@ -9,5 +9,5 @@
       "@ui/*": ["./src/components/ui/*"]
     }
   },
-  "include": ["src", "index.ts", "**/*.cjs"]
+  "include": ["src", "index.ts", "**/*.cjs", "tailwind.config.js"]
 }

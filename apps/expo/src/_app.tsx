@@ -10,6 +10,7 @@ import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import { atom, useAtom } from 'jotai';
+
 import { TRPCProvider } from './utils/trpc';
 import { HomeScreen } from './screens/Home';
 import { SignInScreen } from './screens/auth/SignIn';
@@ -55,15 +56,15 @@ export const App = () => {
   }, [setSession]);
 
   const [isFontsLoaded] = useFonts({
-    InterThin: require('../assets/fonts/Inter/static/Inter-Thin.ttf'),
-    InterExtraLight: require('../assets/fonts/Inter/static/Inter-ExtraLight.ttf'),
-    InterLight: require('../assets/fonts/Inter/static/Inter-Light.ttf'),
-    Inter: require('../assets/fonts/Inter/static/Inter-Regular.ttf'),
-    InterMedium: require('../assets/fonts/Inter/static/Inter-Medium.ttf'),
-    InterSemiBold: require('../assets/fonts/Inter/static/Inter-SemiBold.ttf'),
-    InterBold: require('../assets/fonts/Inter/static/Inter-Bold.ttf'),
-    InterExtraBold: require('../assets/fonts/Inter/static/Inter-ExtraBold.ttf'),
-    InterBlack: require('../assets/fonts/Inter/static/Inter-Black.ttf'),
+    'Inter-Thin': require('../assets/fonts/Inter/static/Inter-Thin.ttf'),
+    'Inter-ExtraLight': require('../assets/fonts/Inter/static/Inter-ExtraLight.ttf'),
+    'Inter-Light': require('../assets/fonts/Inter/static/Inter-Light.ttf'),
+    'Inter': require('../assets/fonts/Inter/static/Inter-Regular.ttf'),
+    'Inter-Medium': require('../assets/fonts/Inter/static/Inter-Medium.ttf'),
+    'Inter-SemiBold': require('../assets/fonts/Inter/static/Inter-SemiBold.ttf'),
+    'Inter-Bold': require('../assets/fonts/Inter/static/Inter-Bold.ttf'),
+    'Inter-ExtraBold': require('../assets/fonts/Inter/static/Inter-ExtraBold.ttf'),
+    'Inter-Black': require('../assets/fonts/Inter/static/Inter-Black.ttf'),
   });
 
   if (!isFontsLoaded) {

@@ -2,8 +2,30 @@ const tw = require('tailwindcss/colors');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{ts,tsx}', './src/_app.tsx'],
+  content: ['./src/**/*.{ts,tsx}', './src/_app.tsx', './src/index.ts'],
+  darkMode: 'class',
   theme: {
+    extend: {
+      fontFamily: {
+        sans: [
+          'Inter var',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'Noto Sans',
+          'sans-serif',
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          'Segoe UI Symbol',
+          'Noto Color Emoji',
+        ],
+      },
+    },
     spacing: {
       none: '0px',
       px: '1px',
@@ -115,7 +137,7 @@ module.exports = {
       },
       danger: {
         normal: tw.red[800], // red-800
-        muted: tw.black, // red-700
+        muted: tw.red[700], // red-700
       },
       info: {
         normal: tw.blue[800], // blue-800
