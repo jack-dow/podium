@@ -1,31 +1,42 @@
-import { MotiPressable } from 'moti/interactions';
-import { useMemo } from 'react';
+import type { PressableProps } from 'react-native';
+
+import { useEffect, useState } from 'react';
+import { Pressable } from 'react-native';
+import { Easing, interpolateColor, useSharedValue, withTiming } from 'react-native-reanimated';
+import theme from '@podium/tailwindcss/theme';
+
 import { XMarkIcon } from '@/assets/icons/mini/XMark';
-import { useTheme } from '@/themes';
 
 interface CloseButtonProps {
+  /** Controls what happens when the anchor is pressed */
   onPress?: () => void;
+
+  /** Allows button customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style: PressableProps['style'];
 }
 
 export const CloseButton: React.FC<CloseButtonProps> = ({ ...props }) => {
-  const { radii } = useTheme();
+  const [isPressed, setIsPressed] = useState(false);
+
+  const strokeColor = useSharedValue(0);
+  const stroke = interpolateColor(
+    strokeColor.value,
+    [0, 1],
+    [theme.textColor.icon.primary.normal, theme.textColor.icon.primary.active],
+  );
+
+  useEffect(() => {
+    strokeColor.value = withTiming(isPressed ? 0 : 1, { duration: 150, easing: Easing.ease });
+  }, [isPressed, strokeColor]);
+
   return (
-    <MotiPressable
-      transition={{ type: 'timing', duration: 100 }}
-      animate={useMemo(
-        () =>
-          ({ pressed }) => {
-            'worklet';
-            return {
-              opacity: pressed ? 1 : 0.83, // tried to get it as close as possible to icon-normal
-            };
-          },
-        [],
-      )}
-      style={{ borderRadius: radii.md }}
+    <Pressable
+      className="rounded-md"
       {...props}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
     >
-      <XMarkIcon variant="primary" />
-    </MotiPressable>
+      <XMarkIcon intent="primary" stroke={stroke} />
+    </Pressable>
   );
 };

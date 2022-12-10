@@ -16,32 +16,43 @@ export const defaultTemplateSetSelect = Prisma.validator<Prisma.TemplateSetSelec
   position: true,
   type: true,
   reps: true,
+  userId: true,
+});
+
+export const templateSetCreateSchema = z.object({
+  id: z.string().uuid().optional(),
+  templateExerciseId: z.string().uuid(),
+  templateId: z.string().uuid(),
+  userId: z.string().uuid(),
+  reps: z.string(),
+  position: z.number(),
+  type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']),
+  // type: z.nativeEnum(set).parse(0),
+});
+
+export const templateSetUpdateSchema = z.object({
+  id: z.string().uuid(),
+  reps: z.string().optional(),
+  position: z.number().optional(),
+  type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']).optional(),
 });
 
 export const templateSetRouter = router({
-  byId: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const { id } = input;
+  byId: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+    const { id } = input;
+    const templateSet = await prisma.templateSet.findUnique({
+      where: { id },
+      select: defaultTemplateSetSelect,
+    });
 
-      const templateSet = await prisma.templateSet.findUnique({
-        where: { id },
-        select: defaultTemplateSetSelect,
+    if (!templateSet) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `No template exercise with id '${id}'`,
       });
-
-      if (!templateSet) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `No template exercise found with id '${id}'`,
-        });
-      }
-
-      return templateSet;
-    }),
+    }
+    return templateSet;
+  }),
   byTemplateId: publicProcedure
     .input(
       z.object({
@@ -76,93 +87,95 @@ export const templateSetRouter = router({
       return templateSets;
     }),
 
-  create: publicProcedure
-    .input(
-      z.object({
-        id: z.string().uuid().optional(),
-        templateExerciseId: z.string().uuid(),
-        templateId: z.string().uuid(),
-        userId: z.string().uuid(),
-        reps: z.string(),
-        position: z.number(),
-        type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']),
-        // type: z.nativeEnum(set).parse(0),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const templateSet = await prisma.templateSet.create({
-        data: input,
-        select: defaultTemplateSetSelect,
-      });
-      return templateSet;
-    }),
+  // create: publicProcedure
+  //   .input(
+  //     z.object({
+  //       id: z.string().uuid().optional(),
+  //       templateExerciseId: z.string().uuid(),
+  //       templateId: z.string().uuid(),
+  //       userId: z.string().uuid(),
+  //       reps: z.string(),
+  //       position: z.number(),
+  //       type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']),
+  //       // type: z.nativeEnum(set).parse(0),
+  //     }),
+  //   )
+  //   .mutation(async ({ input }) => {
+  //     const templateSet = await prisma.templateSet.create({
+  //       data: input,
+  //       select: defaultTemplateSetSelect,
+  //     });
+  //     return templateSet;
+  //   }),
 
-  createMany: publicProcedure
-    .input(
-      z.array(
-        z.object({
-          id: z.string().uuid().optional(),
-          templateExerciseId: z.string().uuid(),
-          templateId: z.string().uuid(),
-          userId: z.string().uuid(),
-          reps: z.string(),
-          position: z.number(),
-          type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']),
-        }),
-      ),
-    )
-    .mutation(async ({ input }) => {
-      const templateSet = await prisma.templateSet.createMany({
-        data: input,
-      });
-      return templateSet;
-    }),
+  // createMany: publicProcedure
+  //   .input(
+  //     z.array(
+  //       z.object({
+  //         id: z.string().uuid().optional(),
+  //         templateExerciseId: z.string().uuid(),
+  //         templateId: z.string().uuid(),
+  //         userId: z.string().uuid(),
+  //         reps: z.string(),
+  //         position: z.number(),
+  //         type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']),
+  //       }),
+  //     ),
+  //   )
+  //   .mutation(async ({ input }) => {
+  //     const templateSet = await prisma.templateSet.createMany({
+  //       data: input,
+  //     });
+  //     return templateSet;
+  //   }),
 
-  update: publicProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        reps: z.string().optional(),
-        position: z.number().optional(),
-        type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']).optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const { id, ...updates } = input;
-      const updatedTemplateSet = await prisma.templateSet.update({
-        where: { id },
-        data: updates,
-        select: defaultTemplateSetSelect,
-      });
-      return updatedTemplateSet;
-    }),
+  // update: publicProcedure
+  //   .input(
+  //     z.object({
+  //       id: z.string().uuid(),
+  //       reps: z.string().optional(),
+  //       position: z.number().optional(),
+  //       type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']).optional(),
+  //     }),
+  //   )
+  //   .mutation(async ({ input }) => {
+  //     const { id, ...updates } = input;
+  //     const updatedTemplateSet = await prisma.templateSet.update({
+  //       where: { id },
+  //       data: updates,
+  //       select: defaultTemplateSetSelect,
+  //     });
+  //     return updatedTemplateSet;
+  //   }),
 
-  updateMany: publicProcedure
-    .input(
-      z.array(
-        z.object({
-          id: z.string().uuid(),
-          reps: z.string().optional(),
-          position: z.number().optional(),
-          type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']).optional(),
-        }),
-      ),
-    )
-    .mutation(async ({ input }) => {
-      for (const updatedTemplateSet of input) {
-        const { id, ...updates } = updatedTemplateSet;
-        await prisma.templateSet.update({
-          where: { id },
-          data: updates,
-        });
-      }
-    }),
+  // updateMany: publicProcedure
+  //   .input(
+  //     z.array(
+  //       z.object({
+  //         id: z.string().uuid(),
+  //         reps: z.string().optional(),
+  //         position: z.number().optional(),
+  //         type: z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']).optional(),
+  //       }),
+  //     ),
+  //   )
+  //   .mutation(async ({ input }) => {
+  //     for (const updatedTemplateSet of input) {
+  //       const { id, ...updates } = updatedTemplateSet;
+  //       await prisma.templateSet.update({
+  //         where: { id },
+  //         data: updates,
+  //       });
+  //     }
+  //   }),
 
-  delete: publicProcedure.input(z.string().uuid()).mutation(async ({ input: id }) => {
-    await prisma.templateSet.delete({ where: { id } });
-  }),
+  // delete: publicProcedure.input(z.string().uuid()).mutation(async ({ input: id }) => {
+  //   const deletedTemplateSet = await prisma.templateSet.delete({ where: { id } });
+  //   return deletedTemplateSet;
+  // }),
 
-  deleteMany: publicProcedure.input(z.array(z.string().uuid())).mutation(async ({ input }) => {
-    await prisma.templateSet.deleteMany({ where: { id: { in: input } } });
-  }),
+  // deleteMany: publicProcedure.input(z.array(z.string().uuid())).mutation(async ({ input }) => {
+  //   const deletedTemplateSets = await prisma.templateSet.deleteMany({ where: { id: { in: input } } });
+  //   return deletedTemplateSets;
+  // }),
 });

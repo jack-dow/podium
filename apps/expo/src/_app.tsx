@@ -11,7 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import { atom, useAtom } from 'jotai';
 
-import { TRPCProvider } from './utils/trpc';
+import { TRPCProvider } from './trpc';
 import { HomeScreen } from './screens/Home';
 import { SignInScreen } from './screens/auth/SignIn';
 import { SignUpScreen } from './screens/auth/SignUp';
@@ -25,15 +25,15 @@ import { SafeAreaView } from './components/ui/layout/SafeAreaView';
 import { TemplateEditorScreen } from './screens/TemplateEditor';
 import { PlaygroundScreen } from './screens/Playground';
 import { useAuthAPI, useAuthSession } from './stores/global/auth';
-import type { Session } from '@/lib/supabsae';
-import { supabase } from '@/lib/supabsae';
+import type { Session } from '@/supabase';
+import { supabase } from '@/supabase';
 
 export type RootStackParamList = {
   Playground: undefined;
   Home: undefined;
   Exercises: undefined;
-  ExerciseEditor: { exerciseId: string };
-  TemplateEditor: { templateId: string };
+  ExerciseEditor: { exerciseId: string | null };
+  TemplateEditor: { templateId: string | null };
   SignIn: undefined;
   SignUp: undefined;
   Loading: undefined;
@@ -92,9 +92,9 @@ export const App = () => {
                 ) : (
                   <>
                     {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
-                    <RootStack.Screen name="Playground" component={PlaygroundScreen} />
-                    {/* <RootStack.Screen name="Home" component={HomeScreen} /> */}
-                    {/* <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} /> */}
+                    {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
+                    <RootStack.Screen name="Home" component={HomeScreen} />
+                    <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
                     {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
                     {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
                   </>

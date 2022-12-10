@@ -1,11 +1,15 @@
-import { forwardRef } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
+
+import { forwardRef } from 'react';
+import { styled } from 'nativewind';
+
 import type { InputProps } from './Input';
+
 import { Input } from './Input';
 
 interface EmailInputProps extends InputProps {}
 
-export const EmailInput = forwardRef<RNTextInput, EmailInputProps>(({ ...props }, ref) => {
+const EmailInputRoot = forwardRef<RNTextInput, EmailInputProps>(({ ...props }, ref) => {
   return (
     <Input
       ref={ref}
@@ -18,4 +22,6 @@ export const EmailInput = forwardRef<RNTextInput, EmailInputProps>(({ ...props }
   );
 });
 
-EmailInput.displayName = 'TextInput';
+EmailInputRoot.displayName = 'TextInput';
+
+export const EmailInput = Object.assign(styled(EmailInputRoot), { ErrorText: Input.ErrorText });

@@ -60,8 +60,8 @@ model Profile {
   name              String
   planId            String?            @db.Uuid
   email             String?
-  plan              Plan?              @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   exercises         Exercise[]
+  plan              Plan?              @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   templates         Template[]
   templateExercises TemplateExercise[]
   templateSets      TemplateSet[]

@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { Layout } from '@/components/ui/layout/Layout';
-import { trpc } from '@/utils/trpc';
+import { trpc } from '@/trpc';
 import { Anchor } from '@/components/ui/navigation/Anchor';
 import type { RootStackParamList } from '@/_app';
 import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';

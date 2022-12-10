@@ -1,23 +1,14 @@
+import type { ViewStyle } from 'react-native';
 import { SafeAreaView as SAV } from 'react-native-safe-area-context';
 import { PortalProvider } from '@gorhom/portal';
-import type { StylesAsProp } from 'react-native';
-import { useTheme } from '@/themes';
+import { styled } from 'nativewind';
 
-export const SafeAreaView: React.FC<{ children: React.ReactNode; style?: StylesAsProp }> = ({ children, style }) => {
-  const theme = useTheme();
+const SafeAreaViewRoot: React.FC<{ children: React.ReactNode; style?: ViewStyle }> = ({ children, style }) => {
   return (
-    <SAV
-      style={[
-        {
-          backgroundColor: theme.colors.background.primary,
-          height: '100%',
-          position: 'relative',
-          flex: 1,
-        },
-        style,
-      ]}
-    >
+    <SAV style={style} className="relative flex-1 bg-primary">
       <PortalProvider>{children}</PortalProvider>
     </SAV>
   );
 };
+
+export const SafeAreaView = styled(SafeAreaViewRoot);

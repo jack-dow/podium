@@ -1,40 +1,46 @@
-import { MotiView } from 'moti';
-import { useEffect, useState } from 'react';
+import type { VariantPropsWithoutNull } from 'nativewind';
 
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import Animated, { Easing, useAnimatedProps } from 'react-native-reanimated';
-import { Text, View } from 'react-native';
+import { styled, variants } from 'nativewind';
+import { MotiView } from 'moti';
 import { MotiPressable } from 'moti/interactions';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
+import clsx from 'clsx';
+import theme from '@podium/tailwindcss/theme';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+const StyledMotiPressable = styled(MotiPressable);
 
-const sizes = {
-  sm: 20,
-  md: 24,
-};
+const checkboxVariants = variants({
+  variants: {
+    sizes: {
+      sm: 'w-[20px] h-[20px]',
+      md: 'w-lg h-lg',
+    },
+  },
+});
+
+type CheckboxVariants = VariantPropsWithoutNull<typeof checkboxVariants>;
 
 interface CheckboxProps {
+  /** Controls the checkbox checked state */
   checked?: boolean;
+
+  /** Controls the checkbox indeterminate state */
   indeterminate?: boolean;
+
+  /** Controls what happens when the anchor is pressed */
   onPress?: (checked: boolean) => void;
-  radius?: keyof Theme['radii'];
-  label?: string;
-  size?: keyof typeof sizes;
+
+  /** Controls the button size */
+  size?: CheckboxVariants['sizes'];
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-  radius = 'md',
-  checked,
-  indeterminate = false,
-  onPress,
-  label,
-  size = 'md',
-  ...props
-}) => {
+const CheckboxRoot: React.FC<CheckboxProps> = ({ checked, indeterminate = false, onPress, size = 'md' }) => {
   const [isChecked, setIsChecked] = useState(checked || false);
-  const { radii, colors, spacing } = useTheme();
+  const className = checkboxVariants({ sizes: size });
 
   useEffect(() => {
     if (typeof checked === 'boolean' && checked !== isChecked) {
@@ -43,17 +49,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   }, [isChecked, checked]);
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <MotiPressable
-        style={{
-          width: sizes[size],
-          height: sizes[size],
-          borderWidth: 1,
-          borderRadius: radii[radius],
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderColor: isChecked ? 'transparent' : colors.border.primary.normal,
-        }}
+    <View className="flex-row items-center">
+      <StyledMotiPressable
+        className={clsx(
+          'items-center justify-center rounded-md border',
+          isChecked ? 'border-transparent' : 'border-primary-normal',
+          className,
+        )}
         onPress={() => {
           if (onPress) {
             onPress(!isChecked);
@@ -64,28 +66,19 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         <MotiView
           animate={{
             opacity: isChecked ? 1 : 0,
-            borderColor: colors.border.primary.active,
-            backgroundColor: colors.interactive.primary.normal,
+            borderColor: theme.borderColor.interactive.primary.normal,
+            backgroundColor: theme.backgroundColor.interactive.primary.normal,
           }}
           transition={{
             type: 'timing',
             duration: 100,
             easing: Easing.ease,
           }}
-          style={{
-            width: sizes[size],
-            height: sizes[size],
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderRadius: radii[radius],
-            opacity: 0,
-          }}
+          className={clsx('items-center justify-center rounded-md border opacity-0', className)}
         >
           <CheckIcon indeterminate={indeterminate} />
         </MotiView>
-      </MotiPressable>
-      {label && <Text style={{ paddingLeft: spacing.base }}>{label}</Text>}
+      </StyledMotiPressable>
     </View>
   );
 };
@@ -100,8 +93,10 @@ const CheckIcon: React.FC<CheckboxStateIcon> = ({ indeterminate }) => {
       : 'M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z',
   }));
   return (
-    <Svg viewBox="0 0 16 16" fill="#fff" style={{ width: 16, height: 16 }}>
+    <Svg viewBox="0 0 16 16" fill="#fff" className="h-base w-base">
       <AnimatedPath animatedProps={animatedProps} />
     </Svg>
   );
 };
+
+export const Checkbox = styled(CheckboxRoot);

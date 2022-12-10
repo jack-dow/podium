@@ -1,113 +1,71 @@
+import type { TextInputProps, ViewProps } from 'react-native';
+
 import { forwardRef, useState } from 'react';
-import type { StylesAsProp, TextInputProps } from 'react-native';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { Label } from './Label';
+import { TextInput, View } from 'react-native';
+import { styled } from 'nativewind';
+import clsx from 'clsx';
+import theme from '@podium/tailwindcss/theme';
+
+import { Text } from '../typography/Text';
 import { ExclamationCircleIcon } from '@/assets/icons/mini/ExclamationCircle';
-import { useTheme } from '@/themes';
-import { responsive } from '@/responsive';
 
 export interface InputProps extends Omit<TextInputProps, 'style'> {
-  invalid?: boolean | string;
-  label?: string;
+  /** Controls the invalid state of the input */
+  invalid?: boolean;
+
   // leftIcon?: React.ReactNode
+
+  /** Adds an icon to the right side of the input */
   rightIcon?: React.ReactNode;
-  style?: StylesAsProp;
-  styles?: {
-    label?: StylesAsProp;
-    wrapper?: StylesAsProp;
-    input?: StylesAsProp;
-    rightIconWrapper?: StylesAsProp;
-    invalidText?: StylesAsProp;
-  };
+
+  /** Allows button customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style?: ViewProps['style'];
 }
 
-export const Input = forwardRef<TextInput, InputProps>(
-  ({ invalid, label, rightIcon, style, styles, ...props }, ref) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const { radii, shadows, fontSizes, lineHeights, colors, spacing } = useTheme();
+const InputRoot = forwardRef<TextInput, InputProps>(({ invalid, rightIcon, style, ...props }, ref) => {
+  const [isFocused, setIsFocused] = useState(false);
 
-    return (
-      <View style={style}>
-        {label && <Label style={styles?.label}>{label}</Label>}
-        <View
-          style={[
-            { position: 'relative', borderRadius: radii.md, ...shadows.base, marginTop: spacing.xs },
-            styles?.wrapper,
-          ]}
-        >
-          <TextInput
-            ref={ref}
-            {...props}
-            style={[
-              {
-                fontSize: fontSizes.sm,
-
-                width: '100%',
-                borderRadius: radii.md,
-                borderWidth: 1,
-                borderColor:
-                  isFocused && invalid
-                    ? colors.border.danger.active
-                    : !isFocused && invalid
-                    ? colors.border.danger.normal
-                    : isFocused
-                    ? colors.border.primary.active
-                    : colors.border.primary.normal,
-                backgroundColor: 'white',
-                paddingVertical: spacing.sm,
-
-                paddingLeft: spacing.sm,
-                paddingRight: rightIcon || invalid ? 40 : spacing.base,
-                color: invalid ? colors.text.danger.normal : colors.text.primary.normal,
-                textAlignVertical: props.multiline ? 'top' : 'center',
-              },
-              styles?.input,
-            ]}
-            onBlur={(e) => {
-              if (props?.onBlur) {
-                props.onBlur(e);
-              }
-              setIsFocused(false);
-            }}
-            onFocus={(e) => {
-              if (props?.onFocus) {
-                props.onFocus(e);
-              }
-              setIsFocused(true);
-            }}
-            placeholderTextColor={invalid ? colors.placeholder.danger : colors.placeholder.normal}
-          />
-
-          <View
-            style={[
-              {
-                position: 'absolute',
-                right: 0,
-                justifyContent: 'center',
-                paddingRight: spacing.base,
-                top: 0,
-                bottom: 0,
-              },
-              styles?.rightIconWrapper,
-            ]}
-          >
-            {invalid && !rightIcon && <ExclamationCircleIcon variant="danger" active={isFocused} />}
-            {rightIcon}
-          </View>
-        </View>
-        {typeof invalid === 'string' && (
-          <Text
-            style={[
-              { marginTop: spacing.sm, fontSize: fontSizes.sm, color: colors.text.danger.muted },
-              styles?.invalidText,
-            ]}
-          >
-            {invalid}
-          </Text>
+  return (
+    <View className="relative rounded-md shadow-sm" style={style}>
+      <TextInput
+        ref={ref}
+        {...props}
+        className={clsx(
+          'w-full rounded-md border bg-white py-sm pl-sm text-sm',
+          rightIcon || invalid ? 'pr-[40px]' : 'pr-base',
+          invalid ? 'text-danger-normal' : 'text-primary-normal',
+          isFocused && invalid
+            ? 'border-danger-active'
+            : !isFocused && invalid
+            ? 'border-danger-normal'
+            : isFocused
+            ? 'border-primary-active'
+            : 'border-primary-normal',
+          props.multiline ? 'align-top' : 'align-middle',
         )}
+        onBlur={(e) => {
+          if (props?.onBlur) props.onBlur(e);
+          setIsFocused(false);
+        }}
+        onFocus={(e) => {
+          if (props?.onFocus) props.onFocus(e);
+          setIsFocused(true);
+        }}
+        placeholderTextColor={invalid ? theme.placeholderColor.danger : theme.placeholderColor.normal}
+      />
+
+      <View className="absolute inset-y-none right-none items-center pr-md">
+        {invalid && !rightIcon && <ExclamationCircleIcon intent="danger" />}
+        {rightIcon}
       </View>
-    );
-  },
+    </View>
+  );
+});
+
+InputRoot.displayName = 'Input';
+
+const ErrorText = ({ children }: { children: string }) => (
+  <Text className="mt-xs text-xs text-danger-normal">{children}</Text>
 );
 
-Input.displayName = 'Input';
+export const Input = Object.assign(styled(InputRoot), { ErrorText: styled(ErrorText) });

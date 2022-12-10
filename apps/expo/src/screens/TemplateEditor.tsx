@@ -1,33 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import 'react-native-get-random-values';
 
 import { useAtom } from 'jotai';
-import { SetsAndRepsTab } from './SetsAndReps';
-import { ExerciseSelectTab, stepsCompletedAtom } from './ExerciseSelect';
+import clsx from 'clsx';
+import { ExerciseSelectTab, stepsCompletedAtom } from '@/components/TemplateEditor/ExerciseSelect';
+import { SetsAndRepsTab, templateSubmittedAtom } from '@/components/TemplateEditor/SetsAndReps';
 import type { RootStackParamList } from '@/_app';
 import { Layout } from '@/components/ui/layout/Layout';
 import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
-import { useTheme } from '@/themes';
-import { trpc } from '@/utils/trpc';
-import { Loader } from '@/components/ui/feedback/Loader';
-import { TemplateProvider } from '@/providers/FullTemplateProvider';
+
+import { TemplateProvider } from '@/stores/local/TemplateProvider';
+import { Text } from '@/components/ui/typography/Text';
+// import { TemplateProvider } from '@/stores/local/TemplateProvider';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type TabNavigationParamList = {
-  ExerciseSelect: undefined;
-  SetsAndReps: undefined;
+  ExerciseSelect: { isTemplateNew: boolean };
+  SetsAndReps: { isTemplateNew: boolean };
 };
 
 const Tab = createBottomTabNavigator<TabNavigationParamList>();
 
 type Props = StackScreenProps<RootStackParamList, 'TemplateEditor'>;
 
-export const TemplateEditorScreen = ({ route }: Props) => {
+export const TemplateEditorScreen = ({ route, navigation }: Props) => {
+  const [submitted] = useAtom(templateSubmittedAtom);
+
+  useEffect(() => {
+    if (submitted) {
+      navigation.goBack();
+    }
+  }, [submitted, navigation]);
+
   return (
     <TemplateProvider id={route?.params?.templateId ?? null}>
       <SafeAreaView>
@@ -37,8 +46,22 @@ export const TemplateEditorScreen = ({ route }: Props) => {
             screenOptions={{ headerShown: false, tabBarStyle: { position: 'absolute' } }}
             tabBar={(props) => <TabBars {...props} />}
           >
-            <Tab.Screen name="ExerciseSelect" component={ExerciseSelectTab} options={{ title: 'Select Exercises' }} />
-            <Tab.Screen name="SetsAndReps" component={SetsAndRepsTab} options={{ title: 'Sets & Reps' }} />
+            <Tab.Screen
+              name="ExerciseSelect"
+              component={ExerciseSelectTab}
+              options={{ title: 'Select Exercises' }}
+              initialParams={{
+                isTemplateNew: !!route?.params?.templateId,
+              }}
+            />
+            <Tab.Screen
+              name="SetsAndReps"
+              component={SetsAndRepsTab}
+              options={{ title: 'Sets & Reps' }}
+              initialParams={{
+                isTemplateNew: !!route?.params?.templateId,
+              }}
+            />
           </Tab.Navigator>
         </Layout>
       </SafeAreaView>
@@ -48,12 +71,12 @@ export const TemplateEditorScreen = ({ route }: Props) => {
 
 const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const [stepsCompleted] = useAtom(stepsCompletedAtom);
-  const { spacing, colors, fontWeights, fontSizes } = useTheme();
+
   return (
     <View>
       <View style={{ flexDirection: 'row' }}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
+          const { options } = descriptors[route.key]!;
           const label =
             typeof options.tabBarLabel === 'string'
               ? options.tabBarLabel
@@ -71,36 +94,35 @@ const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
           };
 
           return (
-            <View key={route.key} style={{ flex: 1, paddingRight: index === 0 ? spacing.base : 0 }}>
+            <View key={route.key} className={clsx('flex-1', index === 0 ? 'pr-base' : 'pr-none')}>
               <Pressable
                 onPress={handlePress}
                 disabled={isDisabled}
-                style={{
-                  width: '100%',
-                  borderTopWidth: 4,
-                  borderTopColor: isFocused ? colors.border.primary.active : colors.border.primary.normal,
-                  paddingTop: spacing.base,
-                  opacity: isDisabled ? 0.3 : 1,
-                }}
+                className={clsx(
+                  'w-full border-t-4 pt-base',
+                  isFocused ? 'border-primary-active' : 'border-primary-normal',
+                  isDisabled ? 'opacity-30' : 'opacity-100',
+                )}
               >
                 {({ pressed }) => {
                   return (
                     <>
                       <Text
-                        style={{
-                          fontWeight: fontWeights.bold,
-                          textTransform: 'uppercase',
-                          fontSize: fontSizes.sm,
-                          color: isFocused
-                            ? colors.interactive.primary.active
+                        weight="bold"
+                        className={clsx(
+                          'text-sm uppercase',
+                          isFocused
+                            ? 'text-interactive-primary-normal'
                             : pressed
-                            ? colors.interactive.primary.normal
-                            : colors.text.primary.muted,
-                        }}
+                            ? 'text-interactive-primary-active'
+                            : 'text-primary-muted',
+                        )}
                       >
                         Step {index + 1}
                       </Text>
-                      <Text style={{ fontWeight: fontWeights.medium, fontSize: fontSizes.sm }}>{label}</Text>
+                      <Text weight="medium" className="text-sm">
+                        {label}
+                      </Text>
                     </>
                   );
                 }}

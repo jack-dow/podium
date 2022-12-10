@@ -1,47 +1,85 @@
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
+import type { ViewProps } from 'react-native';
 import Svg, { type SvgProps } from 'react-native-svg';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
+import type { VariantPropsWithoutNull } from 'nativewind';
+import { styled, variants } from 'nativewind';
+import clsx from 'clsx';
+
+const iconVariants = variants({
+  variants: {
+    intent: {
+      primary: 'text-icon-primary-normal',
+      positive: 'text-icon-positive-normal',
+      warning: 'text-icon-warning-normal',
+      danger: 'text-icon-danger-normal',
+      info: 'text-icon-info-normal',
+    },
+    size: {
+      sm: 'w-base h-base',
+      md: 'w-[20px] h-[20px]',
+      base: 'w-lg h-lg',
+    },
+    muted: {
+      true: '',
+      false: '',
+    },
+  },
+  compoundVariants: [
+    {
+      intent: 'primary',
+      muted: true,
+      className: 'text-icon-primary-muted',
+    },
+    {
+      intent: 'positive',
+      muted: true,
+      className: 'text-icon-positive-muted',
+    },
+    {
+      intent: 'warning',
+      muted: true,
+      className: 'text-icon-warning-muted',
+    },
+    {
+      intent: 'danger',
+      muted: true,
+      className: 'text-icon-danger-muted',
+    },
+    {
+      intent: 'info',
+      muted: true,
+      className: 'text-icon-info-muted',
+    },
+  ],
+});
+
+type IconVariants = VariantPropsWithoutNull<typeof iconVariants>;
 
 export interface IconProps extends SvgProps {
-  style?: StyleProp<ViewStyle | TextStyle>;
-  variant?: keyof Theme['colors']['icon'];
-  active?: boolean;
-  children?: React.ReactNode;
-  size?: keyof typeof sizes;
+  /** Applies custom styles to the icon */
+  style?: ViewProps['style'];
+
+  /** Controls the icon color */
+  intent?: IconVariants['intent'];
+
+  /** Controls the icon size */
+  size?: IconVariants['size'];
+
+  /** Controls the icon color whether it's normal or muted */
+  muted?: IconVariants['muted'];
 }
 
-export const Icon: React.FC<IconProps> = ({
+const IconRoot: React.FC<React.PropsWithChildren<IconProps>> = ({
   children,
-  active = false,
-  variant = 'primary',
-  style,
+  intent = 'primary',
   size = 'base',
   ...props
 }) => {
-  const { icon } = useTheme().colors;
-
-  const styles = Object.assign({ color: active ? icon[variant].active : icon[variant].normal }, style);
-
+  const className = iconVariants({ intent, size, muted: false });
   return (
-    <Svg {...props} style={[styles, sizes[size]]}>
+    <Svg {...props} className={clsx(className)}>
       {children}
     </Svg>
   );
 };
 
-const sizes = StyleSheet.create({
-  sm: {
-    width: 16,
-    height: 16,
-  },
-  md: {
-    width: 20,
-    height: 20,
-  },
-  base: {
-    width: 24,
-    height: 24,
-  },
-});
+export const Icon = styled(IconRoot);

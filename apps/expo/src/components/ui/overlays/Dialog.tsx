@@ -1,15 +1,15 @@
-import type { StylesAsProp } from 'react-native';
-import { Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import type { VariantPropsWithoutNull } from 'nativewind';
+
+import { Modal, Pressable, View } from 'react-native';
 import { createContext, useContext } from 'react';
-import { Button } from '../buttons/Button';
+import { styled, variants } from 'nativewind';
+import clsx from 'clsx';
 
+import { Text } from '../typography/Text';
 import { ExclamationTriangleIcon } from '@/assets/icons/outline/ExclamationTriangle';
-
 import { CheckIcon } from '@/assets/icons/outline/Check';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
 
-type DialogContextProps = Required<Pick<DialogRootProps, 'variant' | 'isLoading' | 'onClose'>>;
+type DialogContextProps = Required<Pick<DialogRootProps, 'intent'>>;
 
 const DialogContext = createContext<DialogContextProps | null>(null);
 
@@ -26,54 +26,44 @@ function useDialogContext() {
 }
 
 interface DialogRootProps {
+  /** Controls whether dialog is visible on the screen */
   open: boolean;
+
+  /** Called when the dialog is requested to closed */
   onClose: () => void;
+
+  /** Controls the dialog position on the screen */
   position?: 'bottom' | 'center';
+
+  /** Controls whether the dialog takes up the full screen width or not */
   fullWidth?: boolean;
-  variant?: keyof Pick<Theme['colors']['interactive'], 'positive' | 'warning' | 'danger'>;
-  isLoading?: boolean;
+
+  /** Controls the dialog intent and style */
+  intent?: IconVariants['intent'];
+
+  /** The dialog contents */
   children: React.ReactNode;
 }
 
 const DialogRoot: React.FC<DialogRootProps> = ({
   open,
   onClose,
-  variant = 'positive',
-  isLoading = false,
+  intent = 'positive',
   children,
   position = 'bottom',
   fullWidth = true,
 }) => {
-  const { width } = useWindowDimensions();
-  const { spacing, colors, radii, shadows } = useTheme();
   return (
-    <DialogContext.Provider value={{ variant, isLoading, onClose }}>
+    <DialogContext.Provider value={{ intent }}>
       <Modal animationType="fade" transparent={true} visible={open} onRequestClose={onClose} statusBarTranslucent>
         <View
-          style={{
-            flex: 1,
-            justifyContent: position === 'bottom' ? 'flex-end' : 'center',
-            alignItems: 'center',
-            position: 'relative',
-            height: '100%',
-          }}
+          className={clsx(
+            'relative h-full flex-1 items-center',
+            position === 'bottom' ? 'justify-end' : 'justify-center',
+          )}
         >
-          <Pressable
-            onPress={onClose}
-            style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: colors.background.overlay }}
-          />
-          <View
-            style={{
-              backgroundColor: colors.white,
-              borderRadius: radii.lg,
-              padding: spacing.base,
-              marginVertical: spacing.lg,
-              alignItems: 'center',
-              width: fullWidth ? '100%' : undefined,
-              maxWidth: width - spacing.lg,
-              ...shadows.xl,
-            }}
-          >
+          <Pressable onPress={onClose} className="absolute h-full w-full bg-overlay" />
+          <View className={clsx('my-lg items-center rounded-lg bg-white p-base shadow-xl', fullWidth && 'w-full')}>
             {children}
           </View>
         </View>
@@ -82,104 +72,52 @@ const DialogRoot: React.FC<DialogRootProps> = ({
   );
 };
 
+const iconVariants = variants({
+  variants: {
+    intent: {
+      positive: 'bg-positive',
+      warning: 'bg-warning',
+      danger: 'bg-danger',
+    },
+  },
+});
+
+type IconVariants = VariantPropsWithoutNull<typeof iconVariants>;
+
 interface DialogIconProps {
   children?: React.ReactNode;
 }
 function DialogIcon({ children }: DialogIconProps) {
-  const { colors, radii } = useTheme();
-  const { variant } = useDialogContext();
+  const { intent } = useDialogContext();
+  const className = iconVariants({ intent });
   return (
-    <View
-      style={{
-        height: 48,
-        width: 48,
-        backgroundColor: colors.background[variant],
-        borderRadius: radii.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <View className={clsx('h-[40px] w-[40px] items-center justify-center rounded-full', className)}>
       {children}
       {!children ? (
-        variant === 'positive' ? (
-          <CheckIcon variant={variant} />
+        intent === 'positive' ? (
+          <CheckIcon intent={intent} />
         ) : (
-          <ExclamationTriangleIcon variant={variant} />
+          <ExclamationTriangleIcon intent={intent} />
         )
       ) : undefined}
     </View>
   );
 }
 
-interface DialogSubmitButtonProps {
-  children: React.ReactNode;
-  onSubmit: () => void;
-  style?: StylesAsProp;
-}
-function DialogSubmitButton({ children, style, onSubmit }: DialogSubmitButtonProps) {
-  const { variant, isLoading } = useDialogContext();
-  return (
-    <Button variant={variant} loading={isLoading} onPress={onSubmit} style={style}>
-      {children}
-    </Button>
-  );
-}
-
-interface DialogCancelButtonProps {
-  children?: React.ReactNode;
-  style?: StylesAsProp;
-}
-function DialogCancelButton({ children, style }: DialogCancelButtonProps) {
-  const { spacing } = useTheme();
-  const { onClose } = useDialogContext();
-  return (
-    <Button variant="tertiary" onPress={onClose} style={style}>
-      {children || <Button.Text>Cancel</Button.Text>}
-    </Button>
-  );
-}
-const DialogButtonText = Button.Text;
-
 function DialogTitle({ children }: { children: React.ReactNode }) {
-  const { fontWeights, fontSizes, colors } = useTheme();
   return (
-    <Text
-      style={[
-        {
-          fontWeight: fontWeights.medium,
-          textAlign: 'center',
-          fontSize: fontSizes.lg,
-          color: colors.text.primary.normal,
-        },
-      ]}
-    >
+    <Text weight="medium" className="text-center text-lg text-primary-normal">
       {children}
     </Text>
   );
 }
 
 function DialogDescription({ children }: { children: React.ReactNode }) {
-  const { spacing, fontSizes, colors } = useTheme();
-  return (
-    <Text
-      style={{
-        marginTop: spacing.sm,
-        textAlign: 'center',
-        paddingHorizontal: spacing.sm,
-        fontSize: fontSizes.sm,
-        color: colors.text.primary.muted,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <Text className="mt-sm px-sm text-center text-sm text-primary-muted">{children}</Text>;
 }
 
-export const Dialog = Object.assign(DialogRoot, {
-  Icon: DialogIcon,
-  SubmitButton: DialogSubmitButton,
-  CancelButton: DialogCancelButton,
-  ButtonText: DialogButtonText,
-  Title: DialogTitle,
-  Description: DialogDescription,
+export const Dialog = Object.assign(styled(DialogRoot), {
+  Icon: styled(DialogIcon),
+  Title: styled(DialogTitle),
+  Description: styled(DialogDescription),
 });

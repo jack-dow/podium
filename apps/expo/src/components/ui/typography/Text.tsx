@@ -1,13 +1,20 @@
-import { styled } from 'nativewind';
-import type { TextStyle } from 'react-native';
-import { Text as RNText, StyleSheet } from 'react-native';
+import type { TextProps as RNTextProps, TextStyle } from 'react-native';
 
-interface TextProps {
+import { Text as RNText, StyleSheet } from 'react-native';
+import { styled } from 'nativewind';
+
+export interface TextProps extends RNTextProps {
+  /** Children must be passed to a text component */
   children: React.ReactNode;
-  style?: TextStyle;
+
   /** Controls the font weight of the default Inter font-family as the default font-weight property doesn't work with custom fonts */
-  weight?: keyof typeof weights;
+  weight?: TextWeights;
+
+  /** Allows text customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style?: TextStyle;
 }
+
+export type TextWeights = keyof typeof weights;
 
 const weights = StyleSheet.create({
   thin: {

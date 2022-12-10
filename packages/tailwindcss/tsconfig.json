@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["index.js", "postcss.js", "rollup.config.ts", "colors.ts", "theme.ts"]
+}

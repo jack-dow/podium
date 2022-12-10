@@ -1,13 +1,43 @@
-import { MotiPressable } from 'moti/interactions';
+import type { ViewProps } from 'react-native';
+import type { VariantPropsWithoutNull } from 'nativewind';
+
 import { createContext, useContext, useMemo } from 'react';
-import type { StylesAsProp } from 'react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { styled, variants } from 'nativewind';
+import { MotiPressable } from 'moti/interactions';
+import clsx from 'clsx';
+import theme from '@podium/tailwindcss/theme';
+
+import type { TextProps } from '../typography/Text';
+import { Text } from '../typography/Text';
 
 import { SpinnerIcon } from '@/assets/icons/Spinner';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
 
-interface ButtonProps {
+const StyledMotiPressable = styled(MotiPressable);
+
+const buttonVariants = variants({
+  variants: {
+    intent: {
+      primary: 'bg-interactive-primary-active border-interactive-primary-active',
+      secondary: 'bg-interactive-secondary-active border-interactive-secondary-active',
+      tertiary: 'bg-interactive-tertiary-active border-interactive-tertiary-active',
+      positive: 'bg-interactive-positive-active border-interactive-positive-active',
+      warning: 'bg-interactive-warning-active border-interactive-warning-active',
+      danger: 'bg-interactive-danger-active border-interactive-danger-active',
+    },
+    size: {
+      md: 'px-base py-[10px]',
+    },
+  },
+  defaultProps: {
+    intent: 'primary',
+    size: 'md',
+  },
+});
+
+type ButtonVariants = VariantPropsWithoutNull<typeof buttonVariants>;
+
+export interface ButtonProps {
   /** Adds icon before button label */
   leftIcon?: React.ReactNode;
 
@@ -15,13 +45,10 @@ interface ButtonProps {
   rightIcon?: React.ReactNode;
 
   /** Controls button appearance */
-  variant?: keyof Theme['colors']['interactive'];
+  intent?: ButtonVariants['intent'];
 
-  /** Button size */
-  size?: keyof ReturnType<typeof textSizes> & keyof typeof buttonSizes;
-
-  /** Reduces vertical and horizontal spacing */
-  compact?: boolean;
+  /** Controls button size */
+  size?: ButtonVariants['size'];
 
   /** Controls what happens when the button is pressed */
   onPress?: () => void;
@@ -32,127 +59,103 @@ interface ButtonProps {
   /** Adds loading spinner to indicate loading state */
   loading?: boolean;
 
-  /** Applies custom styles to the button  */
-  style?: StylesAsProp;
+  /** Allows button customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style?: ViewProps['style'];
 }
 
-type ButtonContextProps = Required<Pick<ButtonProps, 'variant' | 'size'>>;
+type ButtonContextProps = Required<Pick<ButtonProps, 'intent' | 'size'>>;
 
 const ButtonContext = createContext<ButtonContextProps | null>(null);
 
 const ButtonRoot: React.FC<React.PropsWithChildren<ButtonProps>> = ({
   children,
-  variant = 'primary',
+  intent = 'primary',
   size = 'md',
-  compact,
   loading,
   leftIcon,
   rightIcon,
-  style,
+  disabled,
   ...props
 }) => {
-  const theme = useTheme();
+  const className = buttonVariants({ intent, size });
+
   return (
-    <ButtonContext.Provider value={{ variant, size }}>
-      <MotiPressable
+    <ButtonContext.Provider value={{ intent, size }}>
+      <StyledMotiPressable
         {...props}
         transition={{
           type: 'timing',
           duration: 100,
         }}
+        disabled={disabled || loading}
         animate={useMemo(
           () =>
             ({ pressed }) => {
               'worklet';
               return {
                 backgroundColor: pressed
-                  ? theme.colors.interactive[variant].active
-                  : theme.colors.interactive[variant].normal,
+                  ? theme.backgroundColor.interactive[intent].active
+                  : theme.backgroundColor.interactive[intent].normal,
 
                 borderColor: pressed
-                  ? theme.colors.interactive[variant].border.active
-                  : theme.colors.interactive[variant].border.normal,
+                  ? theme.borderColor.interactive[intent].active
+                  : theme.borderColor.interactive[intent].normal,
               };
             },
-          [variant, theme.colors],
+          [intent],
         )}
-        style={[
-          {
-            justifyContent: 'center',
-            borderWidth: theme.borderWeights.light,
-            borderRadius: theme.radii.md,
-            opacity: props.disabled || loading ? 0.5 : 1,
-            ...buttonSizes[compact ? (`compact-${size}` as const) : size],
-          },
-          style,
-        ]}
+        className={clsx(
+          'justify-center rounded-md border border-transparent',
+          (disabled || loading) && 'opacity-75',
+          className,
+        )}
       >
-        <View
-          style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-          className="text-primary-normal"
-        >
+        <View className="flex-row items-center justify-center">
           {(leftIcon || loading) && (
-            <View style={{ marginHorizontal: theme.spacing.sm, marginLeft: -theme.spacing.xs }}>
-              {loading ? <SpinnerIcon size="sm" /> : leftIcon}
-            </View>
+            <View className="mx-sm -ml-xs">{loading ? <SpinnerIcon size="sm" /> : leftIcon}</View>
           )}
 
           {children}
-          {rightIcon && (
-            <View style={{ marginHorizontal: theme.spacing.sm, marginLeft: -theme.spacing.xs }}>{rightIcon}</View>
-          )}
+
+          {rightIcon && <View className="mx-sm -mr-xs items-center">{rightIcon}</View>}
         </View>
-      </MotiPressable>
+      </StyledMotiPressable>
     </ButtonContext.Provider>
   );
 };
 
-const buttonSizes = StyleSheet.create({
-  'xs': { paddingVertical: 8, paddingHorizontal: 10 },
-  'sm': { paddingVertical: 10, paddingHorizontal: 12 },
-  'md': { paddingVertical: 10, paddingHorizontal: 16, minHeight: 42 },
-  'lg': { paddingVertical: 10, paddingHorizontal: 16 },
-  'compact-xs': { paddingVertical: 4, paddingHorizontal: 5, px: 5 },
-  'compact-sm': { paddingVertical: 4, paddingHorizontal: 5, px: 5 },
-  'compact-md': { paddingVertical: 4, paddingHorizontal: 7, px: 7 },
-  'compact-lg': { paddingVertical: 4, paddingHorizontal: 7, px: 7 },
+const StyledButtonText = styled(Text, 'text-center', {
+  variants: {
+    intent: {
+      primary: 'text-button-primary',
+      secondary: 'text-button-secondary',
+      tertiary: 'text-button-tertiary',
+      positive: 'text-button-positive',
+      warning: 'text-button-warning',
+      danger: 'text-button-danger',
+    },
+    size: {
+      md: 'text-sm',
+    },
+  },
+  defaultProps: {
+    size: 'md',
+  },
 });
 
-function ButtonText({ children }: { children: React.ReactNode }) {
+function ButtonText({ children, ...props }: TextProps) {
   const context = useContext(ButtonContext);
-  const { colors, fontSizes } = useTheme();
 
   if (!context) {
     throw new Error('[Button] Button Text was used outside of a Button. Please fix this.');
   }
 
   return (
-    <Text
-      style={{
-        textAlign: 'center',
-        color: colors.interactive[context.variant].text,
-        ...textSizes(fontSizes)[context.size],
-      }}
-    >
+    <StyledButtonText weight="medium" intent={context.intent!} size={context.size!} {...props}>
       {children}
-    </Text>
+    </StyledButtonText>
   );
 }
-const textSizes = (fontSizes: Theme['fontSizes']) => {
-  return StyleSheet.create({
-    xs: {
-      fontSize: fontSizes.xs,
-    },
-    sm: {
-      fontSize: fontSizes.sm,
-    },
-    md: {
-      fontSize: fontSizes.sm,
-    },
-    lg: {
-      fontSize: fontSizes.md,
-    },
-  });
-};
 
-export const Button = Object.assign(ButtonRoot, { Text: ButtonText });
+const ButtonWithClassName = styled(ButtonRoot);
+export const Button = Object.assign(ButtonWithClassName, { Text: styled(ButtonText) });

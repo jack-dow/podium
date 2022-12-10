@@ -18,30 +18,6 @@ export const PlaygroundScreen = ({ navigation }: Props) => {
         <Text weight="thin" className="text-2xl text-danger-muted">
           Hello world!
         </Text>
-        <Text weight="extralight" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="light" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="normal" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="medium" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="semibold" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="bold" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="extrabold" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
-        <Text weight="black" className="text-2xl text-danger-muted">
-          Hello world!
-        </Text>
       </View>
     </SafeAreaView>
   );

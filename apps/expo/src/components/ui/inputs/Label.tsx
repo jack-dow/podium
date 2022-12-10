@@ -1,32 +1,21 @@
 import React from 'react';
-import type { StylesAsProp } from 'react-native';
-import { Text } from 'react-native';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
+import { styled } from 'nativewind';
+
+import type { TextWeights } from '../typography/Text';
+
+import { Text } from '../typography/Text';
 
 export interface LabelProps {
-  children?: React.ReactNode;
-  size?: keyof Theme['fontSizes'];
-  style?: StylesAsProp;
+  /** Controls the font weight of the default Inter font-family as the default font-weight property doesn't work with custom fonts */
+  weight?: TextWeights;
 }
 
-export const Label: React.FC<LabelProps> = ({ children, size = 'sm', style }) => {
-  const { fontSizes, fontWeights, colors, lineHeights } = useTheme();
+const LabelRoot: React.FC<React.PropsWithChildren<LabelProps>> = ({ children, weight = 'medium' }) => {
   return (
-    <Text
-      style={[
-        {
-          fontSize: fontSizes[size],
-          fontWeight: fontWeights.semibold,
-          color: colors.text.primary.normal,
-          lineHeight: lineHeights.lg,
-        },
-        style,
-      ]}
-    >
+    <Text weight={weight} className="mb-xs text-sm text-label">
       {children}
     </Text>
   );
 };
 
-Label.displayName = 'Label';
+export const Label = styled(LabelRoot);

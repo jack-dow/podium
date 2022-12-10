@@ -1,24 +1,27 @@
-import type { BottomSheetBackdropProps, BottomSheetModal } from '@gorhom/bottom-sheet';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import type { ViewProps } from 'react-native';
+import { Pressable, View } from 'react-native';
+import type { BottomSheetBackdropProps, BottomSheetModal } from '@gorhom/bottom-sheet';
+import GorhomBottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
-
+import { styled } from 'nativewind';
 import type { Exercise } from '@podium/db';
-import { useTheme } from '@/themes';
-import { Input } from '@/components/ui/inputs/Input';
-import { Button } from '@/components/ui/buttons/Button';
-import { SearchIcon } from '@/assets/icons/mini/Search';
-import { Checkbox } from '@/components/ui/inputs/Checkbox';
-import { trpc } from '@/utils/trpc';
-import { Loader } from '@/components/ui/feedback/Loader';
-import { useTemplateAPI, useTemplateExercisesIdsByExerciseId } from '@/providers/FullTemplateProvider';
 
-export const ExerciseSelectBottomSheet = () => {
+import { Input } from '@ui/inputs/Input';
+import { Button } from '@ui/buttons/Button';
+import { Loader } from '@ui/feedback/Loader';
+import { Text } from '@ui/typography/Text';
+import { Checkbox } from '@ui/inputs/Checkbox';
+import { trpc } from '@/trpc';
+
+import { useTemplateAPI, useTemplateExercisesIdsByExerciseId } from '@/stores/local/TemplateProvider';
+import { SearchIcon } from '@/assets/icons/mini/Search';
+
+const StyledBackdrop = styled(BottomSheetBackdrop);
+
+const BottomSheet = ({ style }: { style?: ViewProps['style'] }) => {
   const { data, isLoading, isError } = trpc.exercise.all.useQuery({ limit: 50 });
   const [isOpen, setIsOpen] = useState(false);
-
-  const { spacing, colors } = useTheme();
 
   const ref = useRef<BottomSheetModal>(null);
 
@@ -29,7 +32,7 @@ export const ExerciseSelectBottomSheet = () => {
     setIsOpen(true);
   }, []);
 
-  const handleSheetChanges = useCallback((index: number) => {
+  const handleSheetChanges = useCallback((_index: number) => {
     // console.log(index);
   }, []);
 
@@ -37,27 +40,18 @@ export const ExerciseSelectBottomSheet = () => {
     setIsOpen(false);
   }, []);
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => {
-      return (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          style={[props.style, { backgroundColor: colors.background.overlay }]}
-        />
-      );
-    },
-    [colors.background.overlay],
-  );
+  const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => {
+    return <StyledBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} className="bg-overlay" />;
+  }, []);
 
   return (
-    <View style={{ marginBottom: spacing.lg }}>
+    <View style={style}>
       <Button onPress={handleSheetOpen}>
         <Button.Text>Select Exercises</Button.Text>
       </Button>
+
       <Portal>
-        <BottomSheet
+        <GorhomBottomSheet
           ref={ref}
           index={-1}
           snapPoints={snapPoints}
@@ -66,29 +60,22 @@ export const ExerciseSelectBottomSheet = () => {
           enablePanDownToClose
           backdropComponent={renderBackdrop}
         >
-          <BottomSheetScrollView style={{ padding: spacing.base, marginBottom: spacing.lg }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Input
-                placeholder="Search exercises"
-                rightIcon={<SearchIcon />}
-                style={{ flex: 1, marginRight: spacing.md }}
-                styles={{
-                  input: { height: 42 },
-                }}
-              />
-              <Button onPress={() => ref?.current?.close()} style={{ height: 42 }}>
+          <BottomSheetScrollView className="mb-lg p-base">
+            <View className="flex-row items-center">
+              <Input placeholder="Search exercises" rightIcon={<SearchIcon />} className="mr-md h-[42px] flex-1" />
+              <Button onPress={() => ref?.current?.close()} className="h-[42px]">
                 <Button.Text>Add</Button.Text>
               </Button>
             </View>
 
             {isLoading && (
-              <View style={{ justifyContent: 'center', marginVertical: spacing.md }}>
+              <View className="my-md items-center">
                 <Loader />
               </View>
             )}
 
             {isError && (
-              <View>
+              <View className="my-md">
                 <Text>An unknown error occurred...</Text>
               </View>
             )}
@@ -97,7 +84,7 @@ export const ExerciseSelectBottomSheet = () => {
               return <ExerciseSelectBottomSheetItem key={exercise.id} exercise={exercise} isSheetOpen={isOpen} />;
             })}
           </BottomSheetScrollView>
-        </BottomSheet>
+        </GorhomBottomSheet>
       </Portal>
     </View>
   );
@@ -113,12 +100,10 @@ function ExerciseSelectBottomSheetItem({ exercise, isSheetOpen }: ExerciseSelect
 
   const [isSelected, setIsSelected] = useState(false);
 
-  const { spacing, colors, borderWeights } = useTheme();
-
   const handleItemPress = () => {
     if (isSelected) {
       if (templateExerciseIds && templateExerciseIds.length > 0) {
-        removeTemplateExercise(templateExerciseIds[templateExerciseIds.length - 1]);
+        removeTemplateExercise(templateExerciseIds[templateExerciseIds.length - 1] ?? '');
       }
       setIsSelected(false);
     } else {
@@ -134,18 +119,13 @@ function ExerciseSelectBottomSheetItem({ exercise, isSheetOpen }: ExerciseSelect
   }, [isSheetOpen]);
 
   return (
-    <View
-      style={{
-        justifyContent: 'space-between',
-        flexDirection: 'row',
-        borderBottomWidth: borderWeights.light,
-        borderBottomColor: colors.border.primary.normal,
-      }}
-    >
-      <Pressable onPress={handleItemPress} style={{ flex: 1, paddingVertical: spacing.base }}>
+    <View className="flex-row items-center justify-between border-b border-primary-normal">
+      <Pressable onPress={handleItemPress} className="flex-1 py-base">
         <Text>{exercise.name}</Text>
       </Pressable>
       <Checkbox size="sm" checked={isSelected} onPress={handleItemPress} />
     </View>
   );
 }
+
+export const ExerciseSelectBottomSheet = styled(BottomSheet);

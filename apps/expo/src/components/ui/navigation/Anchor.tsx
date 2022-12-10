@@ -1,33 +1,31 @@
-import { Pressable, Text } from 'react-native';
-import type { Theme } from '@/themes';
-import { useTheme } from '@/themes';
+import type { PressableProps } from 'react-native';
+import { Pressable } from 'react-native';
+import { styled } from 'nativewind';
+
+import clsx from 'clsx';
+import { Text } from '../typography/Text';
 
 interface AnchorProps {
+  /** Controls what happens when the anchor is pressed */
+  onPress?: () => void;
+
   /** Link label */
   children: string;
 
-  /** Controls anchor appearance */
-  variant?: keyof Theme['colors']['interactive'];
-
-  /** Controls the font-size of the anchor */
-  size?: keyof Theme['fontSizes'];
-
-  /** Controls what happens when the anchor is pressed */
-  onPress?: () => void;
+  /** Allows button customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style: PressableProps['style'];
 }
 
-export const Anchor: React.FC<AnchorProps> = ({ children, size = 'sm', variant = 'primary', ...props }) => {
-  const { colors, fontSizes, fontWeights } = useTheme();
+const AnchorRoot: React.FC<AnchorProps> = ({ children, ...props }) => {
   return (
-    <Pressable {...props}>
+    <Pressable {...props} className="focus:underline">
       {({ pressed }) => (
         <Text
-          style={{
-            fontSize: fontSizes[size],
-            fontWeight: fontWeights.medium,
-            color: pressed ? colors.interactive[variant].active : colors.interactive[variant].normal,
-            textDecorationLine: pressed ? 'underline' : 'none',
-          }}
+          weight="medium"
+          className={clsx(
+            'text-sm',
+            pressed ? 'text-interactive-primary-active underline' : 'text-interactive-primary-normal no-underline',
+          )}
         >
           {children}
         </Text>
@@ -36,4 +34,6 @@ export const Anchor: React.FC<AnchorProps> = ({ children, size = 'sm', variant =
   );
 };
 
-Anchor.displayName = 'Anchor';
+AnchorRoot.displayName = 'Anchor';
+
+export const Anchor = styled(AnchorRoot);

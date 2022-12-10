@@ -24,7 +24,6 @@ export const profileRouter = router({
     )
     .query(async ({ input }) => {
       const { id } = input;
-
       const profile = await prisma.profile.findUnique({
         where: { id },
         select: defaultProfileSelect,
@@ -33,10 +32,9 @@ export const profileRouter = router({
       if (!profile) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: `No profile found with id '${id}'`,
+          message: `No profile with id '${id}'`,
         });
       }
-
       return profile;
     }),
 

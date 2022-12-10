@@ -1,13 +1,14 @@
+import { styled } from 'nativewind';
 import { Icon, type IconProps } from '../Icon';
 
 export const SolidIcon = (iconName: string, children: React.ReactNode) => {
-  const icon = ({ ...props }: Omit<IconProps, 'children' | 'style'>) => {
+  const SolidIconComponent = ({ ...props }: IconProps) => {
     return (
-      <Icon viewBox="0 0 24 24" fill="currentColor" {...props} style={{ width: 24, height: 24 }}>
+      <Icon viewBox="0 0 24 24" fill="currentColor" {...props}>
         {children}
       </Icon>
     );
   };
-  icon.displayName = `${iconName}Solid`;
-  return icon;
+  SolidIconComponent.displayName = `${iconName}Solid`;
+  return styled(SolidIconComponent);
 };

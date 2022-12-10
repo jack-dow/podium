@@ -6,10 +6,10 @@ import { useIsFocused } from '@react-navigation/native';
 import { Controller, useForm } from 'react-hook-form';
 import type { TextInput } from 'react-native';
 import { FlatList, Text, View } from 'react-native';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/supabase';
 import type { RootStackParamList } from '@/_app';
 import { Layout } from '@/components/ui/layout/Layout';
-import { trpc } from '@/utils/trpc';
+import { trpc } from '@/trpc';
 import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
 import { Anchor } from '@/components/ui/navigation/Anchor';
 import { Modal } from '@/components/ui/overlays/Modal';
@@ -128,7 +128,7 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
         <Modal
           open={isDeleteModalVisible}
           onClose={() => setIsDeleteModalVisible(false)}
-          variant="danger"
+          intent="danger"
           title={`Delete "${exercise.name}"?`}
           description="Are you sure you want to delete this exercise? All of the data attached to this exercise will be deleted forever. This action cannot be undone."
           submitButtonText="Delete exercise"
@@ -145,7 +145,7 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
         }
         titleRightSection={
           exercise && (
-            <Anchor variant="danger" onPress={() => setIsDeleteModalVisible(true)}>
+            <Anchor intent="danger" onPress={() => setIsDeleteModalVisible(true)}>
               Delete exercise
             </Anchor>
           )

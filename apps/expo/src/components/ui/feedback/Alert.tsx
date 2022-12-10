@@ -1,75 +1,140 @@
+import type { ViewProps } from 'react-native';
+import type { VariantPropsWithoutNull } from 'nativewind';
+
 import React, { createContext, useContext } from 'react';
-import type { StylesAsProp } from 'react-native';
-import { Text, View } from 'react-native';
-import { XCircleIcon } from '@/assets/icons/solid/XCircle';
-import { CheckCircleIcon } from '@/assets/icons/solid/CheckCircle';
-import { ExclamationTriangleIcon } from '@/assets/icons/solid/ExclamationTriangle';
-import { useTheme } from '@/themes';
+import { View } from 'react-native';
+import { styled, variants } from 'nativewind';
+import clsx from 'clsx';
 
-type AlertTypes = 'positive' | 'warning' | 'danger' | 'info';
+import type { TextWeights } from '../typography/Text';
+import { Text } from '../typography/Text';
 
-interface AlertProps {
-  type?: AlertTypes;
-  title?: string;
-  children?: React.ReactNode;
-  icon?: React.ReactNode;
-  style?: StylesAsProp;
-}
+import { XCircleIcon } from '@/assets/icons/mini/XCircle';
+import { CheckCircleIcon } from '@/assets/icons/mini/CheckCircle';
+import { ExclamationTriangleIcon } from '@/assets/icons/mini/ExclamationTriangle';
+import { InformationCircleIcon } from '@/assets/icons/mini/InformationCircle';
 
-const AlertContext = createContext<{ type: AlertTypes }>({
-  type: 'danger',
+const alertVariants = variants({
+  variants: {
+    intent: {
+      positive: 'bg-positive',
+      warning: 'bg-warning',
+      danger: 'bg-danger',
+      info: 'bg-info',
+    },
+  },
 });
 
-const AlertRoot: React.FC<AlertProps> = ({ type = 'danger', title, children, icon, style }) => {
-  const { colors, spacing, radii, fontWeights, fontSizes } = useTheme();
+type AlertVariants = VariantPropsWithoutNull<typeof alertVariants>;
+
+interface AlertProps {
+  /** Controls alert appearance */
+  intent: AlertVariants['intent'];
+
+  /** Replaces the default icon */
+  icon?: React.ReactNode;
+
+  /** Allows alert customization. Shouldn't really ever be used, only useful for space tailwind utilities */
+  style?: ViewProps['style'];
+}
+
+type AlertContextProps = Required<Pick<AlertProps, 'intent'>>;
+
+const AlertContext = createContext<AlertContextProps | null>(null);
+
+const AlertRoot: React.FC<React.PropsWithChildren<AlertProps>> = ({ intent, icon, children }) => {
+  const className = alertVariants({ intent });
   return (
-    <AlertContext.Provider value={{ type }}>
-      <View
-        style={[
-          {
-            borderRadius: radii.md,
-            backgroundColor: colors.background[type],
-            padding: spacing.base,
-            flexDirection: 'row',
-          },
-          style,
-        ]}
-      >
-        <View style={{ marginTop: -2 }}>
+    <AlertContext.Provider value={{ intent }}>
+      <View className={clsx('flex-row rounded-md p-base', className)}>
+        <View>
           {icon || (
             <>
-              {type === 'positive' && <CheckCircleIcon variant="positive" />}
-              {type === 'warning' && <ExclamationTriangleIcon variant="warning" />}
-              {type === 'danger' && <XCircleIcon variant="danger" />}
+              {intent === 'positive' && <CheckCircleIcon intent="positive" />}
+              {intent === 'warning' && <ExclamationTriangleIcon intent="warning" />}
+              {intent === 'danger' && <XCircleIcon intent="danger" />}
+              {intent === 'info' && <InformationCircleIcon intent="info" />}
             </>
           )}
         </View>
-        <View style={{ marginLeft: spacing.md }}>
-          <Text style={{ fontWeight: fontWeights.medium, fontSize: fontSizes.sm, color: colors.text[type].normal }}>
-            {title}
-          </Text>
-          <View style={{ marginTop: spacing.sm }}>{children}</View>
-        </View>
+        <View className="ml-md">{children}</View>
       </View>
     </AlertContext.Provider>
   );
 };
 
-const ListItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { fontSizes, colors } = useTheme();
-  const { type } = useContext(AlertContext);
+const Title: React.FC<{ children: React.ReactNode; weight?: TextWeights }> = ({ children, weight = 'medium' }) => {
+  const context = useContext(AlertContext);
+  if (!context) {
+    throw new Error('[Alert] Alert.Title was used outside of an Alert. Please fix this.');
+  }
   return (
-    <View style={{ flexDirection: 'row' }}>
-      <Text style={{ fontSize: fontSizes.sm, color: colors.text[type].muted }}>{'\u2022'}</Text>
-      <Text style={{ fontSize: fontSizes.sm, color: colors.text[type].muted, paddingLeft: 10 }}>{children}</Text>
+    <Text
+      weight={weight}
+      className={clsx('text-sm', {
+        'text-positive-normal': context.intent === 'positive',
+        'text-warning-normal': context.intent === 'warning',
+        'text-danger-normal': context.intent === 'danger',
+        'text-info-normal': context.intent === 'info',
+      })}
+    >
+      {children}
+    </Text>
+  );
+};
+
+const Content: React.FC<{ children: React.ReactNode }> = ({ children }) => <View className="mt-sm">{children}</View>;
+
+const ListItem: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const context = useContext(AlertContext);
+  if (!context) {
+    throw new Error('[Alert] Alert.ListItem was used outside of an Alert. Please fix this.');
+  }
+
+  return (
+    <View className="flex-row">
+      <Text
+        className={clsx('text-sm', {
+          'text-positive-muted': context.intent === 'positive',
+          'text-warning-muted': context.intent === 'warning',
+          'text-danger-muted': context.intent === 'danger',
+          'text-info-muted': context.intent === 'info',
+        })}
+      >
+        {'\u2022'}
+      </Text>
+      <Text
+        className={clsx('pl-md text-sm', {
+          'text-positive-muted': context.intent === 'positive',
+          'text-warning-muted': context.intent === 'warning',
+          'text-danger-muted': context.intent === 'danger',
+          'text-info-muted': context.intent === 'info',
+        })}
+      >
+        {children}
+      </Text>
     </View>
   );
 };
 
 const Description: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { fontSizes, colors } = useTheme();
-  const { type } = useContext(AlertContext);
-  return <Text style={{ fontSize: fontSizes.sm, color: colors.text[type].normal }}>{children}</Text>;
+  const context = useContext(AlertContext);
+  if (!context) {
+    throw new Error('[Alert] Alert.Description was used outside of an Alert. Please fix this.');
+  }
+  return (
+    <Text
+      className={clsx('text-sm', {
+        'text-positive-muted': context.intent === 'positive',
+        'text-warning-muted': context.intent === 'warning',
+        'text-danger-muted': context.intent === 'danger',
+        'text-info-muted': context.intent === 'info',
+      })}
+    >
+      {children}
+    </Text>
+  );
 };
 
-export const Alert = Object.assign(AlertRoot, { ListItem, Description });
+const AlertWithClassName = styled(AlertRoot);
+export const Alert = Object.assign(AlertWithClassName, { ListItem, Description, Title, Content: styled(Content) });

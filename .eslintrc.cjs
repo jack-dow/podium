@@ -19,7 +19,7 @@ module.exports = {
   },
   settings: {
     tailwindcss: {
-      config: './packages/config/tailwind/index.js',
+      config: './packages/tailwindcss/index.js',
     },
   },
 };

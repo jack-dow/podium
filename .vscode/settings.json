@@ -1,19 +1,20 @@
 {
-    "cSpell.words": [
-        "clsx",
-        "dripsy",
-        "gorhom",
-        "Haptics",
-        "Immer",
-        "moti",
-        "Pressable",
-        "SUPABASE",
-        "tailwindcss",
-        "trpc",
-        "upserting",
-        "upserts",
-        "uuidv",
-        "worklets",
-        "zustand"
-    ]
+  "cSpell.words": [
+    "clsx",
+    "dripsy",
+    "gorhom",
+    "Haptics",
+    "Immer",
+    "moti",
+    "nativewind",
+    "Pressable",
+    "SUPABASE",
+    "tailwindcss",
+    "trpc",
+    "upserting",
+    "upserts",
+    "uuidv",
+    "worklets",
+    "zustand"
+  ]
 }
