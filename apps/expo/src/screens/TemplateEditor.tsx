@@ -1,22 +1,22 @@
-import React, { useEffect } from 'react';
-
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Pressable, View } from 'react-native';
-import 'react-native-get-random-values';
 
+import React, { useEffect } from 'react';
+import { Pressable, View } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import 'react-native-get-random-values';
 import { useAtom } from 'jotai';
 import clsx from 'clsx';
+
+import { Layout } from '@ui/layout/Layout';
+import { SafeAreaView } from '@ui/layout/SafeAreaView';
+import { Text } from '@ui/typography/Text';
+
+import type { RootStackParamList } from '@/_app';
+
 import { ExerciseSelectTab, stepsCompletedAtom } from '@/components/TemplateEditor/ExerciseSelect';
 import { SetsAndRepsTab, templateSubmittedAtom } from '@/components/TemplateEditor/SetsAndReps';
-import type { RootStackParamList } from '@/_app';
-import { Layout } from '@/components/ui/layout/Layout';
-import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
-
 import { TemplateProvider } from '@/stores/local/TemplateProvider';
-import { Text } from '@/components/ui/typography/Text';
-// import { TemplateProvider } from '@/stores/local/TemplateProvider';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type TabNavigationParamList = {

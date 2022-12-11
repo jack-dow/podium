@@ -1,4 +1,4 @@
-import type { TextProps as RNTextProps, TextStyle } from 'react-native';
+import type { TextProps as RNTextProps } from 'react-native';
 
 import { Text as RNText, StyleSheet } from 'react-native';
 import { styled } from 'nativewind';
@@ -11,7 +11,7 @@ export interface TextProps extends RNTextProps {
   weight?: TextWeights;
 
   /** Allows text customization. Shouldn't really ever be used, only useful for space tailwind utilities */
-  style?: TextStyle;
+  style?: RNTextProps['style'];
 }
 
 export type TextWeights = keyof typeof weights;

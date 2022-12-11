@@ -1,18 +1,20 @@
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import type { TemplateSet } from '@podium/db';
+import type { TemplateCreate, TemplateUpdate } from '@podium/api';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import 'react-native-get-random-values';
 import { useState } from 'react';
 import { atom, useAtom } from 'jotai';
-import type { TemplateCreate, TemplateUpdate } from '@podium/api';
 
 import { Button } from '@ui/buttons/Button';
 import { Anchor } from '@ui/navigation/Anchor';
 import { Dialog } from '@ui/overlays/Dialog';
 import { Text } from '@ui/typography/Text';
-import type { TabNavigationParamList } from '@/screens/TemplateEditor';
-import { TrashIcon } from '@/assets/icons/mini/Trash';
 
+import type { TabNavigationParamList } from '@/screens/TemplateEditor';
+
+import { TrashIcon } from '@/assets/icons/mini/Trash';
 import { ChevronDownIcon } from '@/assets/icons/mini/ChevronDown';
 import {
   useTemplateAPI,
@@ -59,7 +61,7 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
         ))}
       </View>
 
-      <View className="flex-row justify-center">
+      <View className="flex-row justify-between">
         <View />
         <Button
           loading={isTemplateNew ? templateCreateMutation.isLoading : templateUpdateMutation.isLoading}
@@ -73,47 +75,89 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
 };
 
 function ExerciseCard({ templateExerciseId }: { templateExerciseId: string }) {
-  const { addTemplateSet } = useTemplateAPI();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { addTemplateSet, removeTemplateExercise } = useTemplateAPI();
   const { templateExercise, isLoading: isTemplateExerciseLoading } = useTemplateExercise(templateExerciseId);
   const templateSetIds = useTemplateSetIdsByTemplateExerciseId(templateExerciseId);
 
+  const handleTemplateDelete = () => {
+    removeTemplateExercise(templateExerciseId);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleModalCancel = () => setIsDeleteModalOpen(false);
+
   return (
     <View className="mb-md space-y-md rounded-md bg-secondary p-md shadow">
-      <View>
+      <View className="flex-row items-center justify-between">
         <Text weight="medium" className="text-lg">
           {isTemplateExerciseLoading ? 'Loading...' : templateExercise?.exercise?.name}
         </Text>
+
+        <Anchor intent="danger" onPress={() => setIsDeleteModalOpen(true)}>
+          Delete
+        </Anchor>
+
+        <Dialog open={isDeleteModalOpen} onClose={handleModalCancel} intent="danger">
+          <Dialog.Icon />
+          <Dialog.Content>
+            <Dialog.Title>
+              Delete {templateExercise?.exercise?.name ? `"${templateExercise.exercise.name}"` : 'Template Exercise'}
+            </Dialog.Title>
+            <Dialog.Description>
+              Are you sure you want to delete this exercise? This action cannot be undone.
+            </Dialog.Description>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button intent="danger" onPress={handleTemplateDelete}>
+              <Button.Text>Delete</Button.Text>
+            </Button>
+            <Button intent="tertiary" onPress={handleModalCancel} className="mt-md">
+              <Button.Text>Cancel</Button.Text>
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
       </View>
 
       <View>
-        <View className="flex-[10] flex-row justify-between">
-          <View className="flex-[1] items-center justify-center px-xs">
+        <View className="flex-row justify-between pb-sm">
+          <View className="w-[10%] items-center justify-center">
             <Text weight="medium" className="text-center text-base">
               Set
             </Text>
           </View>
-          <View className="flex-[3] items-center justify-center px-xs">
+          <View className="w-[30%] items-center justify-center">
             <Text weight="medium" className="text-center text-base">
               Type
             </Text>
           </View>
-          <View className="flex-[4] items-center justify-center px-xs">
+          <View className="w-[40%] items-center justify-center">
             <Text weight="medium" className="text-center text-base">
               Reps
             </Text>
           </View>
-          <View className="flex-[2] items-center justify-center px-xs" />
+          <View className="w-[20%] items-center justify-center" />
         </View>
 
         <View className="space-y-md">
           {templateSetIds &&
             templateSetIds.map((setId, index) => (
-              <View key={setId} className="flex-[10] flex-row justify-between space-x-xs">
-                <ExerciseCardSet setId={setId} position={index} templateSetIdsLength={templateSetIds.length} />
+              <View key={setId} className="flex-row justify-between">
+                <ExerciseCardSet
+                  setId={setId}
+                  position={index}
+                  templateSetIdsLength={templateSetIds.length}
+                  handleTemplateExerciseDelete={() => setIsDeleteModalOpen(true)}
+                />
               </View>
             ))}
         </View>
-        <Anchor onPress={() => addTemplateSet(templateExerciseId)}>Add another set</Anchor>
+        <View className="py-md">
+          {!templateSetIds ||
+            (templateSetIds && templateSetIds.length < 10 && (
+              <Anchor onPress={() => addTemplateSet(templateExerciseId)}>Add another set</Anchor>
+            ))}
+        </View>
       </View>
     </View>
   );
@@ -124,9 +168,15 @@ interface ExerciseCardSetProps {
   position: number;
   /** Used to determine if delete button should be disabled or not */
   templateSetIdsLength: number;
+  handleTemplateExerciseDelete: () => void;
 }
 
-function ExerciseCardSet({ setId, position, templateSetIdsLength }: ExerciseCardSetProps) {
+function ExerciseCardSet({
+  setId,
+  position,
+  templateSetIdsLength,
+  handleTemplateExerciseDelete,
+}: ExerciseCardSetProps) {
   const { updateTemplateSet, removeTemplateSet } = useTemplateAPI();
   const { templateSet, isLoading, isError } = useTemplateSet(setId);
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
@@ -145,27 +195,30 @@ function ExerciseCardSet({ setId, position, templateSetIdsLength }: ExerciseCard
 
   return (
     <>
-      <View className="flex-[1] items-center justify-center">
+      <View className="w-[10%] items-center justify-center">
         <Text weight="medium" className="text-sm">
           {position + 1}
         </Text>
       </View>
 
-      <View className="flex-[3] items-center justify-center">
-        <Pressable className="flex-row items-center" onPress={() => setIsTypeModalOpen(!isTypeModalOpen)}>
+      <View className="w-[30%] items-center justify-center">
+        <Text weight="medium" className="text-sm capitalize">
+          {templateSet?.type}
+        </Text>
+        {/* <Pressable className="flex-row items-center" onPress={() => setIsTypeModalOpen(!isTypeModalOpen)}>
           <Text weight="medium" className="text-sm capitalize">
             {templateSet?.type}
           </Text>
           <ChevronDownIcon intent="primary" />
-        </Pressable>
-        <SetTypeChangeModal
+        </Pressable> */}
+        {/* <SetTypeChangeModal
           open={isTypeModalOpen}
           onClose={() => setIsTypeModalOpen(false)}
           onSetChange={(newSetType) => updateTemplateSet({ id: setId, type: newSetType })}
-        />
+        /> */}
       </View>
 
-      <View className="flex-[4] items-center justify-center">
+      <View className="w-[40%] items-center justify-center">
         <TextInput
           placeholder="10-12"
           className="w-full rounded-md bg-tertiary py-sm px-md text-center text-sm"
@@ -180,12 +233,14 @@ function ExerciseCardSet({ setId, position, templateSetIdsLength }: ExerciseCard
         />
       </View>
 
-      <View className="flex-[2] items-center justify-center">
+      <View className="w-[20%] items-center justify-center">
         <Button
           className="h-[30px] w-[46px] justify-center"
           intent="tertiary"
-          onPress={() => removeTemplateSet(setId)}
-          disabled={templateSetIdsLength === 1}
+          onPress={() => {
+            if (templateSetIdsLength === 1) return handleTemplateExerciseDelete();
+            removeTemplateSet(setId);
+          }}
         >
           <TrashIcon size="sm" />
         </Button>

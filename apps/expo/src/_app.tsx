@@ -1,32 +1,27 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { registerRootComponent } from 'expo';
-import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { TransitionPresets, createStackNavigator } from '@react-navigation/stack';
-import 'react-native-url-polyfill/auto';
-import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View } from 'react-native';
-import { atom, useAtom } from 'jotai';
+import { registerRootComponent } from 'expo';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import 'react-native-url-polyfill/auto';
 
 import { TRPCProvider } from './trpc';
+import { useAuthAPI, useAuthSession } from './stores/global/auth';
+import { supabase } from './supabase';
+
 import { HomeScreen } from './screens/Home';
 import { SignInScreen } from './screens/auth/SignIn';
 import { SignUpScreen } from './screens/auth/SignUp';
 import { LoadingScreen } from './screens/Loading';
 import { ExercisesScreen } from './screens/Exercises';
-import { NotificationProvider } from './components/ui/feedback/Notification';
 import { ExerciseEditorScreen } from './screens/ExerciseEditor';
-
-import { ThemeProvider, themeLight } from './themes';
-import { SafeAreaView } from './components/ui/layout/SafeAreaView';
 import { TemplateEditorScreen } from './screens/TemplateEditor';
 import { PlaygroundScreen } from './screens/Playground';
-import { useAuthAPI, useAuthSession } from './stores/global/auth';
-import type { Session } from '@/supabase';
-import { supabase } from '@/supabase';
 
 export type RootStackParamList = {
   Playground: undefined;
@@ -75,34 +70,32 @@ export const App = () => {
     <TRPCProvider>
       {/* Safe Area Manager */}
       <SafeAreaProvider>
-        <ThemeProvider value={themeLight}>
-          {/* Gesture Handler */}
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            {/* React Navigation */}
-            <NavigationContainer>
-              <ExpoStatusBar translucent backgroundColor="transparent" />
-              <RootStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
-                {session === undefined ? (
-                  <RootStack.Screen name="Loading" component={LoadingScreen} />
-                ) : session == null ? (
-                  <>
-                    <RootStack.Screen name="SignIn" component={SignInScreen} />
-                    <RootStack.Screen name="SignUp" component={SignUpScreen} />
-                  </>
-                ) : (
-                  <>
-                    {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
-                    {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
-                    <RootStack.Screen name="Home" component={HomeScreen} />
-                    <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
-                    {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
-                    {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
-                  </>
-                )}
-              </RootStack.Navigator>
-            </NavigationContainer>
-          </GestureHandlerRootView>
-        </ThemeProvider>
+        {/* Gesture Handler */}
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          {/* React Navigation */}
+          <NavigationContainer>
+            <ExpoStatusBar translucent backgroundColor="transparent" />
+            <RootStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
+              {session === undefined ? (
+                <RootStack.Screen name="Loading" component={LoadingScreen} />
+              ) : session == null ? (
+                <>
+                  <RootStack.Screen name="SignIn" component={SignInScreen} />
+                  <RootStack.Screen name="SignUp" component={SignUpScreen} />
+                </>
+              ) : (
+                <>
+                  {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
+                  {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
+                  <RootStack.Screen name="Home" component={HomeScreen} />
+                  <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
+                  {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
+                  {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
+                </>
+              )}
+            </RootStack.Navigator>
+          </NavigationContainer>
+        </GestureHandlerRootView>
       </SafeAreaProvider>
     </TRPCProvider>
   );

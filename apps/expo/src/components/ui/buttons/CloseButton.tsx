@@ -12,7 +12,7 @@ interface CloseButtonProps {
   onPress?: () => void;
 
   /** Allows button customization. Shouldn't really ever be used, only useful for space tailwind utilities */
-  style: PressableProps['style'];
+  style?: PressableProps['style'];
 }
 
 export const CloseButton: React.FC<CloseButtonProps> = ({ ...props }) => {

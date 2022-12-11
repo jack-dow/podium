@@ -1,7 +1,8 @@
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { atom, useAtom } from 'jotai';
 
 import { Input } from '@ui/inputs/Input';
@@ -10,8 +11,10 @@ import { Alert } from '@ui/feedback/Alert';
 
 import { ExerciseSelectBottomSheet } from './BottomSheet';
 import { ExerciseSelectList } from './SelectList';
-import { useTemplateAPI, useTemplateExerciseIds, useTemplateName } from '@/stores/local/TemplateProvider';
+
 import type { TabNavigationParamList } from '@/screens/TemplateEditor';
+
+import { useTemplateAPI, useTemplateExerciseIds, useTemplateName } from '@/stores/local/TemplateProvider';
 import { Label } from '@/components/ui/inputs/Label';
 
 type ExerciseSelectTabProps = BottomTabScreenProps<TabNavigationParamList, 'ExerciseSelect'>;

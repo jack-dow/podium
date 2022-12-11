@@ -54,7 +54,7 @@ const InputRoot = forwardRef<TextInput, InputProps>(({ invalid, rightIcon, style
         placeholderTextColor={invalid ? theme.placeholderColor.danger : theme.placeholderColor.normal}
       />
 
-      <View className="absolute inset-y-none right-none items-center pr-md">
+      <View className="absolute inset-y-none right-none items-center justify-center pr-md">
         {invalid && !rightIcon && <ExclamationCircleIcon intent="danger" />}
         {rightIcon}
       </View>

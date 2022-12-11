@@ -72,9 +72,10 @@ const IconRoot: React.FC<React.PropsWithChildren<IconProps>> = ({
   children,
   intent = 'primary',
   size = 'base',
+  muted,
   ...props
 }) => {
-  const className = iconVariants({ intent, size, muted: false });
+  const className = iconVariants({ intent, size, muted });
   return (
     <Svg {...props} className={clsx(className)}>
       {children}

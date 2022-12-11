@@ -373,12 +373,13 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
             }
 
             // Update all the template set positions of the same template exercise
-            Object.entries(template.templateSets.positions).every(([key, value]) => {
-              if (value[templateSetId] != null) {
+            Object.entries(template.templateSets.positions).every(([templateExerciseId, templateSetPositions]) => {
+              if (templateSetPositions[templateSetId] != null) {
                 const newPositions: Record<TemplateSetId, Position> = {};
-                const templateExerciseId = key;
-                const ids = Object.keys(value)
+                const swapped = Object.entries(templateSetPositions).map(([key, value]) => [value, key]);
+                const ids = swapped
                   .sort()
+                  .map(([_, value]) => value as string)
                   .filter((id) => id !== templateSetId);
                 ids.forEach((id, index) => {
                   newPositions[id] = index;
@@ -544,7 +545,7 @@ export function useTemplateExerciseIds() {
   return ids;
 }
 /** Returns all the given template sets that relate to the provided exercise id */
-export function useTemplateExercisesIdsByExerciseId(exerciseId: ExerciseId): TemplateExerciseId[] | null {
+export function useTemplateExerciseIdsByExerciseId(exerciseId: ExerciseId): TemplateExerciseId[] | null {
   const templateExercises = useTemplateContext((s) => s.templateExercises.filters.byExerciseId[exerciseId] ?? null);
   return templateExercises;
 }

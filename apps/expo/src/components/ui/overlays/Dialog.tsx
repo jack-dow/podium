@@ -1,7 +1,8 @@
 import type { VariantPropsWithoutNull } from 'nativewind';
 
+import type { TextProps, ViewProps } from 'react-native';
 import { Modal, Pressable, View } from 'react-native';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { styled, variants } from 'nativewind';
 import clsx from 'clsx';
 
@@ -9,7 +10,7 @@ import { Text } from '../typography/Text';
 import { ExclamationTriangleIcon } from '@/assets/icons/outline/ExclamationTriangle';
 import { CheckIcon } from '@/assets/icons/outline/Check';
 
-type DialogContextProps = Required<Pick<DialogRootProps, 'intent'>>;
+type DialogContextProps = Required<Pick<DialogRootProps, 'intent'>> & { hasIcon: boolean; setHasIcon: () => void };
 
 const DialogContext = createContext<DialogContextProps | null>(null);
 
@@ -53,18 +54,21 @@ const DialogRoot: React.FC<DialogRootProps> = ({
   position = 'bottom',
   fullWidth = true,
 }) => {
+  const [hasIcon, setHasIcon] = useState(false);
   return (
-    <DialogContext.Provider value={{ intent }}>
+    <DialogContext.Provider value={{ intent, hasIcon, setHasIcon: () => setHasIcon(true) }}>
       <Modal animationType="fade" transparent={true} visible={open} onRequestClose={onClose} statusBarTranslucent>
-        <View
-          className={clsx(
-            'relative h-full flex-1 items-center',
-            position === 'bottom' ? 'justify-end' : 'justify-center',
-          )}
-        >
-          <Pressable onPress={onClose} className="absolute h-full w-full bg-overlay" />
-          <View className={clsx('my-lg items-center rounded-lg bg-white p-base shadow-xl', fullWidth && 'w-full')}>
-            {children}
+        <View className={clsx('relative min-h-full flex-1', position === 'bottom' ? 'justify-end' : 'justify-center')}>
+          <Pressable onPress={onClose} className="absolute inset-none bg-overlay" />
+          <View className={clsx('p-base')}>
+            <View
+              className={clsx(
+                'relative overflow-hidden rounded-lg bg-white px-base pb-base pt-[20px] text-left shadow-xl sm:my-xl sm:w-full sm:max-w-lg sm:p-lg',
+                fullWidth && 'w-full',
+              )}
+            >
+              <View className="sm:items-start">{children}</View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -88,10 +92,20 @@ interface DialogIconProps {
   children?: React.ReactNode;
 }
 function DialogIcon({ children }: DialogIconProps) {
-  const { intent } = useDialogContext();
+  const { intent, hasIcon, setHasIcon } = useDialogContext();
   const className = iconVariants({ intent });
+
+  useEffect(() => {
+    if (!hasIcon) setHasIcon();
+  }, [hasIcon, setHasIcon]);
+
   return (
-    <View className={clsx('h-[40px] w-[40px] items-center justify-center rounded-full', className)}>
+    <View
+      className={clsx(
+        'mx-auto h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full sm:mx-none sm:h-[40px] sm:w-[40px]',
+        className,
+      )}
+    >
       {children}
       {!children ? (
         intent === 'positive' ? (
@@ -104,20 +118,43 @@ function DialogIcon({ children }: DialogIconProps) {
   );
 }
 
-function DialogTitle({ children }: { children: React.ReactNode }) {
+function DialogContent({ children, style }: { children: React.ReactNode; style?: ViewProps['style'] }) {
+  const { hasIcon } = useDialogContext();
   return (
-    <Text weight="medium" className="text-center text-lg text-primary-normal">
+    <View className={clsx('items-center  sm:items-start', hasIcon && 'mt-md sm:ml-base sm:mt-none')} style={style}>
+      {children}
+    </View>
+  );
+}
+
+function DialogTitle({ children, style }: { children: React.ReactNode; style?: TextProps['style'] }) {
+  return (
+    <Text weight="medium" className="text-center text-lg text-primary-normal sm:text-left" style={style}>
       {children}
     </Text>
   );
 }
 
-function DialogDescription({ children }: { children: React.ReactNode }) {
-  return <Text className="mt-sm px-sm text-center text-sm text-primary-muted">{children}</Text>;
+function DialogDescription({ children, style }: { children: React.ReactNode; style?: TextProps['style'] }) {
+  return (
+    <Text className="mt-sm px-sm  text-center text-sm text-primary-muted sm:text-left" style={style}>
+      {children}
+    </Text>
+  );
+}
+
+function DialogActions({ children, style }: { children: React.ReactNode; style?: ViewProps['style'] }) {
+  return (
+    <View className="mt-lg w-full sm:mt-base sm:flex-row-reverse" style={style}>
+      {children}
+    </View>
+  );
 }
 
 export const Dialog = Object.assign(styled(DialogRoot), {
   Icon: styled(DialogIcon),
   Title: styled(DialogTitle),
   Description: styled(DialogDescription),
+  Content: styled(DialogContent),
+  Actions: styled(DialogActions),
 });

@@ -1,8 +1,9 @@
 import type { RefObject } from 'react';
-import { useEffect } from 'react';
 import type { ViewProps } from 'react-native';
-import { StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
+
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
