@@ -49,10 +49,10 @@ export const SignInScreen = ({ navigation }: Props) => {
 
   return (
     <SafeAreaView>
-      <View className="relative flex-1 justify-center py-xl px-base sm:px-lg md:px-xl">
+      <View className="relative flex-1 justify-center py-xl px-base  sm:px-lg md:px-xl">
         <View className="space-y-lg">
           <View className="sm:w-full sm:max-w-[448px]">
-            <Text weight="extrabold" className="text-center text-3xl text-primary-normal">
+            <Text weight="extrabold" className=" text-center text-2xl text-primary-normal">
               Sign in to your account
             </Text>
             <View className="mt-sm flex-row items-center justify-center">
@@ -86,6 +86,7 @@ export const SignInScreen = ({ navigation }: Props) => {
                       returnKeyType="next"
                       value={value}
                       onChangeText={onChange}
+                      invalid={!!fieldState.error?.message}
                       onBlur={onBlur}
                       blurOnSubmit={false}
                       onSubmitEditing={() => passwordRef.current?.focus()}
@@ -110,6 +111,7 @@ export const SignInScreen = ({ navigation }: Props) => {
                       ref={passwordRef}
                       returnKeyType="go"
                       onChangeText={onChange}
+                      invalid={!!fieldState.error?.message}
                       value={value}
                       onBlur={onBlur}
                       blurOnSubmit={false}

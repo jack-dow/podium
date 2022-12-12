@@ -13,10 +13,10 @@ import { Loader } from '@ui/feedback/Loader';
 import type { RootStackParamList } from '@/_app';
 import { trpc } from '@/trpc';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Exercises'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Templates'>;
 
-export const ExercisesScreen = ({ navigation }: Props) => {
-  const { data, isLoading, refetch } = trpc.exercise.all.useQuery({ limit: 50 });
+export const TemplatesScreen = ({ navigation }: Props) => {
+  const { data, isLoading, refetch } = trpc.template.all.useQuery({ limit: 50 });
 
   useFocusEffect(
     useCallback(() => {
@@ -27,8 +27,8 @@ export const ExercisesScreen = ({ navigation }: Props) => {
   return (
     <SafeAreaView>
       <Layout
-        title="Exercises"
-        description="Here you can manage the exercises that are referenced in your plans and single workouts"
+        title="Templates"
+        description="Here you can manage the templates that are referenced in your plans and workouts"
         titleRightSection={
           <Anchor onPress={() => navigation.navigate('ExerciseEditor', { exerciseId: null })}>New exercise</Anchor>
         }
@@ -39,12 +39,12 @@ export const ExercisesScreen = ({ navigation }: Props) => {
           </View>
         ) : (
           <ScrollView>
-            {data?.items.map((exercise, index) => {
+            {data?.items.map((template, index) => {
               const isFirst = index === 0;
               const isLast = index === data.items.length - 1;
               return (
                 <View
-                  key={exercise.id}
+                  key={template.id}
                   className={clsx(
                     'border border-primary-normal p-sm shadow',
                     isFirst ? 'rounded-t-md' : '',
@@ -54,11 +54,11 @@ export const ExercisesScreen = ({ navigation }: Props) => {
                   <View className="p-sm sm:px-lg">
                     <View className="flex-row items-center justify-between">
                       <Text weight="medium" className="truncate text-base capitalize text-primary-normal">
-                        {exercise.name}
+                        {template.name}
                       </Text>
                       <Anchor
                         onPress={() => {
-                          navigation.navigate('ExerciseEditor', { exerciseId: exercise.id });
+                          navigation.navigate('TemplateEditor', { templateId: template.id });
                         }}
                       >
                         Edit

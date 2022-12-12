@@ -56,16 +56,7 @@ export const Layout = styled(LayoutRoot);
 function BackButton({ onPress }: { onPress: () => void }) {
   const [isPressed, setIsPressed] = useState(false);
 
-  const strokeColor = useSharedValue(0);
-  const stroke = interpolateColor(
-    strokeColor.value,
-    [0, 1],
-    [theme.textColor.icon.primary.normal, theme.textColor.icon.primary.active],
-  );
-
-  useEffect(() => {
-    strokeColor.value = withTiming(isPressed ? 0 : 1, { duration: 150, easing: Easing.ease });
-  }, [isPressed, strokeColor]);
+  const stroke = isPressed ? theme.textColor.icon.primary.active : theme.textColor.icon.primary.normal;
 
   return (
     <Pressable

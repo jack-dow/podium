@@ -1,22 +1,24 @@
 /* eslint-disable @typescript-eslint/quotes */
-import React, { useEffect, useRef, useState } from 'react';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import { useIsFocused } from '@react-navigation/native';
-import { Controller, useForm } from 'react-hook-form';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
-import { FlatList, Text, View } from 'react-native';
-import { supabase } from '@/supabase';
-import type { RootStackParamList } from '@/_app';
-import { Layout } from '@/components/ui/layout/Layout';
+import { Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import { Controller, useForm } from 'react-hook-form';
+
+import { Layout } from '@ui/layout/Layout';
+import { SafeAreaView } from '@ui/layout/SafeAreaView';
+import { Anchor } from '@ui/navigation/Anchor';
+import { Alert } from '@ui/feedback/Alert';
+import { Input } from '@ui/inputs/Input';
+import { Button } from '@ui/buttons/Button';
+import { Dialog } from '@ui/overlays/Dialog';
+import { Label } from '@ui/inputs/Label';
+
 import { trpc } from '@/trpc';
-import { SafeAreaView } from '@/components/ui/layout/SafeAreaView';
-import { Anchor } from '@/components/ui/navigation/Anchor';
-import { Modal } from '@/components/ui/overlays/Modal';
-import { Alert } from '@/components/ui/feedback/Alert';
-import { Input } from '@/components/ui/inputs/Input';
-import { Button } from '@/components/ui/buttons/Button';
-import { useTheme } from '@/themes';
+import type { RootStackParamList } from '@/_app';
+import { getAuthSafeUser } from '@/stores/global/auth';
+import { Loader } from '@/components/ui/feedback/Loader';
 
 interface FormProps {
   name: string;
@@ -29,73 +31,52 @@ interface FormProps {
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseEditor'>;
 
 export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
-  const { exerciseId } = route.params;
-  const { spacing } = useTheme();
-  const { data: exercise, isLoading, isError, refetch } = trpc.exercise.byId.useQuery({ id: exerciseId });
+  const queryEnabled = route?.params?.exerciseId != null;
+  const {
+    data: exercise,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.exercise.byId.useQuery({ id: route!.params!.exerciseId! }, { enabled: queryEnabled });
 
   const handleGoBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
+    if (isDeleteModalVisible) setIsDeleteModalVisible(false);
+    if (navigation.canGoBack()) navigation.goBack();
   };
 
-  const createMutation = trpc.exercise.create.useMutation({
-    onSuccess() {
-      handleGoBack();
-    },
-  });
-
-  const updateMutation = trpc.exercise.update.useMutation({
-    onSuccess: () => {
-      handleGoBack();
-    },
-  });
-
-  const deleteMutation = trpc.exercise.delete.useMutation({
-    onSuccess() {
-      setIsDeleteModalVisible(false);
-      handleGoBack();
-    },
-  });
+  const createMutation = trpc.exercise.create.useMutation({ onSuccess: () => handleGoBack() });
+  const updateMutation = trpc.exercise.update.useMutation({ onSuccess: () => handleGoBack() });
+  const deleteMutation = trpc.exercise.delete.useMutation({ onSuccess: () => handleGoBack() });
 
   const {
     handleSubmit,
     control,
     reset,
     setValue,
-
     formState: { errors: formErrors, isDirty },
   } = useForm<FormProps>({ criteriaMode: 'all' });
 
-  const onFormSubmit = handleSubmit(
-    async (data) => {
-      if (exercise) {
-        updateMutation.mutate({ ...exercise, ...data });
-      } else {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          createMutation.mutate({ ...data, user: user?.id });
-        }
-      }
-      reset(data);
-    },
-    () => {},
-  );
+  const onFormSubmit = handleSubmit(async (data) => {
+    if (exercise) {
+      updateMutation.mutate({ ...exercise, ...data });
+    } else {
+      const user = getAuthSafeUser();
+      createMutation.mutate({ ...data, userId: user.id });
+    }
+    reset(data);
+  });
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
-  const isFocused = useIsFocused();
   const instructionsRef = useRef<TextInput>(null);
 
   const error = createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message;
 
-  useEffect(() => {
-    if (isFocused) {
-      refetch();
-    }
-  }, [isFocused, refetch]);
+  useFocusEffect(
+    useCallback(() => {
+      if (queryEnabled) refetch();
+    }, [queryEnabled, refetch]),
+  );
 
   useEffect(() => {
     if (exercise?.name !== undefined) {
@@ -106,18 +87,10 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
     }
   }, [exercise, setValue]);
 
-  if (isError) {
+  if (queryEnabled && isError) {
     return (
-      <SafeAreaView>
+      <SafeAreaView className="items-center justify-center">
         <Text>An error occurred...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <SafeAreaView>
-        <Text>Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -125,18 +98,32 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
   return (
     <SafeAreaView>
       {exercise && (
-        <Modal
-          open={isDeleteModalVisible}
-          onClose={() => setIsDeleteModalVisible(false)}
-          intent="danger"
-          title={`Delete "${exercise.name}"?`}
-          description="Are you sure you want to delete this exercise? All of the data attached to this exercise will be deleted forever. This action cannot be undone."
-          submitButtonText="Delete exercise"
-          onSubmit={() => deleteMutation.mutate({ id: exercise.id })}
-          isLoading={deleteMutation.isLoading}
-        />
+        <Dialog open={isDeleteModalVisible} onClose={() => setIsDeleteModalVisible(false)}>
+          <Dialog.Icon />
+          <Dialog.Content>
+            <Dialog.Title>Delete &apos;{exercise.name}&apos;?</Dialog.Title>
+            <Dialog.Description>
+              Are you sure you want to delete this exercise? All of the data attached to this exercise will be deleted
+              forever. This action cannot be undone.
+            </Dialog.Description>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              intent="danger"
+              onPress={() => deleteMutation.mutate(exercise.id)}
+              loading={deleteMutation.isLoading}
+            >
+              <Button.Text>Delete exercise</Button.Text>
+            </Button>
+            <Button intent="tertiary" onPress={() => setIsDeleteModalVisible(false)} className="mt-md">
+              <Button.Text>Cancel</Button.Text>
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
       )}
+
       <Layout
+        className="space-y-lg"
         title={exercise ? 'Update Exercise' : 'Create Exercise'}
         description={
           exercise
@@ -151,87 +138,96 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
           )
         }
       >
-        {/* Displaying errors */}
-        {Object.keys(formErrors).length > 0 && (
-          <Alert title="There's a problem with your exercise" style={{ marginBottom: spacing.lg }}>
-            <FlatList
-              data={Object.keys(formErrors)}
-              renderItem={({ item }) => {
-                return <Alert.ListItem>{formErrors[item as keyof typeof formErrors]?.message}</Alert.ListItem>;
-              }}
-            />
-          </Alert>
-        )}
-
-        {!!error && (
-          <Alert title="An error occurred" style={{ marginBottom: spacing.lg }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Form */}
-        <View>
-          <Controller
-            name="name"
-            control={control}
-            defaultValue={exercise?.name}
-            rules={{
-              required: 'Please provide a name for this exercise.',
-            }}
-            render={({ field: { value, onChange, onBlur }, fieldState }) => (
-              <Input
-                label="Name"
-                returnKeyType="next"
-                invalid={!!fieldState.error}
-                value={value}
-                onBlur={onBlur}
-                blurOnSubmit={false}
-                onChangeText={onChange}
-                onSubmitEditing={() => instructionsRef.current?.focus()}
-                style={{ marginBottom: spacing.lg }}
-              />
-            )}
-          />
-
-          <Controller
-            name="instructions"
-            control={control}
-            defaultValue={exercise?.instructions || undefined}
-            render={({ field: { value, onChange, onBlur } }) => (
-              <Input
-                ref={instructionsRef}
-                label="Instructions"
-                multiline
-                numberOfLines={8}
-                returnKeyType="next"
-                value={value}
-                onBlur={onBlur}
-                blurOnSubmit={false}
-                onChangeText={onChange}
-                style={{
-                  marginBottom: spacing.lg,
-                }}
-                styles={{
-                  input: { minHeight: 125 },
-                }}
-              />
-            )}
-          />
-
-          <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-            <View />
-            <Button
-              loading={updateMutation.isLoading || createMutation.isLoading}
-              disabled={!isDirty}
-              onPress={onFormSubmit}
-            >
-              <Button.Text>
-                {exercise && (updateMutation.isLoading ? 'Updating exercise...' : 'Update exercise')}
-                {!exercise && (createMutation.isLoading ? 'Creating exercise...' : 'Create exercise')}
-              </Button.Text>
-            </Button>
+        {isLoading && queryEnabled ? (
+          <View className="flex-1 items-center justify-center">
+            <Loader />
           </View>
-        </View>
+        ) : (
+          <>
+            {/* Displaying errors */}
+            {Object.keys(formErrors).length > 0 && (
+              <Alert intent="danger">
+                <Alert.Title>There&apos;s a problem with your exercise</Alert.Title>
+                {Object.keys(formErrors).map((fieldId) => (
+                  <Alert.ListItem key={fieldId}>
+                    {formErrors[fieldId as keyof typeof formErrors]?.message}
+                  </Alert.ListItem>
+                ))}
+              </Alert>
+            )}
+            {!!error && (
+              <Alert intent="danger">
+                <Alert.Title>An error occurred...</Alert.Title>
+                <Alert.Description>{error}</Alert.Description>
+              </Alert>
+            )}
+            {/* Form */}
+            <View className="space-y-lg">
+              <View>
+                <Controller
+                  name="name"
+                  control={control}
+                  defaultValue={exercise?.name}
+                  rules={{
+                    required: 'Please provide a name for this exercise.',
+                  }}
+                  render={({ field: { value, onChange, onBlur }, fieldState }) => (
+                    <>
+                      <Label>Name</Label>
+                      <Input
+                        returnKeyType="next"
+                        value={value}
+                        invalid={!!fieldState.error}
+                        onBlur={onBlur}
+                        blurOnSubmit={false}
+                        onChangeText={onChange}
+                        onSubmitEditing={() => instructionsRef.current?.focus()}
+                      />
+                      {fieldState.error?.message && <Input.ErrorText>{fieldState.error.message}</Input.ErrorText>}
+                    </>
+                  )}
+                />
+              </View>
+
+              <View>
+                <Controller
+                  name="instructions"
+                  control={control}
+                  defaultValue={exercise?.instructions || undefined}
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <>
+                      <Label>Instructions</Label>
+                      <Input
+                        ref={instructionsRef}
+                        multiline
+                        numberOfLines={8}
+                        returnKeyType="next"
+                        value={value}
+                        onBlur={onBlur}
+                        blurOnSubmit={false}
+                        onChangeText={onChange}
+                      />
+                    </>
+                  )}
+                />
+              </View>
+
+              <View className="flex-row justify-between">
+                <View />
+                <Button
+                  loading={updateMutation.isLoading || createMutation.isLoading}
+                  disabled={!isDirty}
+                  onPress={onFormSubmit}
+                >
+                  <Button.Text>
+                    {exercise && (updateMutation.isLoading ? 'Updating exercise...' : 'Update exercise')}
+                    {!exercise && (createMutation.isLoading ? 'Creating exercise...' : 'Create exercise')}
+                  </Button.Text>
+                </Button>
+              </View>
+            </View>
+          </>
+        )}
       </Layout>
     </SafeAreaView>
   );

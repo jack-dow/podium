@@ -71,7 +71,7 @@ export const SignUpScreen = ({ navigation }: Props) => {
       <View className="relative flex-1 justify-center py-xl px-base sm:px-lg md:px-xl">
         <View className="space-y-lg">
           <View className="sm:w-full sm:max-w-[448px]">
-            <Text weight="extrabold" className="text-center text-3xl text-primary-normal">
+            <Text weight="extrabold" className="text-center text-2xl text-primary-normal">
               Create your account
             </Text>
             <View className="mt-sm flex-row items-center justify-center">
@@ -99,6 +99,7 @@ export const SignUpScreen = ({ navigation }: Props) => {
                       returnKeyType="next"
                       value={value}
                       onChangeText={onChange}
+                      invalid={!!fieldState.error?.message}
                       onBlur={onBlur}
                       blurOnSubmit={false}
                       onSubmitEditing={() => emailRef.current?.focus()}
@@ -127,6 +128,7 @@ export const SignUpScreen = ({ navigation }: Props) => {
                       returnKeyType="next"
                       value={value}
                       onChangeText={onChange}
+                      invalid={!!fieldState.error?.message}
                       onBlur={onBlur}
                       blurOnSubmit={false}
                       onSubmitEditing={() => passwordRef.current?.focus()}

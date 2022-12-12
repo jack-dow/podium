@@ -72,10 +72,10 @@ const Title: React.FC<{ children: React.ReactNode; weight?: TextWeights }> = ({ 
     <Text
       weight={weight}
       className={clsx('text-sm', {
-        'text-positive-normal': context.intent === 'positive',
-        'text-warning-normal': context.intent === 'warning',
-        'text-danger-normal': context.intent === 'danger',
-        'text-info-normal': context.intent === 'info',
+        'text-positive-dark': context.intent === 'positive',
+        'text-warning-dark': context.intent === 'warning',
+        'text-danger-dark': context.intent === 'danger',
+        'text-info-dark': context.intent === 'info',
       })}
     >
       {children}

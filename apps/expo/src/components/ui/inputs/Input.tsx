@@ -41,7 +41,7 @@ const InputRoot = forwardRef<TextInput, InputProps>(({ invalid, rightIcon, style
             : isFocused
             ? 'border-primary-active'
             : 'border-primary-normal',
-          props.multiline ? 'align-top' : 'align-middle',
+          props.multiline ? 'min-h-[125px] align-top' : 'align-middle',
         )}
         onBlur={(e) => {
           if (props?.onBlur) props.onBlur(e);

@@ -369,26 +369,30 @@ const theme = {
     textColor: {
         white: colors.white,
         black: colors.black,
-        label: colors.zinc[700],
+        label: colors.zinc[800],
         primary: {
             normal: colors.zinc[900],
             muted: colors.zinc[500], // zinc-500
         },
         positive: {
-            normal: colors.emerald[800],
-            muted: colors.emerald[700], // emerald-700
+            normal: colors.emerald[600],
+            muted: colors.emerald[700],
+            dark: colors.emerald[800], // emerald-800
         },
         warning: {
-            normal: colors.amber[800],
-            muted: colors.amber[700], // amber-700
+            normal: colors.amber[600],
+            muted: colors.amber[700],
+            dark: colors.amber[800], // amber-800
         },
         danger: {
-            normal: colors.red[800],
-            muted: colors.red[700], // red-700
+            normal: colors.red[600],
+            muted: colors.red[700],
+            dark: colors.red[800], // red-800
         },
         info: {
-            normal: colors.blue[800],
-            muted: colors.blue[700], // blue-700
+            normal: colors.blue[600],
+            muted: colors.blue[700],
+            dark: colors.blue[800], // blue-800
         },
         icon: {
             primary: {

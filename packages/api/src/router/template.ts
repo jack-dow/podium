@@ -2,6 +2,7 @@ import { Prisma, prisma } from '@podium/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { TemplateCreateSchema, TemplateUpdateSchema } from '../schemas/template';
+import { ObjectWithId } from '../schemas/util';
 import { publicProcedure, router } from '../trpc';
 import { defaultTemplateExerciseSelect } from './templateExercise';
 import { defaultTemplateSetSelect } from './templateSet';
@@ -25,27 +26,67 @@ const templateSelectWithRelations = {
 };
 
 export const templateRouter = router({
-  byId: publicProcedure
+  all: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        limit: z.number().min(1).max(100).nullish(),
+        cursor: z.string().nullish(),
       }),
     )
     .query(async ({ input }) => {
-      const { id } = input;
-      const template = await prisma.template.findUnique({
-        where: { id },
-        select: templateSelectWithRelations,
+      /**
+       * For pagination docs you can have a look here
+       * @see https://trpc.io/docs/useInfiniteQuery
+       * @see https://www.prisma.io/docs/concepts/components/prisma-client/pagination
+       */
+
+      const limit = input.limit ?? 50;
+      const { cursor } = input;
+
+      const items = await prisma.template.findMany({
+        select: defaultTemplateSelect,
+        // get an extra item at the end which we'll use as next cursor
+        take: limit + 1,
+        where: {},
+        cursor: cursor
+          ? {
+              id: cursor,
+            }
+          : undefined,
+        orderBy: {
+          createdAt: 'asc',
+        },
       });
 
-      if (!template) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `No template with id '${id}'`,
-        });
+      let nextCursor: typeof cursor | undefined;
+      if (items.length > limit) {
+        // Remove the last item and use it as next cursor
+
+        const nextItem = items.pop()!;
+        nextCursor = nextItem.id;
       }
-      return template;
+
+      return {
+        items: items.reverse(),
+        nextCursor,
+      };
     }),
+
+  byId: publicProcedure.input(ObjectWithId).query(async ({ input }) => {
+    const { id } = input;
+    const template = await prisma.template.findUnique({
+      where: { id },
+      select: templateSelectWithRelations,
+    });
+
+    if (!template) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `No template with id '${id}'`,
+      });
+    }
+    return template;
+  }),
 
   create: publicProcedure.input(TemplateCreateSchema).mutation(async ({ input }) => {
     const { templateExercises, templateSets, ...template } = input;

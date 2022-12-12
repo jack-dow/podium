@@ -22,12 +22,14 @@ import { ExercisesScreen } from './screens/Exercises';
 import { ExerciseEditorScreen } from './screens/ExerciseEditor';
 import { TemplateEditorScreen } from './screens/TemplateEditor';
 import { PlaygroundScreen } from './screens/Playground';
+import { TemplatesScreen } from './screens/Templates';
 
 export type RootStackParamList = {
   Playground: undefined;
   Home: undefined;
   Exercises: undefined;
   ExerciseEditor: { exerciseId: string | null };
+  Templates: undefined;
   TemplateEditor: { templateId: string | null };
   SignIn: undefined;
   SignUp: undefined;
@@ -88,9 +90,10 @@ export const App = () => {
                   {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
                   {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
                   <RootStack.Screen name="Home" component={HomeScreen} />
+                  <RootStack.Screen name="Exercises" component={ExercisesScreen} />
+                  <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} />
+                  <RootStack.Screen name="Templates" component={TemplatesScreen} />
                   <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
-                  {/* <RootStack.Screen name="Exercises" component={ExercisesScreen} /> */}
-                  {/* <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} /> */}
                 </>
               )}
             </RootStack.Navigator>

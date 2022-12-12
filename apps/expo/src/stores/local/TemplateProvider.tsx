@@ -3,13 +3,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { createStore, useStore } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import produce from 'immer';
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useCallback, useContext, useRef } from 'react';
 import type { TemplateExercise, TemplateSet } from '@podium/db';
 
 import { SafeAreaView } from '@ui/layout/SafeAreaView';
 import { Loader } from '@ui/feedback/Loader';
 import { Text } from '@ui/typography/Text';
-import { useIsFocused } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import type {
   TemplateCreate,
   TemplateExerciseCreate,
@@ -474,27 +474,20 @@ interface TemplateProviderProps {
 
 export function TemplateProvider({ children, id }: React.PropsWithChildren<TemplateProviderProps>) {
   const queriesEnabled = typeof id === 'string';
-  const isFocused = useIsFocused();
-
-  const storeRef = useRef<CreatedTemplateStore>();
-
   const {
     data: template,
     isLoading: isTemplateLoading,
     isError: isTemplateError,
     refetch,
-    isFetched,
   } = trpc.template.byId.useQuery({ id: id as string }, { enabled: queriesEnabled });
 
-  // useEffect(() => {
-  //   if (isFocused && queriesEnabled && isFetched) {
-  //     refetch();
-  //   }
-  // }, [isFocused, isFetched, queriesEnabled, refetch]);
+  const storeRef = useRef<CreatedTemplateStore>();
 
-  useEffect(() => {
-    console.log({ isFocused });
-  }, [isFocused]);
+  useFocusEffect(
+    useCallback(() => {
+      if (queriesEnabled) refetch();
+    }, [queriesEnabled, refetch]),
+  );
 
   if (queriesEnabled && isTemplateLoading) {
     return (

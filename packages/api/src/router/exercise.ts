@@ -1,6 +1,8 @@
 import { Prisma, prisma } from '@podium/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { ExerciseCreateSchema, ExerciseUpdateSchema } from '../schemas/exercise';
+import { ObjectWithId } from '../schemas/util';
 import { publicProcedure, router } from '../trpc';
 
 /**
@@ -63,63 +65,42 @@ export const exerciseRouter = router({
       };
     }),
 
-  byId: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const { id } = input;
+  byId: publicProcedure.input(ObjectWithId).query(async ({ input }) => {
+    const { id } = input;
 
-      const exercise = await prisma.exercise.findUnique({
-        where: { id },
-        select: defaultExerciseSelect,
+    const exercise = await prisma.exercise.findUnique({
+      where: { id },
+      select: defaultExerciseSelect,
+    });
+
+    if (!exercise) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `No exercise found with id '${id}'`,
       });
+    }
+    return exercise;
+  }),
 
-      if (!exercise) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `No exercise found with id '${id}'`,
-        });
-      }
-      return exercise;
-    }),
+  create: publicProcedure.input(ExerciseCreateSchema).mutation(async ({ input }) => {
+    const exercise = await prisma.exercise.create({
+      data: input,
+      select: defaultExerciseSelect,
+    });
 
-  create: publicProcedure
-    .input(
-      z.object({
-        id: z.string().uuid().optional(),
-        userId: z.string().uuid(),
-        name: z.string().min(1).max(64),
-        instructions: z.string().min(0).max(400).optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const exercise = await prisma.exercise.create({
-        data: input,
-        select: defaultExerciseSelect,
-      });
-      return exercise;
-    }),
+    return exercise;
+  }),
 
-  update: publicProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        name: z.string().min(1).max(64).optional(),
-        instructions: z.string().min(0).max(400).optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const { id, ...updates } = input;
-      const updatedExercise = await prisma.exercise.update({
-        where: { id },
-        data: updates,
-        select: defaultExerciseSelect,
-      });
-      return updatedExercise;
-    }),
+  update: publicProcedure.input(ExerciseUpdateSchema).mutation(async ({ input }) => {
+    const { id, ...updates } = input;
+    const updatedExercise = await prisma.exercise.update({
+      where: { id },
+      data: updates,
+      select: defaultExerciseSelect,
+    });
+
+    return updatedExercise;
+  }),
 
   delete: publicProcedure.input(z.string().uuid()).mutation(async ({ input: id }) => {
     await prisma.exercise.delete({ where: { id } });
