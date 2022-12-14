@@ -16,18 +16,19 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export const HomeScreen = ({ navigation }: Props) => {
   return (
     <SafeAreaView>
-      <ScrollView className="relative flex-1 space-y-base p-md pb-xl md:px-lg">
-        <View className="space-y-sm">
-          <Anchor onPress={() => navigation.navigate('Exercises')}>Exercises</Anchor>
-          <Anchor onPress={() => navigation.navigate('TemplateEditor', { templateId: null })}>Templates</Anchor>
-        </View>
-
-        <View className="pb-lg">
+      <View className="relative flex-1 space-y-base p-md pb-xl md:px-lg">
+        <ScrollView>
+          <View className="flex-row space-x-sm">
+            <Anchor onPress={() => navigation.navigate('Exercises')}>Exercises</Anchor>
+            <Anchor onPress={() => navigation.navigate('Templates')}>Templates</Anchor>
+          </View>
+        </ScrollView>
+        <View className="absolute top-md right-md">
           <Button intent="tertiary" onPress={() => supabase.auth.signOut()}>
             <Button.Text>Logout!</Button.Text>
           </Button>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };

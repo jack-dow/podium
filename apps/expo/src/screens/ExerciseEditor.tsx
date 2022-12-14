@@ -31,13 +31,13 @@ interface FormProps {
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseEditor'>;
 
 export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
-  const queryEnabled = route?.params?.exerciseId != null;
+  const exerciseId = route?.params?.exerciseId ?? null;
   const {
     data: exercise,
     isLoading,
     isError,
     refetch,
-  } = trpc.exercise.byId.useQuery({ id: route!.params!.exerciseId! }, { enabled: queryEnabled });
+  } = trpc.exercise.byId.useQuery({ id: exerciseId! }, { enabled: !!exerciseId });
 
   const handleGoBack = () => {
     if (isDeleteModalVisible) setIsDeleteModalVisible(false);
@@ -68,26 +68,28 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
+  const handleCloseDeleteModal = () => {
+    if (!deleteMutation.isLoading) setIsDeleteModalVisible(false);
+  };
+
   const instructionsRef = useRef<TextInput>(null);
 
   const error = createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message;
 
   useFocusEffect(
     useCallback(() => {
-      if (queryEnabled) refetch();
-    }, [queryEnabled, refetch]),
+      if (exerciseId) refetch();
+    }, [exerciseId, refetch]),
   );
 
   useEffect(() => {
-    if (exercise?.name !== undefined) {
-      setValue('name', exercise.name);
+    if (exerciseId) {
+      setValue('name', exercise?.name ?? '');
+      setValue('instructions', exercise?.instructions ?? '');
     }
-    if (exercise?.instructions !== null) {
-      setValue('instructions', exercise?.instructions || '');
-    }
-  }, [exercise, setValue]);
+  }, [exercise, setValue, exerciseId]);
 
-  if (queryEnabled && isError) {
+  if (exerciseId && isError) {
     return (
       <SafeAreaView className="items-center justify-center">
         <Text>An error occurred...</Text>
@@ -97,25 +99,25 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
 
   return (
     <SafeAreaView>
-      {exercise && (
-        <Dialog open={isDeleteModalVisible} onClose={() => setIsDeleteModalVisible(false)}>
+      {exerciseId && (
+        <Dialog open={isDeleteModalVisible} onClose={handleCloseDeleteModal} intent="danger">
           <Dialog.Icon />
           <Dialog.Content>
-            <Dialog.Title>Delete &apos;{exercise.name}&apos;?</Dialog.Title>
+            <Dialog.Title>Delete {exercise?.name ? `"${exercise.name}"` : 'Exercise'}?</Dialog.Title>
             <Dialog.Description>
-              Are you sure you want to delete this exercise? All of the data attached to this exercise will be deleted
-              forever. This action cannot be undone.
+              Are you sure you want to delete this exercise? All of the data attached to this exercise such as template
+              exercises or this exercises history will be deleted forever. This action cannot be undone.
             </Dialog.Description>
           </Dialog.Content>
           <Dialog.Actions>
             <Button
               intent="danger"
-              onPress={() => deleteMutation.mutate(exercise.id)}
+              onPress={() => deleteMutation.mutate(exerciseId)}
               loading={deleteMutation.isLoading}
             >
-              <Button.Text>Delete exercise</Button.Text>
+              <Button.Text>{deleteMutation.isLoading ? 'Deleting exercise...' : 'Delete exercise'}</Button.Text>
             </Button>
-            <Button intent="tertiary" onPress={() => setIsDeleteModalVisible(false)} className="mt-md">
+            <Button intent="tertiary" onPress={handleCloseDeleteModal} className="mt-md">
               <Button.Text>Cancel</Button.Text>
             </Button>
           </Dialog.Actions>
@@ -124,21 +126,21 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
 
       <Layout
         className="space-y-lg"
-        title={exercise ? 'Update Exercise' : 'Create Exercise'}
+        title={exerciseId ? 'Update Exercise' : 'Create Exercise'}
         description={
-          exercise
+          exerciseId
             ? "Here is where you can edit the exercises you've previously created which are referenced throughout the app"
             : 'Here is where you can create the exercises that will be referenced throughout the app'
         }
         titleRightSection={
-          exercise && (
+          exerciseId && (
             <Anchor intent="danger" onPress={() => setIsDeleteModalVisible(true)}>
               Delete exercise
             </Anchor>
           )
         }
       >
-        {isLoading && queryEnabled ? (
+        {isLoading && exerciseId ? (
           <View className="flex-1 items-center justify-center">
             <Loader />
           </View>
@@ -220,8 +222,8 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
                   onPress={onFormSubmit}
                 >
                   <Button.Text>
-                    {exercise && (updateMutation.isLoading ? 'Updating exercise...' : 'Update exercise')}
-                    {!exercise && (createMutation.isLoading ? 'Creating exercise...' : 'Create exercise')}
+                    {exerciseId && (updateMutation.isLoading ? 'Updating exercise...' : 'Update exercise')}
+                    {!exerciseId && (createMutation.isLoading ? 'Creating exercise...' : 'Create exercise')}
                   </Button.Text>
                 </Button>
               </View>

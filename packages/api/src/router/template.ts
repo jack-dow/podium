@@ -2,7 +2,7 @@ import { Prisma, prisma } from '@podium/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { TemplateCreateSchema, TemplateUpdateSchema } from '../schemas/template';
-import { ObjectWithId } from '../schemas/util';
+import { Id, ObjectWithId } from '../schemas/util';
 import { publicProcedure, router } from '../trpc';
 import { defaultTemplateExerciseSelect } from './templateExercise';
 import { defaultTemplateSetSelect } from './templateSet';
@@ -104,45 +104,36 @@ export const templateRouter = router({
 
   update: publicProcedure.input(TemplateUpdateSchema).mutation(async ({ input }) => {
     const { templateExercises, templateSets, ...template } = input;
-    const promises = [];
+    const transactions = [];
 
-    promises.push(
-      prisma.$transaction([
-        // Template
+    if (template.name) {
+      transactions.push(
         prisma.template.update({
           where: { id: template.id },
           data: { name: template.name },
         }),
+      );
+    }
+
+    if (templateExercises.deleted) {
+      transactions.push(
         prisma.templateExercise.deleteMany({
           where: { id: { in: templateExercises.deleted } },
         }),
-        prisma.templateSet.deleteMany({
-          where: { id: { in: templateSets.deleted } },
-        }),
-      ]),
-    );
-
-    async function createNewTemplateExercisesAndSets() {
-      await prisma.templateExercise.deleteMany({
-        where: { id: { in: templateExercises.deleted } },
-      });
-      prisma.templateSet.createMany({
-        data: templateSets.new,
-      });
+      );
     }
 
-    promises.push(createNewTemplateExercisesAndSets());
-
     for (const updatedTemplateExercise of templateExercises.updated) {
-      promises.push(
+      transactions.push(
         prisma.templateExercise.update({
           where: { id: updatedTemplateExercise.id },
           data: updatedTemplateExercise,
         }),
       );
     }
+
     for (const updatedTemplateSet of templateSets.updated) {
-      promises.push(
+      transactions.push(
         prisma.templateSet.update({
           where: { id: updatedTemplateSet.id },
           data: updatedTemplateSet,
@@ -150,6 +141,35 @@ export const templateRouter = router({
       );
     }
 
-    await Promise.all(promises);
+    if (templateSets.deleted) {
+      transactions.push(
+        prisma.templateSet.deleteMany({
+          where: { id: { in: templateSets.deleted } },
+        }),
+      );
+    }
+
+    async function createNewTemplateExercisesAndSets() {
+      if (templateExercises.new) {
+        await prisma.templateExercise.createMany({
+          data: templateExercises.new,
+        });
+      }
+      if (templateSets.new) {
+        await prisma.templateSet.createMany({
+          data: templateSets.new,
+        });
+      }
+    }
+
+    transactions.push(createNewTemplateExercisesAndSets());
+
+    await Promise.all(transactions);
+  }),
+
+  delete: publicProcedure.input(Id).mutation(async ({ input: id }) => {
+    await prisma.template.delete({
+      where: { id },
+    });
   }),
 });

@@ -3,15 +3,17 @@ import { TemplateExerciseCreateSchema, TemplateExerciseUpdateSchema } from './te
 import { TemplateSetCreateSchema, TemplateSetUpdateSchema } from './templateSet';
 import { Id, ObjectWithId } from './util';
 
+const Name = z.string().min(1).max(64);
+
 export const TemplateCreateSchema = ObjectWithId.extend({
-  name: z.string().min(1).max(64),
+  name: Name,
   userId: Id,
   templateExercises: z.array(TemplateExerciseCreateSchema),
   templateSets: z.array(TemplateSetCreateSchema),
 });
 
 export const TemplateUpdateSchema = ObjectWithId.extend({
-  name: z.string().min(1).max(64),
+  name: Name.optional(),
   userId: Id,
   templateExercises: z.object({
     new: z.array(TemplateExerciseCreateSchema),

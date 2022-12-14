@@ -47,9 +47,7 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
       });
     } else {
       const template = getSubmittableTemplate() as TemplateUpdate;
-      templateUpdateMutation.mutate(template, {
-        onSuccess: () => setTemplateSubmitted(true),
-      });
+      templateUpdateMutation.mutate(template, { onSuccess: () => setTemplateSubmitted(true) });
     }
   };
 
@@ -67,7 +65,10 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
           loading={isTemplateNew ? templateCreateMutation.isLoading : templateUpdateMutation.isLoading}
           onPress={handleSubmit}
         >
-          <Button.Text>Create Template</Button.Text>
+          <Button.Text>
+            {isTemplateNew && (templateCreateMutation.isLoading ? 'Creating Template...' : 'Create Template')}
+            {!isTemplateNew && (templateUpdateMutation.isLoading ? 'Updating Template...' : 'Update Template')}
+          </Button.Text>
         </Button>
       </View>
     </ScrollView>

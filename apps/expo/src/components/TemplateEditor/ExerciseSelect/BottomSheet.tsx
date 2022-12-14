@@ -196,7 +196,7 @@ function BottomSheetItem({ exercise }: BottomSheetItemProps) {
   const handleAddPress = () => {
     if (!templateExerciseIds || (templateExerciseIds && templateExerciseIds.length < 10)) {
       setValue((prev) => prev + 1);
-      addTemplateExercise(exercise.id);
+      addTemplateExercise(exercise);
     }
   };
 

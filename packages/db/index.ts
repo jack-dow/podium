@@ -1,4 +1,4 @@
-import { PrismaClient, set } from '@prisma/client';
+import { Prisma, PrismaClient, set } from '@prisma/client';
 declare global {
   // allow global `var` declarations
   // eslint-disable-next-line no-var
@@ -16,3 +16,14 @@ export * from '@prisma/client';
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma;
 }
+
+export type TemplateWithExercisesAndSets = Prisma.TemplateGetPayload<{
+  include: {
+    templateExercises: { include: { exercise: true } };
+    templateSets: true;
+  };
+}>;
+
+export type TemplateExerciseWithExercise = Prisma.TemplateExerciseGetPayload<{
+  include: { exercise: true };
+}>;

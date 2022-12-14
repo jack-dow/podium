@@ -47,7 +47,7 @@ export const exerciseRouter = router({
             }
           : undefined,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'asc',
         },
       });
 

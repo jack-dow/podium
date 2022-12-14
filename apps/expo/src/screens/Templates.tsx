@@ -30,7 +30,7 @@ export const TemplatesScreen = ({ navigation }: Props) => {
         title="Templates"
         description="Here you can manage the templates that are referenced in your plans and workouts"
         titleRightSection={
-          <Anchor onPress={() => navigation.navigate('ExerciseEditor', { exerciseId: null })}>New exercise</Anchor>
+          <Anchor onPress={() => navigation.navigate('TemplateEditor', { templateId: null })}>New template</Anchor>
         }
       >
         {isLoading ? (
