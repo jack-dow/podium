@@ -1,89 +1,61 @@
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { createContext, useCallback, useContext, useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { createStore, useStore } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import produce from 'immer';
-import { createContext, useCallback, useContext, useRef } from 'react';
 import type { Exercise, TemplateExerciseWithExercise, TemplateSet, TemplateWithExercisesAndSets } from '@podium/db';
+import type { TemplateCreate, TemplateExerciseUpdate, TemplateSetUpdate, TemplateUpdate } from '@podium/api';
 
-import { useFocusEffect } from '@react-navigation/native';
-import type {
-  TemplateCreate,
-  TemplateExerciseCreate,
-  TemplateExerciseUpdate,
-  TemplateSetCreate,
-  TemplateSetUpdate,
-  TemplateUpdate,
-} from '@podium/api';
-import { getAuthSafeUser } from '@/stores/global/auth';
-import { trpc } from '@/trpc';
-
-type ExerciseId = string;
-type TemplateId = string;
-type TemplateExerciseId = string;
-type TemplateSetId = string;
-
-type Position = number;
-
-type TemplateExerciseNew = Omit<TemplateExerciseCreate, 'position'> & { exercise: Exercise };
-type TemplateExerciseUpdated = TemplateExerciseUpdate;
-
-type TemplateSetNew = Omit<TemplateSetCreate, 'position'>;
-type TemplateSetUpdated = TemplateSetUpdate;
-
-type TemplateExercisePositions = Record<TemplateExerciseId, Position>;
-type TemplateSetPositions = Record<TemplateExerciseId, Record<TemplateSetId, Position>>;
+import { getAuthSafeUser } from '../global/AuthProvider';
 
 interface TemplateStoreProps {
-  id: TemplateId;
+  id: string;
   name: string;
   templateExercises: TemplateExerciseWithExercise[];
   templateSets: TemplateSet[];
-  isLoading: boolean;
-  isError: boolean;
 }
 
 interface TemplateStoreState {
-  id: TemplateId;
+  id: string;
   name: string;
   changed: { name: boolean };
 
   isNew: boolean;
-  isLoading: boolean;
-  isError: boolean;
 
   templateExercises: {
-    /** An array of all the template exercises that currently exist in the db for this template and haven't been modified by the user */
-    existing: Record<TemplateExerciseId, TemplateExerciseWithExercise>;
-    /** An object of all the new template exercises created  */
-    new: Record<TemplateExerciseId, TemplateExerciseNew>;
-    /** An object of all the existing template exercises that have been modified */
-    updated: Record<TemplateExerciseId, TemplateExerciseUpdated>;
-    /** An array of all the template exercise ids which currently exist in the db but the user has deleted but not submitted yet. */
-    deleted: Array<TemplateExerciseId>;
-    /** An object of the current positions of all the exercises */
-    positions: TemplateExercisePositions;
+    /** An object with all the template exercises, including those currently existing in the db and any updated yet to be saved, as well as any newly created exercises */
+    all: Record<string, TemplateExerciseWithExercise>;
+    /** An array of the template exercise ids that exist in the db  */
+    existing: Set<string>;
+    /** An array of the template exercise ids that are new  */
+    new: Set<string>;
+    /** An array of the template exercise ids that have been updated */
+    updated: Set<string>;
+    /** An array of all the template exercise ids that currently exist in the db but have been deleted but not saved yet */
+    deleted: Set<string>;
     /** Useful filters to help access specific template exercises quicker */
     filters: {
       /** An object of exercise ids and the array of template exercise ids that relate to it */
-      byExerciseId: Record<ExerciseId, Array<TemplateExerciseId>>;
+      byExerciseId: Record<string, Set<string>>;
     };
   };
   templateSets: {
-    /** An array of all the template sets that currently exist in the db for this template and haven't been modified by the user */
-    existing: Record<TemplateSetId, TemplateSet>;
-    /** An object of all the new template sets created  */
-    new: Record<TemplateSetId, TemplateSetNew>;
-    /** An object of all the existing template sets that have been modified */
-    updated: Record<TemplateSetId, TemplateSetUpdated>;
-    /** An array of all the template set ids which currently exist in the db but the user has deleted but not submitted yet. */
-    deleted: Array<TemplateSetId>;
-    /** An object of the current order of the template sets grouped by their template exercise id */
-    positions: TemplateSetPositions;
+    /** An object with all the template sets, including those currently existing in the db and any updated yet to be saved, as well as any newly created sets */
+    all: Record<string, TemplateSet>;
+    /** An array of the template set ids that exist in the db  */
+    existing: Set<string>;
+    /** An array of the template set ids that are new  */
+    new: Set<string>;
+    /** An array of the template set ids that have been updated */
+    updated: Set<string>;
+    /** An array of all the template set ids that currently exist in the db but have been deleted but not saved yet */
+    deleted: Set<string>;
     /** Useful filters to help access specific template sets quicker */
     filters: {
       /** An object of template exercise ids and the array of template set ids that relate to it */
-      byTemplateExerciseId: Record<TemplateExerciseId, Array<TemplateSetId>>;
+      byTemplateExerciseId: Record<string, Set<string>>;
     };
   };
 }
@@ -100,17 +72,17 @@ interface TemplateStoreAPI {
     /** Update certain properties of the template exercise */
     updateTemplateExercise(updatedTemplateExercise: TemplateExerciseUpdate): void;
     /** Remove a template exercise and it's template sets by passing the template exercise id */
-    removeTemplateExercise(templateExerciseId: TemplateExerciseId): void;
+    removeTemplateExercise(templateExerciseId: string): void;
     /** Pass the updated positions to set the positions for the template exercises  */
-    syncTemplateExercisePositions(positions: TemplateExercisePositions): void;
+    setTemplateExercisePositions(newPositions: Record<string, number>): void;
 
     // Template Sets
     /** Add a new template set by passing the template exercise id which the new template set will be generated by */
-    addTemplateSet(templateExerciseId: TemplateExerciseId): void;
+    addTemplateSet(templateSetId: string): void;
     /** Update certain properties of the template set */
     updateTemplateSet(updatedTemplateSet: TemplateSetUpdate): void;
     /** Remove a template set by passing the template set id */
-    removeTemplateSet(templateSetId: TemplateSetId): void;
+    removeTemplateSet(templateSetId: string): void;
 
     // Utils
     /** Returns a template object that is formatted correctly for submission */
@@ -127,23 +99,21 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
     changed: { name: false },
 
     isNew: !initProps?.id,
-    isLoading: initProps?.isLoading || false,
-    isError: initProps?.isError || false,
 
     templateExercises: {
-      existing: {},
-      new: {},
-      updated: {},
-      deleted: [],
-      positions: {},
+      all: {},
+      existing: new Set(),
+      new: new Set(),
+      updated: new Set(),
+      deleted: new Set(),
       filters: { byExerciseId: {} },
     },
     templateSets: {
-      existing: {},
-      new: {},
-      updated: {},
-      deleted: [],
-      positions: {},
+      all: {},
+      existing: new Set(),
+      new: new Set(),
+      updated: new Set(),
+      deleted: new Set(),
       filters: { byTemplateExerciseId: {} },
     },
   };
@@ -154,42 +124,39 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
       for (let i = 0; i < sortedTemplateExercises.length; i++) {
         const { position, ...templateExercise } = sortedTemplateExercises[i]!;
 
-        // Add template exercise to the existing object
-        draft.templateExercises.existing[templateExercise.id] = { ...templateExercise, position: i };
+        // Add template exercise to the all object
+        draft.templateExercises.all[templateExercise.id] = { ...templateExercise, position: i };
 
         const { id, exerciseId } = templateExercise;
 
+        // Add the template exercise to the existing array
+        draft.templateExercises.existing.add(id);
+
         // Add template exercise to it's byExerciseId filter
         if (!draft.templateExercises.filters.byExerciseId[exerciseId]) {
-          draft.templateExercises.filters.byExerciseId[exerciseId] = [];
+          draft.templateExercises.filters.byExerciseId[exerciseId] = new Set();
         }
-        draft.templateExercises.filters.byExerciseId[exerciseId]?.push(id);
-
-        // Add the position of the existing template exercise, ensuring the position is correct
-        draft.templateExercises.positions[id] = i;
+        draft.templateExercises.filters.byExerciseId[exerciseId]?.add(id);
 
         // If position is incorrect, add it to the updated template exercises to be fixed
-        if (position !== i) draft.templateExercises.updated[id] = { id, position: i };
+        if (position !== i) draft.templateExercises.updated.add(id);
       }
     }
     if (initProps?.templateSets) {
       for (const templateSet of initProps.templateSets) {
-        // Add template set to the existing object
-        draft.templateSets.existing[templateSet.id] = templateSet;
+        // Add template set to the all object
+        draft.templateSets.all[templateSet.id] = templateSet;
 
-        const { id, templateExerciseId, position } = templateSet;
+        const { id, templateExerciseId } = templateSet;
+
+        // Add the template set to the existing array
+        draft.templateSets.existing.add(id);
 
         // Add template set to it's byTemplateExerciseId object
         if (!draft.templateSets.filters.byTemplateExerciseId[templateExerciseId]) {
-          draft.templateSets.filters.byTemplateExerciseId[templateExerciseId] = [];
+          draft.templateSets.filters.byTemplateExerciseId[templateExerciseId] = new Set();
         }
-        draft.templateSets.filters.byTemplateExerciseId[templateExerciseId]?.push(id);
-
-        // Add the position of the template set
-        if (!draft.templateSets.positions[templateExerciseId]) {
-          draft.templateSets.positions[templateExerciseId] = {};
-        }
-        draft.templateSets.positions[templateExerciseId]![id] = position;
+        draft.templateSets.filters.byTemplateExerciseId[templateExerciseId]?.add(id);
       }
     }
   });
@@ -213,89 +180,66 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
             const user = getAuthSafeUser();
             const { id: exerciseId } = exercise;
 
-            const templateExercise: TemplateExerciseNew = {
+            const templateExercise: TemplateExerciseWithExercise = {
               id: templateExerciseId,
               exerciseId,
+              exercise,
               templateId: template.id,
+              createdAt: new Date(),
               notes: '',
               userId: user.id,
-              exercise,
+              position: Object.keys(template.templateExercises.all).length,
             };
+
+            // Add the Template Exercise to the all object and the new array
+            template.templateExercises.all[templateExercise.id] = templateExercise;
+            template.templateExercises.new.add(templateExercise.id);
 
             // Add the Template Exercise id to the byExerciseId object
             if (!template.templateExercises.filters.byExerciseId[exerciseId]) {
-              template.templateExercises.filters.byExerciseId[exerciseId] = [];
+              template.templateExercises.filters.byExerciseId[exerciseId] = new Set();
             }
-            template.templateExercises.filters.byExerciseId[exerciseId]?.push(templateExercise.id);
-
-            // Add the Template Exercise to the new Template Exercises object.
-            template.templateExercises.new[templateExercise.id] = templateExercise;
-
-            // Add Template Exercise to positions
-            template.templateExercises.positions[templateExercise.id] = Object.keys(
-              template.templateExercises.positions,
-            ).length;
+            template.templateExercises.filters.byExerciseId[exerciseId]?.add(templateExercise.id);
           });
 
           // Create 3 sets for the new exercise
-          for (let i = 0; i < 1; i++) {
+          for (let i = 0; i < 3; i++) {
             get().api.addTemplateSet(templateExerciseId);
           }
         },
         updateTemplateExercise: (updatedTemplateExercise) =>
           set((template) => {
             const { id, ...changes } = updatedTemplateExercise;
-            // Is existing
-            if (template.templateExercises.existing[id]) {
-              template.templateExercises.updated[id] = { id, ...changes };
-            }
-            // Is new
-            if (template.templateExercises.new[id]) {
-              template.templateExercises.new[id] = {
-                ...template.templateExercises.new[id]!,
-                ...changes,
-              };
-            }
-            // is updated
-            if (template.templateExercises.updated[id]) {
-              template.templateExercises.updated[id] = {
-                ...template.templateExercises.updated[id]!,
+            if (template.templateExercises.all[id]) {
+              template.templateExercises.all[id] = {
+                ...template.templateExercises.all[id]!,
                 ...changes,
               };
             }
           }),
         removeTemplateExercise: (templateExerciseId) => {
           set((template) => {
-            // Is Existing
-            if (template.templateExercises.existing[templateExerciseId]) {
-              delete template.templateExercises.existing[templateExerciseId];
-              template.templateExercises.deleted.push(templateExerciseId);
-            }
-            // Is new
-            if (template.templateExercises.new[templateExerciseId]) {
-              const exerciseId = template.templateExercises.new[templateExerciseId]!.exerciseId;
-              delete template.templateExercises.new[templateExerciseId];
-              template.templateExercises.filters.byExerciseId[exerciseId] =
-                template.templateExercises.filters.byExerciseId[exerciseId]!.filter((id) => id !== templateExerciseId);
-            }
-            // Is Updated
-            if (template.templateExercises.updated[templateExerciseId]) {
-              delete template.templateExercises.updated[templateExerciseId];
-              template.templateExercises.deleted.push(templateExerciseId);
+            const templateExercise = template.templateExercises.all[templateExerciseId];
+
+            if (!templateExercise) return;
+
+            // If template exercise exists in the db, mark it for deletion
+            if (template.templateExercises.existing.has(templateExerciseId)) {
+              template.templateExercises.existing.delete(templateExerciseId);
+              template.templateExercises.deleted.add(templateExerciseId);
             }
 
-            // Remove template exercise from Template Exercise positions
-            const newPositions: TemplateExercisePositions = {};
-            const swapped = Object.entries(template.templateExercises.positions).map(([key, value]) => [value, key]);
-            const ids = swapped
-              .sort()
-              .map(([_, value]) => value as string)
-              .filter((id) => id !== templateExerciseId);
+            // Update the positions of the template exercises after this one
+            for (const id in template.templateExercises.all) {
+              const otherTemplateExercise = template.templateExercises.all[id];
+              if (otherTemplateExercise && otherTemplateExercise.position > templateExercise.position) {
+                otherTemplateExercise.position--;
+              }
+            }
 
-            ids.forEach((id, index) => {
-              newPositions[id] = index;
-            });
-            template.templateExercises.positions = newPositions;
+            // Remove the template exercise
+            template.templateExercises.filters.byExerciseId[templateExercise.exerciseId]?.delete(templateExerciseId);
+            delete template.templateExercises.all[templateExerciseId];
           });
 
           // Remove the template sets associated with this template exercise
@@ -306,103 +250,76 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
             }
           }
         },
-        syncTemplateExercisePositions: (positions) =>
+        setTemplateExercisePositions: (templateExercisePositions) =>
           set((template) => {
-            template.templateExercises.positions = positions;
+            for (const id in templateExercisePositions) {
+              const templateExercise = template.templateExercises.all[id];
+              if (templateExercise && templateExercise.position !== templateExercisePositions[id]) {
+                template.templateExercises.all[id]!.position = templateExercisePositions[id]!;
+                template.templateExercises.updated.add(id);
+              }
+            }
           }),
 
         // Template Sets
         addTemplateSet: (templateExerciseId) =>
           set((template) => {
             const user = getAuthSafeUser();
-            const templateSet: TemplateSetNew = {
+            const templateSet: TemplateSet = {
               id: uuidv4(),
+              createdAt: new Date(),
               templateId: template.id,
               templateExerciseId,
               type: 'working',
               reps: '',
               userId: user.id,
+              position: Object.keys(template.templateSets.all).length,
             };
+
+            // Add the Template Set to the all object and the new array
+            template.templateSets.all[templateSet.id] = templateSet;
+            template.templateSets.new.add(templateSet.id);
 
             // Add the Template Set id to the byTemplateExerciseId object
             if (!template.templateSets.filters.byTemplateExerciseId[templateExerciseId]) {
-              template.templateSets.filters.byTemplateExerciseId[templateExerciseId] = [];
+              template.templateSets.filters.byTemplateExerciseId[templateExerciseId] = new Set();
             }
-            template.templateSets.filters.byTemplateExerciseId[templateExerciseId]?.push(templateSet.id);
-
-            // Add the Template Set to the new Template Sets object.
-            template.templateSets.new[templateSet.id] = templateSet;
-
-            // Add the new template set to the positions object of its template exercise
-            if (!template.templateSets.positions[templateExerciseId]) {
-              template.templateSets.positions[templateExerciseId] = {};
-            }
-            template.templateSets.positions[templateExerciseId]![templateSet.id] = Object.keys(
-              template.templateSets.positions[templateExerciseId]!,
-            ).length;
+            template.templateSets.filters.byTemplateExerciseId[templateExerciseId]?.add(templateSet.id);
           }),
         updateTemplateSet: (updatedTemplateSet) =>
           set((template) => {
             const { id, ...changes } = updatedTemplateSet;
-            // Is Existing
-            if (template.templateSets.existing[id]) {
-              template.templateSets.updated[id] = { id, ...changes };
-            }
-            // Is new
-            if (template.templateSets.new[id]) {
-              template.templateSets.new[id] = {
-                ...template.templateSets.new[id]!,
-                ...changes,
-              };
-            }
-            // Is updated
-            if (template.templateSets.updated[id]) {
-              template.templateSets.updated[id] = {
-                ...template.templateSets.updated[id]!,
+
+            if (template.templateSets.all[id]) {
+              template.templateSets.all[id] = {
+                ...template.templateSets.all[id]!,
                 ...changes,
               };
             }
           }),
         removeTemplateSet: (templateSetId) =>
           set((template) => {
-            // Is existing
-            if (template.templateSets.existing[templateSetId]) {
-              delete template.templateSets.existing[templateSetId];
-              template.templateSets.deleted.push(templateSetId);
-            }
-            // Is new
-            if (template.templateSets.new[templateSetId]) {
-              const templateExerciseId = template.templateSets.new[templateSetId]!.templateExerciseId;
-              delete template.templateSets.new[templateSetId];
-              const templateExerciseSetFilter = template.templateSets.filters.byTemplateExerciseId[templateExerciseId];
-              if (templateExerciseSetFilter) {
-                template.templateSets.filters.byTemplateExerciseId[templateExerciseId] =
-                  templateExerciseSetFilter!.filter((id) => id !== templateSetId);
-              }
-            }
-            // Is updated
-            if (template.templateSets.updated[templateSetId]) {
-              delete template.templateSets.updated[templateSetId];
-              template.templateSets.deleted.push(templateSetId);
+            const templateSet = template.templateSets.all[templateSetId];
+
+            if (!templateSet) return;
+
+            // If template set exists in the db, mark it for deletion
+            if (template.templateSets.existing.has(templateSetId)) {
+              template.templateSets.existing.delete(templateSetId);
+              template.templateSets.deleted.add(templateSetId);
             }
 
-            // Update all the template set positions of the same template exercise
-            Object.entries(template.templateSets.positions).every(([templateExerciseId, templateSetPositions]) => {
-              if (templateSetPositions[templateSetId] != null) {
-                const newPositions: Record<TemplateSetId, Position> = {};
-                const swapped = Object.entries(templateSetPositions).map(([key, value]) => [value, key]);
-                const ids = swapped
-                  .sort()
-                  .map(([_, value]) => value as string)
-                  .filter((id) => id !== templateSetId);
-                ids.forEach((id, index) => {
-                  newPositions[id] = index;
-                });
-                template.templateSets.positions[templateExerciseId] = newPositions;
-                return false;
+            // Update the positions of the template sets after this one
+            for (const id in template.templateSets.all) {
+              const otherTemplateSet = template.templateSets.all[id];
+              if (otherTemplateSet && otherTemplateSet.position > templateSet.position) {
+                otherTemplateSet.position--;
               }
-              return true;
-            });
+            }
+
+            // Remove the template set
+            template.templateSets.filters.byTemplateExerciseId[templateSet.templateExerciseId]?.delete(templateSetId);
+            delete template.templateSets.all[templateSetId];
           }),
 
         // Utils
@@ -410,69 +327,36 @@ const createTemplateStore = (initProps?: Partial<TemplateStoreProps>) => {
           const userId = getAuthSafeUser().id;
           const template = get();
 
-          // Template Exercises
-          const templateExercisesNew: TemplateUpdate['templateExercises']['new'] = [];
-
-          for (const templateExerciseId in template.templateExercises.new) {
-            const templateExercise = template.templateExercises.new[templateExerciseId]!;
-            const position = template.templateExercises.positions[templateExerciseId];
-            if (position != null) {
-              templateExercisesNew.push({
-                ...templateExercise,
-                position,
-              });
-            }
-          }
-
-          // Template Sets
-          const templateSetsNew: TemplateUpdate['templateSets']['new'] = [];
-
-          for (const templateSetId in template.templateSets.new) {
-            const templateSet = template.templateSets.new[templateSetId]!;
-            const position = template.templateSets.positions[templateSet.templateExerciseId]![templateSetId];
-            if (position != null) {
-              templateSetsNew.push({
-                ...templateSet,
-                position,
-              });
-            }
-          }
-
           if (template.isNew) {
-            const templateCreate: TemplateCreate = {
+            const templateCreate = {
               id: template.id,
               name: template.name,
               userId,
-              templateExercises: templateExercisesNew,
-              templateSets: templateSetsNew,
+              templateExercises: Object.values(template.templateExercises.all).map(
+                ({ exercise: _, ...templateExercise }) => templateExercise,
+              ),
+              templateSets: Object.values(template.templateSets.all),
             };
             return templateCreate;
           }
 
-          const templateExercisePositionChanged: TemplateUpdate['templateExercises']['updated'] = [];
-
-          // Check if the position has been changed on any of the existing template exercises
-          for (const templateExerciseId in template.templateExercises.existing) {
-            const templateExercise = template.templateExercises.existing[templateExerciseId]!;
-            const position = template.templateExercises.positions[templateExerciseId];
-            if (position != null && position !== templateExercise.position) {
-              templateExercisePositionChanged.push({ id: templateExercise.id, position });
-            }
-          }
-
-          const templateUpdate: TemplateUpdate = {
+          const templateUpdate = {
             id: template.id,
             name: template.changed.name ? template.name : undefined,
             userId,
             templateExercises: {
-              new: templateExercisesNew,
-              updated: Object.values(template.templateExercises.updated).concat(templateExercisePositionChanged),
-              deleted: template.templateExercises.deleted,
+              all: Object.values(template.templateExercises.all).map(
+                ({ exercise: _, ...templateExercise }) => templateExercise,
+              ),
+              new: Array.from(template.templateExercises.new),
+              updated: Array.from(template.templateExercises.updated),
+              deleted: Array.from(template.templateExercises.deleted),
             },
             templateSets: {
-              new: templateSetsNew,
-              updated: Object.values(template.templateSets.updated),
-              deleted: template.templateSets.deleted,
+              all: Object.values(template.templateSets.all),
+              new: Array.from(template.templateSets.new),
+              updated: Array.from(template.templateSets.updated),
+              deleted: Array.from(template.templateSets.deleted),
             },
           };
           return templateUpdate;
@@ -531,140 +415,45 @@ export function TemplateProvider({ children, template, isLoading }: React.PropsW
   return <TemplateContext.Provider value={storeRef.current || null}>{children}</TemplateContext.Provider>;
 }
 
+/** Subscribe to the value of the template API */
 export const useTemplateAPI = () => useTemplateContext((s) => s.api);
 
-// Template Info
+// Template Info Hooks
+/** Subscribe to the value of the template id */
 export const useTemplateId = () => useTemplateContext((s) => s.id);
+/** Subscribe to the value of the template name */
 export const useTemplateName = () => useTemplateContext((s) => s.name);
+/** Subscribe to the value of the template isNew variable  */
 export const useTemplateIsNew = () => useTemplateContext((s) => s.isNew);
-export const useTemplateIsLoading = () => useTemplateContext((s) => s.isLoading);
-export const useTemplateIsError = () => useTemplateContext((s) => s.isError);
 
-// Template Exercise
-/** Returns an array of all the template exercise ids in order of their positions */
-export function useTemplateExerciseIds() {
-  const positions = useTemplateContext((s) => s.templateExercises.positions);
-  const swapped = Object.entries(positions).map(([key, value]) => [value, key]);
-  const ids = swapped.sort().map(([_, value]) => value as string);
-  return ids;
-}
-/** Returns all the given template sets that relate to the provided exercise id */
-export function useTemplateExerciseIdsByExerciseId(exerciseId: ExerciseId): TemplateExerciseId[] | null {
-  const templateExercises = useTemplateContext((s) => s.templateExercises.filters.byExerciseId[exerciseId] ?? null);
-  return templateExercises;
-}
+// Template Exercise Hooks
+/** Subscribe to the value of the template exercises. (Ordered correctly by their position) */
+export const useTemplateExercises = () =>
+  useTemplateContext((s) => Object.values(s.templateExercises.all).sort((a, b) => a.position - b.position));
 
-/** Returns the full template exercise of the given template exercise id or null if that id does not exist */
-export function useTemplateExercise(templateExerciseId: TemplateExerciseId) {
-  const existingTemplateExercise: TemplateExerciseWithExercise | null = useTemplateContext(
-    (s) => s.templateExercises.existing[templateExerciseId] ?? null,
-  );
-  const newTemplateExercise: TemplateExerciseNew | null = useTemplateContext(
-    (s) => s.templateExercises.new[templateExerciseId] ?? null,
-  );
-  const updatedTemplateExercise: TemplateExerciseUpdated | null = useTemplateContext(
-    (s) => s.templateExercises.updated[templateExerciseId] ?? null,
+/** Subscribe to the template exercises that relate to the provided exercise id */
+export const useTemplateExerciseIdsByExerciseId = (exerciseId: string): Set<string> | null =>
+  useTemplateContext((s) => s.templateExercises.filters.byExerciseId[exerciseId] ?? null);
+
+/** Subscribe to a template exercise's values. (Returns null if template exercise id does not exist) */
+export const useTemplateExercise = (templateExerciseId: string) =>
+  useTemplateContext((s) => s.templateExercises.all[templateExerciseId] ?? null);
+
+// Template Set Hooks
+/** Subscribe the template sets for the given template exercise id. (Ordered correctly by their position) */
+export function useTemplateSetsByTemplateExerciseId(templateExerciseId: string): TemplateSet[] {
+  const templateSets = useTemplateContext((s) => s.templateSets.all);
+  const filteredTemplateSetIds = useTemplateContext(
+    (s) => s.templateSets.filters.byTemplateExerciseId[templateExerciseId] ?? null,
   );
 
-  const {
-    data: exercise,
-    isLoading: isExerciseLoading,
-    isError: isExerciseError,
-  } = trpc.exercise.byId.useQuery(
-    { id: newTemplateExercise?.exerciseId as string },
-    { enabled: !!newTemplateExercise },
-  );
+  if (!filteredTemplateSetIds) return [];
 
-  // If it's existing but has been updated
-  if (updatedTemplateExercise && existingTemplateExercise) {
-    return {
-      templateExercise: {
-        ...existingTemplateExercise,
-        ...updatedTemplateExercise,
-      },
-      isLoading: false,
-      isError: false,
-    };
-  }
-
-  // If it's existing and has not been updated
-  if (existingTemplateExercise != null) {
-    return {
-      templateExercise: existingTemplateExercise,
-      isLoading: false,
-      isError: false,
-    };
-  }
-
-  // If it's new template exercise
-  if (newTemplateExercise) {
-    return {
-      templateExercise: {
-        ...newTemplateExercise,
-        exercise,
-      },
-      isLoading: isExerciseLoading,
-      isError: isExerciseError,
-    };
-  }
-
-  // If an invalid/non existent id has been passed
-  return { templateExercise: null, isLoading: false, isError: true };
+  return Object.values(templateSets)
+    .filter((templateSet) => filteredTemplateSetIds.has(templateSet.id))
+    .sort((a, b) => a.position - b.position);
 }
 
-/** Returns the template exercise positions object from the store */
-export const useTemplateExercisePositions = () => useTemplateContext((s) => s.templateExercises.positions);
-
-// Template Sets
-/** Returns the template sets for the given template exercise id in order of their position */
-export function useTemplateSetIdsByTemplateExerciseId(templateExerciseId: TemplateExerciseId): TemplateSetId[] | null {
-  const positions = useTemplateContext((s) => s.templateSets.positions[templateExerciseId] ?? null);
-  if (!positions) return null;
-  const swapped = Object.entries(positions).map(([key, value]) => [value, key]);
-  const ids = swapped.sort().map(([_, value]) => value as string);
-  return ids;
-}
-
-/** Returns the full template set or null if that id does not exist  */
-export function useTemplateSet(templateSetId: TemplateSetId) {
-  const existingTemplateSet: TemplateSet | null = useTemplateContext(
-    (s) => s.templateSets.existing[templateSetId] ?? null,
-  );
-  const newTemplateSet: TemplateSetNew | null = useTemplateContext((s) => s.templateSets.new[templateSetId] ?? null);
-  const updatedTemplateSet: TemplateSetUpdated | null = useTemplateContext(
-    (s) => s.templateSets.updated[templateSetId] ?? null,
-  );
-
-  // If it's existing but has been updated
-  if (updatedTemplateSet && existingTemplateSet) {
-    return {
-      templateSet: {
-        ...existingTemplateSet,
-        ...updatedTemplateSet,
-      },
-
-      isLoading: false,
-      isError: false,
-    };
-  }
-
-  // If it's existing and has not been updated
-  if (existingTemplateSet) {
-    return {
-      templateSet: existingTemplateSet,
-      isLoading: false,
-      isError: false,
-    };
-  }
-
-  // If it's  new
-  if (newTemplateSet) {
-    return {
-      templateSet: newTemplateSet,
-      isLoading: false,
-      isError: false,
-    };
-  }
-  // Improper Id Passed
-  return { templateSet: null, isLoading: false, isError: true };
-}
+/** Subscribe to a template set's values. (Returns null if template set id does not exist) */
+export const useTemplateSet = (templateSetId: string) =>
+  useTemplateContext((s) => s.templateSets.all[templateSetId] ?? null);

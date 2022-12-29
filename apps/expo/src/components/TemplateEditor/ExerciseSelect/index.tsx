@@ -9,37 +9,45 @@ import { Input } from '@ui/inputs/Input';
 import { Button } from '@ui/buttons/Button';
 import { Alert } from '@ui/feedback/Alert';
 
-import { ExerciseSelectBottomSheet } from './BottomSheet';
+import type { Exercise } from '@podium/db';
 import { ExerciseSelectList } from './SelectList';
 
-import type { TabNavigationParamList } from '@/screens/TemplateEditor';
+import type { TemplateEditorTabParamList } from '@/screens/TemplateEditor';
 
-import { useTemplateAPI, useTemplateExerciseIds, useTemplateName } from '@/stores/local/TemplateProvider';
+import {
+  useTemplateAPI,
+  useTemplateExerciseIdsByExerciseId,
+  useTemplateExercises,
+  useTemplateName,
+} from '@/stores/local/TemplateProvider';
 import { Label } from '@/components/ui/inputs/Label';
+import { ExerciseSelectBottomSheet } from '@/components/ExerciseSelectBottomSheet';
 
-type ExerciseSelectTabProps = BottomTabScreenProps<TabNavigationParamList, 'ExerciseSelect'>;
+type ExerciseSelectTabProps = BottomTabScreenProps<TemplateEditorTabParamList, 'ExerciseSelect'>;
 
 export const stepsCompletedAtom = atom(0);
 
 export const ExerciseSelectTab = ({ route, navigation }: ExerciseSelectTabProps) => {
   const name = useTemplateName();
   const { setName } = useTemplateAPI();
-  const exercises = useTemplateExerciseIds();
+  const templateExerciseIds = useTemplateExercises();
 
   const [, setStepsCompleted] = useAtom(stepsCompletedAtom);
 
   const [nameError, setNameError] = useState<string | null>(null);
-  const [exercisesError, setExercisesError] = useState<string | null>(null);
+  const [templateExercisesError, setExercisesError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!name || exercises.length === 0) {
+    if (!name || templateExerciseIds.length === 0) {
       setStepsCompleted(0);
+    } else if (name && templateExerciseIds.length > 0) {
+      setStepsCompleted(1);
     }
-  }, [name, exercises.length, setStepsCompleted]);
+  }, [name, templateExerciseIds.length, setStepsCompleted]);
 
   useEffect(() => {
-    if (exercisesError && exercises.length > 0) setExercisesError(null);
-  }, [exercises.length, exercisesError]);
+    if (templateExercisesError && templateExerciseIds.length > 0) setExercisesError(null);
+  }, [templateExerciseIds.length, templateExercisesError]);
 
   const handleNextStepPress = () => {
     // Handling errors
@@ -47,27 +55,27 @@ export const ExerciseSelectTab = ({ route, navigation }: ExerciseSelectTabProps)
       setNameError('Please enter a name for your template.');
       return;
     }
-    if (exercises.length === 0) {
+    if (templateExerciseIds.length === 0) {
       setExercisesError('Please select at least one exercise.');
       return;
     }
 
     // If no errors, go to next step
-    if (!nameError && !exercisesError) {
+    if (!nameError && !templateExercisesError) {
       setStepsCompleted(1);
       navigation.navigate('SetsAndReps', { isTemplateNew: route.params.isTemplateNew });
     }
   };
 
   return (
-    <ScrollView className="space-y-lg">
+    <ScrollView className="my-base space-y-lg px-base">
       {/* Displaying errors */}
-      {(nameError || exercisesError) && (
+      {(nameError || templateExercisesError) && (
         <Alert intent="danger">
           <Alert.Title>There&apos;s a problem with your template</Alert.Title>
           <Alert.Content>
             {nameError && <Alert.ListItem>{nameError}</Alert.ListItem>}
-            {exercisesError && <Alert.ListItem>{exercisesError}</Alert.ListItem>}
+            {templateExercisesError && <Alert.ListItem>{templateExercisesError}</Alert.ListItem>}
           </Alert.Content>
         </Alert>
       )}
@@ -85,7 +93,9 @@ export const ExerciseSelectTab = ({ route, navigation }: ExerciseSelectTabProps)
         />
       </View>
 
-      <ExerciseSelectBottomSheet />
+      <ExerciseSelectBottomSheet
+        renderItem={(exercise) => <ExerciseSelectBottomSheetItem key={exercise.id} exercise={exercise} />}
+      />
 
       <ExerciseSelectList />
 
@@ -98,3 +108,26 @@ export const ExerciseSelectTab = ({ route, navigation }: ExerciseSelectTabProps)
     </ScrollView>
   );
 };
+
+function ExerciseSelectBottomSheetItem({ exercise }: { exercise: Exercise }) {
+  const templateExerciseIds = useTemplateExerciseIdsByExerciseId(exercise.id);
+  const { addTemplateExercise, removeTemplateExercise } = useTemplateAPI();
+
+  const handleAddPress = () => {
+    if (!templateExerciseIds || (templateExerciseIds && templateExerciseIds.size < 10)) addTemplateExercise(exercise);
+  };
+
+  const handleDeletePress = () => {
+    if (templateExerciseIds && templateExerciseIds.size > 0) {
+      removeTemplateExercise(Array.from(templateExerciseIds)[templateExerciseIds.size - 1] ?? '');
+    }
+  };
+  return (
+    <ExerciseSelectBottomSheet.Item
+      value={templateExerciseIds?.size ?? 0}
+      exercise={exercise}
+      onAddPress={handleAddPress}
+      onDeletePress={handleDeletePress}
+    />
+  );
+}

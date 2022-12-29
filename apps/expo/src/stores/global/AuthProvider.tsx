@@ -2,18 +2,18 @@ import type { Session, User } from '@supabase/supabase-js';
 import create from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-interface AuthState {
+interface AuthStoreState {
   session: Session | undefined | null;
   user: User | undefined | null;
 }
 
-interface AuthAPI {
+interface AuthStoreAPI {
   api: {
     setSession(newSession: Session | null): void;
   };
 }
 
-type AuthStore = AuthState & AuthAPI;
+type AuthStore = AuthStoreState & AuthStoreAPI;
 
 const useAuthStore = create(
   immer<AuthStore>((set) => ({

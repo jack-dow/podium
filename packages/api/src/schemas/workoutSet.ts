@@ -4,19 +4,22 @@ import { Id, ObjectWithId } from './util';
 const Reps = z.string();
 const Position = z.number();
 const Type = z.enum(['warmup', 'working', 'failure', 'dropset', 'backoff', 'cooldown']);
+const Weight = z.number();
 
-export const TemplateSetCreateSchema = ObjectWithId.extend({
-  templateExerciseId: Id,
-  templateId: Id,
+export const WorkoutSetCreateSchema = ObjectWithId.extend({
+  workoutExerciseId: Id,
+  workoutId: Id,
   createdAt: z.date(),
   userId: Id,
   reps: Reps,
   position: Position,
+  weight: Weight,
   type: Type,
 });
 
-export const TemplateSetUpdateSchema = ObjectWithId.extend({
+export const WorkoutSetUpdateSchema = ObjectWithId.extend({
   reps: Reps.optional(),
   position: Position.optional(),
+  weight: Weight.optional(),
   type: Type.optional(),
 });

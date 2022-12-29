@@ -2,12 +2,10 @@ import type { StackScreenProps } from '@react-navigation/stack';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import 'react-native-get-random-values';
 import { useAtom } from 'jotai';
-import clsx from 'clsx';
-import { PortalProvider } from '@gorhom/portal';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { Layout } from '@ui/layout/Layout';
@@ -23,14 +21,15 @@ import type { RootStackParamList } from '@/_app';
 import { TemplateProvider } from '@/stores/local/TemplateProvider';
 import { trpc } from '@/trpc';
 import { Anchor } from '@/components/ui/navigation/Anchor';
+import { Stepper } from '@/components/ui/navigation/Stepper';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type TabNavigationParamList = {
+export type TemplateEditorTabParamList = {
   ExerciseSelect: { isTemplateNew: boolean };
   SetsAndReps: { isTemplateNew: boolean };
 };
 
-const Tab = createBottomTabNavigator<TabNavigationParamList>();
+const Tab = createBottomTabNavigator<TemplateEditorTabParamList>();
 
 type Props = StackScreenProps<RootStackParamList, 'TemplateEditor'>;
 
@@ -81,43 +80,45 @@ export const TemplateEditorScreen = ({ route, navigation }: Props) => {
   return (
     <TemplateProvider template={template || null} isLoading={isTemplateFetching || false}>
       <SafeAreaView>
-        <PortalProvider>
-          {templateId && (
-            <Dialog open={isDeleteModalVisible} onClose={handleCloseDeleteModal} intent="danger">
-              <Dialog.Icon />
-              <Dialog.Content>
-                <Dialog.Title>Delete {template?.name ? `"${template.name}"` : 'Template'}?</Dialog.Title>
-                <Dialog.Description>
-                  Are you sure you want to delete this template? All of the data attached to this template will be
-                  deleted forever. This action cannot be undone.
-                </Dialog.Description>
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button
-                  intent="danger"
-                  onPress={() => deleteMutation.mutate(templateId)}
-                  loading={deleteMutation.isLoading}
-                >
-                  <Button.Text>{deleteMutation.isLoading ? 'Deleting Template...' : 'Delete Template'}</Button.Text>
-                </Button>
-                <Button intent="tertiary" onPress={handleCloseDeleteModal} className="mt-md">
-                  <Button.Text>Cancel</Button.Text>
-                </Button>
-              </Dialog.Actions>
-            </Dialog>
-          )}
+        {templateId && (
+          <Dialog open={isDeleteModalVisible} onClose={handleCloseDeleteModal} intent="danger">
+            <Dialog.Icon />
+            <Dialog.Content>
+              <Dialog.Title>Delete {template?.name ? `"${template.name}"` : 'Template'}?</Dialog.Title>
+              <Dialog.Description>
+                Are you sure you want to delete this template? All of the data attached to this template will be deleted
+                forever. This action cannot be undone.
+              </Dialog.Description>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button
+                intent="danger"
+                onPress={() => deleteMutation.mutate(templateId)}
+                loading={deleteMutation.isLoading}
+              >
+                <Button.Text>{deleteMutation.isLoading ? 'Deleting Template...' : 'Delete Template'}</Button.Text>
+              </Button>
+              <Button intent="tertiary" onPress={handleCloseDeleteModal} className="mt-md">
+                <Button.Text>Cancel</Button.Text>
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        )}
 
-          <Layout
-            title={templateId ? 'Update Template' : 'Create Template'}
-            description="Configure this workout template"
-            titleRightSection={
-              templateId && (
+        <Layout>
+          <Layout.Header>
+            <Layout.BackButton />
+            <View className="flex-row items-center justify-between">
+              <Layout.Title>{templateId ? 'Update Template' : 'Create Template'}</Layout.Title>
+              {templateId && (
                 <Anchor intent="danger" onPress={() => setIsDeleteModalVisible(true)}>
                   Delete exercise
                 </Anchor>
-              )
-            }
-          >
+              )}
+            </View>
+            <Layout.Description>Configure this workout template</Layout.Description>
+          </Layout.Header>
+          <Layout.Content>
             {templateId && isTemplateFetching ? (
               <View className="flex-1 items-center justify-center">
                 <Loader />
@@ -146,8 +147,8 @@ export const TemplateEditorScreen = ({ route, navigation }: Props) => {
                 />
               </Tab.Navigator>
             )}
-          </Layout>
-        </PortalProvider>
+          </Layout.Content>
+        </Layout>
       </SafeAreaView>
     </TemplateProvider>
   );
@@ -157,8 +158,8 @@ const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const [stepsCompleted] = useAtom(stepsCompletedAtom);
 
   return (
-    <View>
-      <View style={{ flexDirection: 'row' }}>
+    <View className="mt-sm px-base pb-base">
+      <Stepper active={state.index} className="space-x-md">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]!;
           const label =
@@ -168,53 +169,18 @@ const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
               ? options.title
               : route.name;
 
-          const isFocused = state.index === index;
-          const isDisabled = stepsCompleted < index;
-
-          const handlePress = () => {
-            if (!isFocused) {
-              navigation.navigate(route.name);
-            }
-          };
-
           return (
-            <View key={route.key} className={clsx('flex-1', index === 0 ? 'pr-base' : 'pr-none')}>
-              <Pressable
-                onPress={handlePress}
-                disabled={isDisabled}
-                className={clsx(
-                  'w-full border-t-4 pt-base',
-                  isFocused ? 'border-primary-active' : 'border-primary-normal',
-                  isDisabled ? 'opacity-30' : 'opacity-100',
-                )}
-              >
-                {({ pressed }) => {
-                  return (
-                    <>
-                      <Text
-                        weight="bold"
-                        className={clsx(
-                          'text-sm uppercase',
-                          isFocused
-                            ? 'text-interactive-primary-normal'
-                            : pressed
-                            ? 'text-interactive-primary-active'
-                            : 'text-primary-muted',
-                        )}
-                      >
-                        Step {index + 1}
-                      </Text>
-                      <Text weight="medium" className="text-sm">
-                        {label}
-                      </Text>
-                    </>
-                  );
-                }}
-              </Pressable>
-            </View>
+            <Stepper.Step
+              onPress={() => navigation.navigate(route.name)}
+              key={index}
+              index={index}
+              allowStepSelect={stepsCompleted >= index}
+            >
+              {label}
+            </Stepper.Step>
           );
         })}
-      </View>
+      </Stepper>
     </View>
   );
 };

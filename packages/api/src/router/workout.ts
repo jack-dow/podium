@@ -1,31 +1,31 @@
 import { Prisma, prisma } from '@podium/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { TemplateCreateSchema, TemplateUpdateSchema } from '../schemas/template';
+import { WorkoutCreateSchema, WorkoutUpdateSchema } from '../schemas/workout';
 import { Id, ObjectWithId } from '../schemas/util';
 import { publicProcedure, router } from '../trpc';
-import { defaultTemplateExerciseSelect } from './templateExercise';
-import { defaultTemplateSetSelect } from './templateSet';
+import { defaultWorkoutExerciseSelect } from './workoutExercise';
+import { defaultWorkoutSetSelect } from './workoutSet';
 
 /**
- * Default selector for Template.
+ * Default selector for Workout.
  * It's important to always explicitly say which fields you want to return in order to not leak extra information
  * @see https://github.com/prisma/prisma/issues/9353
  */
-export const defaultTemplateSelect = Prisma.validator<Prisma.TemplateSelect>()({
+export const defaultWorkoutSelect = Prisma.validator<Prisma.WorkoutSelect>()({
   id: true,
   name: true,
   createdAt: true,
   userId: true,
 });
 
-const templateSelectWithRelations = {
-  ...defaultTemplateSelect,
-  templateExercises: { select: defaultTemplateExerciseSelect },
-  templateSets: { select: defaultTemplateSetSelect },
+const workoutSelectWithRelations = {
+  ...defaultWorkoutSelect,
+  workoutExercises: { select: defaultWorkoutExerciseSelect },
+  workoutSets: { select: defaultWorkoutSetSelect },
 };
 
-export const templateRouter = router({
+export const workoutRouter = router({
   all: publicProcedure
     .input(
       z.object({
@@ -43,8 +43,8 @@ export const templateRouter = router({
       const limit = input.limit ?? 50;
       const { cursor } = input;
 
-      const items = await prisma.template.findMany({
-        select: defaultTemplateSelect,
+      const items = await prisma.workout.findMany({
+        select: defaultWorkoutSelect,
         // get an extra item at the end which we'll use as next cursor
         take: limit + 1,
         where: {},
@@ -74,64 +74,64 @@ export const templateRouter = router({
 
   byId: publicProcedure.input(ObjectWithId).query(async ({ input }) => {
     const { id } = input;
-    const template = await prisma.template.findUnique({
+    const workout = await prisma.workout.findUnique({
       where: { id },
-      select: templateSelectWithRelations,
+      select: workoutSelectWithRelations,
     });
 
-    if (!template) {
+    if (!workout) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: `No template with id '${id}'`,
+        message: `No workout with id '${id}'`,
       });
     }
-    return template;
+    return workout;
   }),
 
-  create: publicProcedure.input(TemplateCreateSchema).mutation(async ({ input }) => {
-    const { templateExercises, templateSets, ...template } = input;
+  create: publicProcedure.input(WorkoutCreateSchema).mutation(async ({ input }) => {
+    const { workoutExercises, workoutSets, ...workout } = input;
 
-    await prisma.template.create({
-      data: template,
+    await prisma.workout.create({
+      data: workout,
     });
-    await prisma.templateExercise.createMany({
-      data: templateExercises,
+    await prisma.workoutExercise.createMany({
+      data: workoutExercises,
     });
-    await prisma.templateSet.createMany({
-      data: templateSets,
+    await prisma.workoutSet.createMany({
+      data: workoutSets,
     });
   }),
 
-  update: publicProcedure.input(TemplateUpdateSchema).mutation(async ({ input }) => {
-    const { templateExercises, templateSets, ...template } = input;
+  update: publicProcedure.input(WorkoutUpdateSchema).mutation(async ({ input }) => {
+    const { workoutExercises, workoutSets, ...workout } = input;
     const transactions = [];
 
-    // Handle template updates
-    if (template.name) {
+    // Handle workout updates
+    if (workout.name) {
       transactions.push(
-        prisma.template.update({
-          where: { id: template.id },
-          data: { name: template.name },
+        prisma.workout.update({
+          where: { id: workout.id },
+          data: { name: workout.name },
         }),
       );
     }
 
-    // Handle template exercise deletions
-    if (templateExercises.deleted) {
+    // Handle workout exercise deletions
+    if (workoutExercises.deleted) {
       transactions.push(
-        prisma.templateExercise.deleteMany({
-          where: { id: { in: templateExercises.deleted } },
+        prisma.workoutExercise.deleteMany({
+          where: { id: { in: workoutExercises.deleted } },
         }),
       );
     }
 
-    // Handle template exercise updates
-    for (const updatedTemplateExerciseId of templateExercises.updated) {
-      const updatedTemplateExercise = templateExercises.all.find((el) => el.id === updatedTemplateExerciseId);
+    // Handle workout exercise updates
+    for (const updatedTemplateExerciseId of workoutExercises.updated) {
+      const updatedTemplateExercise = workoutExercises.all.find((el) => el.id === updatedTemplateExerciseId);
 
       if (updatedTemplateExercise) {
         transactions.push(
-          prisma.templateExercise.update({
+          prisma.workoutExercise.update({
             where: { id: updatedTemplateExercise.id },
             data: { notes: updatedTemplateExercise.notes, position: updatedTemplateExercise.position },
           }),
@@ -139,22 +139,22 @@ export const templateRouter = router({
       }
     }
 
-    // Handle template set deletions
-    if (templateSets.deleted) {
+    // Handle workout set deletions
+    if (workoutSets.deleted) {
       transactions.push(
-        prisma.templateSet.deleteMany({
-          where: { id: { in: templateSets.deleted } },
+        prisma.workoutSet.deleteMany({
+          where: { id: { in: workoutSets.deleted } },
         }),
       );
     }
 
-    // Handle template set updates
-    for (const updatedTemplateSetId of templateSets.updated) {
-      const updatedTemplateSet = templateSets.all.find((el) => el.id === updatedTemplateSetId);
+    // Handle workout set updates
+    for (const updatedTemplateSetId of workoutSets.updated) {
+      const updatedTemplateSet = workoutSets.all.find((el) => el.id === updatedTemplateSetId);
 
       if (updatedTemplateSet) {
         transactions.push(
-          prisma.templateSet.update({
+          prisma.workoutSet.update({
             where: { id: updatedTemplateSet.id },
             data: {
               reps: updatedTemplateSet.reps,
@@ -166,16 +166,16 @@ export const templateRouter = router({
       }
     }
 
-    // Handle template exercise and set creations
+    // Handle workout exercise and set creations
     async function createNewTemplateExercisesAndSets() {
-      if (templateExercises.new) {
-        await prisma.templateExercise.createMany({
-          data: templateExercises.all.filter((el) => templateExercises.new.includes(el.id)),
+      if (workoutExercises.new) {
+        await prisma.workoutExercise.createMany({
+          data: workoutExercises.all.filter((el) => workoutExercises.new.includes(el.id)),
         });
       }
-      if (templateSets.new) {
-        await prisma.templateSet.createMany({
-          data: templateSets.all.filter((el) => templateSets.new.includes(el.id)),
+      if (workoutSets.new) {
+        await prisma.workoutSet.createMany({
+          data: workoutSets.all.filter((el) => workoutSets.new.includes(el.id)),
         });
       }
     }
@@ -186,7 +186,7 @@ export const templateRouter = router({
   }),
 
   delete: publicProcedure.input(Id).mutation(async ({ input: id }) => {
-    await prisma.template.delete({
+    await prisma.workout.delete({
       where: { id },
     });
   }),

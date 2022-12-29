@@ -1,67 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import type { TextProps, ViewProps } from 'react-native';
 import { Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
-import Animated, { Easing, interpolateColor, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import theme from '@podium/tailwindcss/theme';
-import clsx from 'clsx';
-
 import { styled } from 'nativewind';
+
 import { Text } from '../typography/Text';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-interface LayoutProps {
-  children?: React.ReactNode;
-  title: string;
-  titleRightSection?: React.ReactNode;
-  description: string;
-  removePadding?: boolean;
+function LayoutRoot({ children }: { children: React.ReactNode }) {
+  return <View className="relative flex-1 pt-base">{children}</View>;
 }
 
-const LayoutRoot: React.FC<LayoutProps> = ({ children, title, description, titleRightSection, removePadding }) => {
-  const navigation = useNavigation();
+function LayoutHeader({ children, style }: { children: React.ReactNode; style?: ViewProps['style'] }) {
   return (
-    <View className="relative flex-1 pb-base">
-      <View className="px-base md:px-lg">
-        <View className="mb-sm w-full flex-row items-center">
-          <BackButton
-            onPress={() => {
-              if (navigation.canGoBack()) navigation.goBack();
-            }}
-          />
-
-          <View style={{ width: 20, height: 20 }} />
-        </View>
-
-        <View className="mb-base border-b border-primary-normal pb-base">
-          <View className="flex-row items-center justify-between">
-            <Text weight="medium" className="text-2xl text-primary-normal">
-              {title}
-            </Text>
-
-            {titleRightSection}
-          </View>
-
-          <Text className="mt-sm text-sm text-primary-muted">{description}</Text>
-        </View>
-      </View>
-      <View className={clsx('flex-1', removePadding ? 'px-none' : 'px-base md:px-lg')}>{children}</View>
+    <View className="px-base md:px-lg" style={style}>
+      <View className="border-b border-primary-normal pb-base">{children}</View>
     </View>
   );
-};
+}
 
-export const Layout = styled(LayoutRoot);
-
-function BackButton({ onPress }: { onPress: () => void }) {
+function LayoutBackButton({ style }: { style?: ViewProps['style'] }) {
+  const navigation = useNavigation();
   const [isPressed, setIsPressed] = useState(false);
 
   const stroke = isPressed ? theme.textColor.icon.primary.active : theme.textColor.icon.primary.normal;
-
   return (
     <Pressable
-      className="ml-[-6px] mb-[-6px] h-[42px] w-[42px] items-center justify-center"
-      onPress={onPress}
+      className="ml-[-6px] mb-[-6px] h-[42px] w-[42px] items-center justify-center pb-sm"
+      style={style}
+      onPress={() => {
+        if (navigation.canGoBack()) navigation.goBack();
+      }}
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
     >
@@ -84,3 +57,35 @@ function BackButton({ onPress }: { onPress: () => void }) {
     </Pressable>
   );
 }
+
+function LayoutTitle({ children, style }: { children: React.ReactNode; style?: TextProps['style'] }) {
+  return (
+    <Text weight="medium" className="text-2xl text-primary-normal" style={style}>
+      {children}
+    </Text>
+  );
+}
+
+function LayoutDescription({ children, style }: { children: React.ReactNode; style?: TextProps['style'] }) {
+  return (
+    <Text className="mt-xs text-sm text-primary-muted" style={style}>
+      {children}
+    </Text>
+  );
+}
+
+function LayoutContent({ children, style }: { children: React.ReactNode; style?: ViewProps['style'] }) {
+  return (
+    <View className="flex-1" style={style}>
+      {children}
+    </View>
+  );
+}
+
+export const Layout = Object.assign(styled(LayoutRoot), {
+  Header: styled(LayoutHeader),
+  BackButton: styled(LayoutBackButton),
+  Title: styled(LayoutTitle),
+  Description: styled(LayoutDescription),
+  Content: styled(LayoutContent),
+});

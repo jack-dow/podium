@@ -17,7 +17,7 @@ import { Label } from '@ui/inputs/Label';
 
 import { trpc } from '@/trpc';
 import type { RootStackParamList } from '@/_app';
-import { getAuthSafeUser } from '@/stores/global/auth';
+import { getAuthSafeUser } from '@/stores/global/AuthProvider';
 import { Loader } from '@/components/ui/feedback/Loader';
 
 interface FormProps {
@@ -124,47 +124,49 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
         </Dialog>
       )}
 
-      <Layout
-        className="space-y-lg"
-        title={exerciseId ? 'Update Exercise' : 'Create Exercise'}
-        description={
-          exerciseId
-            ? "Here is where you can edit the exercises you've previously created which are referenced throughout the app"
-            : 'Here is where you can create the exercises that will be referenced throughout the app'
-        }
-        titleRightSection={
-          exerciseId && (
-            <Anchor intent="danger" onPress={() => setIsDeleteModalVisible(true)}>
-              Delete exercise
-            </Anchor>
-          )
-        }
-      >
-        {isLoading && exerciseId ? (
-          <View className="flex-1 items-center justify-center">
-            <Loader />
+      <Layout>
+        <Layout.Header>
+          <Layout.BackButton />
+          <View className="flex-row items-center justify-between">
+            <Layout.Title>{exerciseId ? 'Update Exercise' : 'Create Exercise'}</Layout.Title>
+            {exerciseId && (
+              <Anchor onPress={() => setIsDeleteModalVisible(true)} intent="danger">
+                Delete Exercise
+              </Anchor>
+            )}
           </View>
-        ) : (
-          <>
-            {/* Displaying errors */}
-            {Object.keys(formErrors).length > 0 && (
-              <Alert intent="danger">
-                <Alert.Title>There&apos;s a problem with your exercise</Alert.Title>
-                {Object.keys(formErrors).map((fieldId) => (
-                  <Alert.ListItem key={fieldId}>
-                    {formErrors[fieldId as keyof typeof formErrors]?.message}
-                  </Alert.ListItem>
-                ))}
-              </Alert>
-            )}
-            {!!error && (
-              <Alert intent="danger">
-                <Alert.Title>An error occurred...</Alert.Title>
-                <Alert.Description>{error}</Alert.Description>
-              </Alert>
-            )}
-            {/* Form */}
-            <View className="space-y-lg">
+          <Layout.Description>
+            {exerciseId
+              ? "Here is where you can edit the exercises you've previously created which are referenced throughout the app"
+              : 'Here is where you can create the exercises that will be referenced throughout the app'}
+          </Layout.Description>
+        </Layout.Header>
+        <Layout.Content className="my-base space-y-lg px-base">
+          {isLoading && exerciseId ? (
+            <View className="flex-1 items-center justify-center">
+              <Loader />
+            </View>
+          ) : (
+            <>
+              {/* Displaying errors */}
+              {Object.keys(formErrors).length > 0 && (
+                <Alert intent="danger">
+                  <Alert.Title>There&apos;s a problem with your exercise</Alert.Title>
+                  {Object.keys(formErrors).map((fieldId) => (
+                    <Alert.ListItem key={fieldId}>
+                      {formErrors[fieldId as keyof typeof formErrors]?.message}
+                    </Alert.ListItem>
+                  ))}
+                </Alert>
+              )}
+              {!!error && (
+                <Alert intent="danger">
+                  <Alert.Title>An error occurred...</Alert.Title>
+                  <Alert.Description>{error}</Alert.Description>
+                </Alert>
+              )}
+
+              {/* Form */}
               <View>
                 <Controller
                   name="name"
@@ -227,9 +229,9 @@ export const ExerciseEditorScreen = ({ navigation, route }: Props) => {
                   </Button.Text>
                 </Button>
               </View>
-            </View>
-          </>
-        )}
+            </>
+          )}
+        </Layout.Content>
       </Layout>
     </SafeAreaView>
   );

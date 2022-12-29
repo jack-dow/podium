@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { TemplateExerciseCreateSchema, TemplateExerciseUpdateSchema } from './templateExercise';
-import { TemplateSetCreateSchema, TemplateSetUpdateSchema } from './templateSet';
+import { TemplateExerciseCreateSchema } from './templateExercise';
+import { TemplateSetCreateSchema } from './templateSet';
 import { Id, ObjectWithId } from './util';
 
 const Name = z.string().min(1).max(64);
@@ -16,13 +16,15 @@ export const TemplateUpdateSchema = ObjectWithId.extend({
   name: Name.optional(),
   userId: Id,
   templateExercises: z.object({
-    new: z.array(TemplateExerciseCreateSchema),
-    updated: z.array(TemplateExerciseUpdateSchema),
+    all: z.array(TemplateExerciseCreateSchema),
+    new: z.array(Id),
+    updated: z.array(Id),
     deleted: z.array(Id),
   }),
   templateSets: z.object({
-    new: z.array(TemplateSetCreateSchema),
-    updated: z.array(TemplateSetUpdateSchema),
+    all: z.array(TemplateSetCreateSchema),
+    new: z.array(Id),
+    updated: z.array(Id),
     deleted: z.array(Id),
   }),
 });

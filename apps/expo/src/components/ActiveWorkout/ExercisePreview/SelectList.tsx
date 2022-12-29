@@ -21,8 +21,8 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 import { styled } from 'nativewind';
 
 import { Text } from '@ui/typography/Text';
-import type { TemplateExerciseWithExercise } from '@podium/db';
-import { useTemplateAPI, useTemplateExercises } from '@/stores/local/TemplateProvider';
+import type { WorkoutExerciseWithExercise } from '@podium/db';
+import { useWorkoutAPI, useWorkoutExercises } from '@/stores/local/WorkoutProvider';
 
 const EXERCISE_ITEM_HEIGHT = 64;
 const EXERCISE_ITEM_GUTTER = 24;
@@ -34,24 +34,24 @@ function clamp(value: number, lowerBound: number, upperBound: number) {
 }
 
 function SelectList({ style }: { style?: ViewProps['style'] }) {
-  const templateExercises = useTemplateExercises();
+  const workoutExercises = useWorkoutExercises();
 
   const positions = useSharedValue<Record<string, number>>(
-    Object.values(templateExercises).reduce((acc, templateExercise) => {
-      acc[templateExercise.id] = templateExercise.position;
+    Object.values(workoutExercises).reduce((acc, workoutExercise) => {
+      acc[workoutExercise.id] = workoutExercise.position;
       return acc;
     }, {} as Record<string, number>),
   );
 
-  // Update the animated positions a template exercise gets added or removed
+  // Update the animated positions a workout exercise gets added or removed
   useEffect(() => {
-    if (Object.keys(templateExercises).length !== Object.keys(positions.value).length) {
-      positions.value = Object.values(templateExercises).reduce((acc, templateExercise) => {
-        acc[templateExercise.id] = templateExercise.position;
+    if (Object.keys(workoutExercises).length !== Object.keys(positions.value).length) {
+      positions.value = Object.values(workoutExercises).reduce((acc, workoutExercise) => {
+        acc[workoutExercise.id] = workoutExercise.position;
         return acc;
       }, {} as Record<string, number>);
     }
-  }, [templateExercises, positions]);
+  }, [workoutExercises, positions]);
 
   const scrollY = useSharedValue(0);
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
@@ -67,7 +67,7 @@ function SelectList({ style }: { style?: ViewProps['style'] }) {
     },
   });
 
-  if (Object.keys(templateExercises).length === 0) return <View />;
+  if (Object.keys(workoutExercises).length === 0) return <View />;
 
   return (
     <View style={style}>
@@ -77,21 +77,21 @@ function SelectList({ style }: { style?: ViewProps['style'] }) {
         scrollEventThrottle={16}
         className="relative"
         contentContainerStyle={{
-          height: Object.keys(templateExercises).length * EXERCISE_ITEM_HEIGHT_WITH_GUTTER,
+          height: Object.keys(workoutExercises).length * EXERCISE_ITEM_HEIGHT_WITH_GUTTER,
         }}
       >
         <View
           className="absolute w-px border-r border-divider pl-xl"
           style={{
-            height: Object.keys(templateExercises).length * EXERCISE_ITEM_HEIGHT_WITH_GUTTER - EXERCISE_ITEM_GUTTER,
+            height: Object.keys(workoutExercises).length * EXERCISE_ITEM_HEIGHT_WITH_GUTTER - EXERCISE_ITEM_GUTTER,
           }}
         />
-        {Object.values(templateExercises).map((templateExercise) => (
+        {Object.values(workoutExercises).map((workoutExercise) => (
           <MoveableExerciseItem
             positions={positions}
-            key={templateExercise.id}
+            key={workoutExercise.id}
             scrollViewRef={scrollViewRef}
-            templateExercise={templateExercise}
+            workoutExercise={workoutExercise}
             scrollY={scrollY}
           />
         ))}
@@ -103,15 +103,15 @@ function SelectList({ style }: { style?: ViewProps['style'] }) {
 interface MoveableExerciseItemProps {
   positions: SharedValue<Record<string, number>>;
   scrollY: SharedValue<number>;
-  templateExercise: TemplateExerciseWithExercise;
+  workoutExercise: WorkoutExerciseWithExercise;
   scrollViewRef: RefObject<Animated.ScrollView>;
 }
-function MoveableExerciseItem({ positions, templateExercise }: MoveableExerciseItemProps) {
-  const { setTemplateExercisePositions } = useTemplateAPI();
+function MoveableExerciseItem({ positions, workoutExercise }: MoveableExerciseItemProps) {
+  const { setWorkoutExercisePositions } = useWorkoutAPI();
 
   const isGestureActive = useSharedValue(false);
   const translateY = useSharedValue(
-    (positions.value[templateExercise.id] || templateExercise.position) * EXERCISE_ITEM_HEIGHT_WITH_GUTTER,
+    (positions.value[workoutExercise.id] || workoutExercise.position) * EXERCISE_ITEM_HEIGHT_WITH_GUTTER,
   );
 
   const animationConfig = {
@@ -120,7 +120,7 @@ function MoveableExerciseItem({ positions, templateExercise }: MoveableExerciseI
   };
 
   useAnimatedReaction(
-    () => positions.value[templateExercise.id],
+    () => positions.value[workoutExercise.id],
     (newPosition = 0) => {
       if (!isGestureActive.value) {
         translateY.value = withTiming(newPosition * EXERCISE_ITEM_HEIGHT_WITH_GUTTER, animationConfig);
@@ -141,7 +141,7 @@ function MoveableExerciseItem({ positions, templateExercise }: MoveableExerciseI
         0,
         Object.keys(positions.value).length - 1,
       );
-      const oldPosition = positions.value[templateExercise.id]!;
+      const oldPosition = positions.value[workoutExercise.id]!;
 
       if (newPosition !== oldPosition) {
         const idToSwap = Object.keys(positions.value).find((key) => positions.value[key] === newPosition);
@@ -149,16 +149,16 @@ function MoveableExerciseItem({ positions, templateExercise }: MoveableExerciseI
           // Spread operator is not supported in worklets
           // And Object.assign doesn't seem to be working on alpha.6
           const newPositions = { ...positions.value };
-          newPositions[templateExercise.id] = newPosition;
+          newPositions[workoutExercise.id] = newPosition;
           newPositions[idToSwap] = oldPosition;
           positions.value = newPositions;
         }
       }
     },
     onFinish() {
-      const newPosition = positions.value[templateExercise.id]! * EXERCISE_ITEM_HEIGHT_WITH_GUTTER;
+      const newPosition = positions.value[workoutExercise.id]! * EXERCISE_ITEM_HEIGHT_WITH_GUTTER;
       translateY.value = withTiming(newPosition, animationConfig, () => (isGestureActive.value = false));
-      runOnJS(setTemplateExercisePositions)(positions.value);
+      runOnJS(setWorkoutExercisePositions)(positions.value);
     },
   });
 
@@ -192,13 +192,13 @@ function MoveableExerciseItem({ positions, templateExercise }: MoveableExerciseI
           <View className="flex-row items-center" style={{ height: EXERCISE_ITEM_HEIGHT }}>
             <Animated.View className="shadow" style={animatedCardStyle}>
               <Text weight="bold" className="text-xl text-primary-normal">
-                {templateExercise.exercise.name[0]?.toUpperCase()}
+                {workoutExercise.exercise.name[0]?.toUpperCase()}
               </Text>
             </Animated.View>
 
             <View className="ml-sm">
               <Text weight="semibold" className="text-base text-primary-normal">
-                {templateExercise.exercise.name}
+                {workoutExercise.exercise.name}
               </Text>
             </View>
           </View>

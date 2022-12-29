@@ -27,3 +27,14 @@ export type TemplateWithExercisesAndSets = Prisma.TemplateGetPayload<{
 export type TemplateExerciseWithExercise = Prisma.TemplateExerciseGetPayload<{
   include: { exercise: true };
 }>;
+
+export type WorkoutWithExercisesAndSets = Prisma.WorkoutGetPayload<{
+  include: {
+    workoutExercises: { include: { exercise: true } };
+    workoutSets: true;
+  };
+}>;
+
+export type WorkoutExerciseWithExercise = Prisma.WorkoutExerciseGetPayload<{
+  include: { exercise: true };
+}>;

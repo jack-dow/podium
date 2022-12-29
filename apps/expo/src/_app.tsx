@@ -9,9 +9,10 @@ import { registerRootComponent } from 'expo';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import 'react-native-url-polyfill/auto';
+import { enableMapSet } from 'immer';
 
 import { TRPCProvider } from './trpc';
-import { useAuthAPI, useAuthSession } from './stores/global/auth';
+import { useAuthAPI, useAuthSession } from './stores/global/AuthProvider';
 import { supabase } from './supabase';
 
 import { HomeScreen } from './screens/Home';
@@ -23,6 +24,9 @@ import { ExerciseEditorScreen } from './screens/ExerciseEditor';
 import { TemplateEditorScreen } from './screens/TemplateEditor';
 import { PlaygroundScreen } from './screens/Playground';
 import { TemplatesScreen } from './screens/Templates';
+
+// Required to use immer with Maps and Sets (https://immerjs.github.io/immer/docs/installation#enablemapset)
+enableMapSet();
 
 export type RootStackParamList = {
   Playground: undefined;
@@ -88,12 +92,12 @@ export const App = () => {
               ) : (
                 <>
                   {/* <RootStack.Screen name="Loading" component={LoadingScreen} /> */}
-                  {/* <RootStack.Screen name="Playground" component={PlaygroundScreen} /> */}
                   <RootStack.Screen name="Home" component={HomeScreen} />
                   <RootStack.Screen name="Exercises" component={ExercisesScreen} />
                   <RootStack.Screen name="ExerciseEditor" component={ExerciseEditorScreen} />
                   <RootStack.Screen name="Templates" component={TemplatesScreen} />
                   <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
+                  <RootStack.Screen name="Playground" component={PlaygroundScreen} />
                 </>
               )}
             </RootStack.Navigator>

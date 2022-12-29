@@ -1,4 +1,4 @@
-import type { TemplateSet } from '@podium/db';
+import type { TemplateExerciseWithExercise, TemplateSet } from '@podium/db';
 import type { TemplateCreate, TemplateUpdate } from '@podium/api';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
@@ -12,27 +12,26 @@ import { Anchor } from '@ui/navigation/Anchor';
 import { Dialog } from '@ui/overlays/Dialog';
 import { Text } from '@ui/typography/Text';
 
-import type { TabNavigationParamList } from '@/screens/TemplateEditor';
+import clsx from 'clsx';
+import type { TemplateEditorTabParamList } from '@/screens/TemplateEditor';
 
 import { TrashIcon } from '@/assets/icons/mini/Trash';
 import { ChevronDownIcon } from '@/assets/icons/mini/ChevronDown';
 import {
   useTemplateAPI,
-  useTemplateExercise,
-  useTemplateExerciseIds,
+  useTemplateExercises,
   useTemplateIsNew,
-  useTemplateSet,
-  useTemplateSetIdsByTemplateExerciseId,
+  useTemplateSetsByTemplateExerciseId,
 } from '@/stores/local/TemplateProvider';
 import { trpc } from '@/trpc';
 
-type SetsAndRepsTabProps = BottomTabScreenProps<TabNavigationParamList, 'SetsAndReps'>;
+type SetsAndRepsTabProps = BottomTabScreenProps<TemplateEditorTabParamList, 'SetsAndReps'>;
 
 export const templateSubmittedAtom = atom(false);
 
 export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
   const [, setTemplateSubmitted] = useAtom(templateSubmittedAtom);
-  const templateExerciseIds = useTemplateExerciseIds();
+  const templateExercises = useTemplateExercises();
   const isTemplateNew = useTemplateIsNew();
   const { getSubmittableTemplate } = useTemplateAPI();
 
@@ -52,14 +51,14 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
   };
 
   return (
-    <ScrollView className="mb-lg space-y-lg">
+    <ScrollView className="my-base space-y-lg">
       <View>
-        {templateExerciseIds.map((templateExerciseId) => (
-          <ExerciseCard key={templateExerciseId} templateExerciseId={templateExerciseId} />
+        {Object.values(templateExercises).map((templateExercise) => (
+          <ExerciseCard key={templateExercise.id} templateExercise={templateExercise} />
         ))}
       </View>
 
-      <View className="flex-row justify-between">
+      <View className="flex-row justify-between px-base pb-base">
         <View />
         <Button
           loading={isTemplateNew ? templateCreateMutation.isLoading : templateUpdateMutation.isLoading}
@@ -75,24 +74,28 @@ export const SetsAndRepsTab = (_: SetsAndRepsTabProps) => {
   );
 };
 
-function ExerciseCard({ templateExerciseId }: { templateExerciseId: string }) {
+function ExerciseCard({ templateExercise }: { templateExercise: TemplateExerciseWithExercise }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { addTemplateSet, removeTemplateExercise } = useTemplateAPI();
-  const { templateExercise, isLoading: isTemplateExerciseLoading } = useTemplateExercise(templateExerciseId);
-  const templateSetIds = useTemplateSetIdsByTemplateExerciseId(templateExerciseId);
+  const templateSets = useTemplateSetsByTemplateExerciseId(templateExercise.id);
 
   const handleTemplateDelete = () => {
-    removeTemplateExercise(templateExerciseId);
+    removeTemplateExercise(templateExercise.id);
     setIsDeleteModalOpen(false);
   };
 
   const handleModalCancel = () => setIsDeleteModalOpen(false);
 
   return (
-    <View className="mb-md space-y-md rounded-md bg-secondary p-md shadow">
+    <View
+      className={clsx(
+        'mx-base space-y-md rounded-md bg-secondary p-md shadow',
+        templateExercise.position > 0 && 'mt-base',
+      )}
+    >
       <View className="flex-row items-center justify-between">
         <Text weight="medium" className="text-lg">
-          {isTemplateExerciseLoading ? 'Loading...' : templateExercise?.exercise?.name}
+          {templateExercise.exercise.name}
         </Text>
 
         <Anchor intent="danger" onPress={() => setIsDeleteModalOpen(true)}>
@@ -102,9 +105,7 @@ function ExerciseCard({ templateExerciseId }: { templateExerciseId: string }) {
         <Dialog open={isDeleteModalOpen} onClose={handleModalCancel} intent="danger">
           <Dialog.Icon />
           <Dialog.Content>
-            <Dialog.Title>
-              Delete {templateExercise?.exercise?.name ? `"${templateExercise.exercise.name}"` : 'Template Exercise'}
-            </Dialog.Title>
+            <Dialog.Title>Delete {`"${templateExercise.exercise.name}"`}</Dialog.Title>
             <Dialog.Description>
               Are you sure you want to delete this exercise? This action cannot be undone.
             </Dialog.Description>
@@ -141,23 +142,20 @@ function ExerciseCard({ templateExerciseId }: { templateExerciseId: string }) {
         </View>
 
         <View className="space-y-md">
-          {templateSetIds &&
-            templateSetIds.map((setId, index) => (
-              <View key={setId} className="flex-row justify-between">
-                <ExerciseCardSet
-                  setId={setId}
-                  position={index}
-                  templateSetIdsLength={templateSetIds.length}
-                  handleTemplateExerciseDelete={() => setIsDeleteModalOpen(true)}
-                />
-              </View>
-            ))}
+          {Object.values(templateSets).map((templateSet) => (
+            <View key={templateSet.id} className="flex-row justify-between">
+              <ExerciseCardSet
+                templateSet={templateSet}
+                templateSetIdsLength={Object.keys(templateSets).length}
+                handleTemplateExerciseDelete={() => setIsDeleteModalOpen(true)}
+              />
+            </View>
+          ))}
         </View>
         <View className="py-md">
-          {!templateSetIds ||
-            (templateSetIds && templateSetIds.length < 10 && (
-              <Anchor onPress={() => addTemplateSet(templateExerciseId)}>Add another set</Anchor>
-            ))}
+          {templateSets.length < 10 && (
+            <Anchor onPress={() => addTemplateSet(templateExercise.id)}>Add another set</Anchor>
+          )}
         </View>
       </View>
     </View>
@@ -165,40 +163,21 @@ function ExerciseCard({ templateExerciseId }: { templateExerciseId: string }) {
 }
 
 interface ExerciseCardSetProps {
-  setId: string;
-  position: number;
+  templateSet: TemplateSet;
   /** Used to determine if delete button should be disabled or not */
   templateSetIdsLength: number;
   handleTemplateExerciseDelete: () => void;
 }
 
-function ExerciseCardSet({
-  setId,
-  position,
-  templateSetIdsLength,
-  handleTemplateExerciseDelete,
-}: ExerciseCardSetProps) {
+function ExerciseCardSet({ templateSet, templateSetIdsLength, handleTemplateExerciseDelete }: ExerciseCardSetProps) {
   const { updateTemplateSet, removeTemplateSet } = useTemplateAPI();
-  const { templateSet, isLoading, isError } = useTemplateSet(setId);
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
-
-  if (isLoading) {
-    <View>
-      <Text>Loading...</Text>
-    </View>;
-  }
-
-  if (isError) {
-    <View>
-      <Text>An error occurred...</Text>
-    </View>;
-  }
 
   return (
     <>
       <View className="w-[10%] items-center justify-center">
         <Text weight="medium" className="text-sm">
-          {position + 1}
+          {templateSet.position}
         </Text>
       </View>
 
@@ -225,11 +204,13 @@ function ExerciseCardSet({
           className="w-full rounded-md bg-tertiary py-sm px-md text-center text-sm"
           maxLength={7}
           value={templateSet?.reps}
-          onChangeText={(value) => updateTemplateSet({ id: setId, reps: value })}
+          onChangeText={(value) => updateTemplateSet({ id: templateSet.id, reps: value })}
           onBlur={() => {
             const validInput = templateSet?.reps?.match(/^([0-9]+-)?([0-9]+)$/);
-            if (validInput && validInput.length > 0) return updateTemplateSet({ id: setId, reps: validInput[0] });
-            updateTemplateSet({ id: setId, reps: '' });
+            if (validInput && validInput.length > 0) {
+              return updateTemplateSet({ id: templateSet.id, reps: validInput[0] });
+            }
+            updateTemplateSet({ id: templateSet.id, reps: '' });
           }}
         />
       </View>
@@ -240,7 +221,7 @@ function ExerciseCardSet({
           intent="tertiary"
           onPress={() => {
             if (templateSetIdsLength === 1) return handleTemplateExerciseDelete();
-            removeTemplateSet(setId);
+            removeTemplateSet(templateSet.id);
           }}
         >
           <TrashIcon size="sm" />

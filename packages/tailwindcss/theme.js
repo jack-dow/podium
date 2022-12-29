@@ -287,6 +287,7 @@ const theme = {
     backgroundColor: {
         white: colors.white,
         black: colors.black,
+        transparent: colors.transparent,
         primary: colors.zinc[50],
         secondary: colors.white,
         tertiary: colors.zinc[100],

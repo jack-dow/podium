@@ -26,50 +26,56 @@ export const TemplatesScreen = ({ navigation }: Props) => {
 
   return (
     <SafeAreaView>
-      <Layout
-        title="Templates"
-        description="Here you can manage the templates that are referenced in your plans and workouts"
-        titleRightSection={
-          <Anchor onPress={() => navigation.navigate('TemplateEditor', { templateId: null })}>New template</Anchor>
-        }
-      >
-        {isLoading ? (
-          <View className="h-full w-full flex-1 items-center justify-center">
-            <Loader />
+      <Layout>
+        <Layout.Header>
+          <Layout.BackButton />
+          <View className="flex-row items-center justify-between">
+            <Layout.Title>Templates</Layout.Title>
+            <Anchor onPress={() => navigation.navigate('TemplateEditor', { templateId: null })}>New template</Anchor>
           </View>
-        ) : (
-          <ScrollView>
-            {data?.items.map((template, index) => {
-              const isFirst = index === 0;
-              const isLast = index === data.items.length - 1;
-              return (
-                <View
-                  key={template.id}
-                  className={clsx(
-                    'border border-primary-normal p-sm shadow',
-                    isFirst ? 'rounded-t-md' : '',
-                    isLast ? 'rounded-b-md border-b' : '',
-                  )}
-                >
-                  <View className="p-sm sm:px-lg">
-                    <View className="flex-row items-center justify-between">
-                      <Text weight="medium" className="truncate text-base capitalize text-primary-normal">
-                        {template.name}
-                      </Text>
-                      <Anchor
-                        onPress={() => {
-                          navigation.navigate('TemplateEditor', { templateId: template.id });
-                        }}
-                      >
-                        Edit
-                      </Anchor>
+          <Layout.Description>
+            Here you can manage the templates that are referenced in your plans and workouts
+          </Layout.Description>
+        </Layout.Header>
+        <Layout.Content>
+          {isLoading ? (
+            <View className="h-full w-full flex-1 items-center justify-center">
+              <Loader />
+            </View>
+          ) : (
+            <ScrollView className="p-base">
+              {data?.items.map((template, index) => {
+                const isFirst = index === 0;
+                const isLast = index === data.items.length - 1;
+                return (
+                  <View
+                    key={template.id}
+                    className={clsx(
+                      'border-2 border-primary-normal p-sm',
+                      isFirst ? 'rounded-t-md' : '',
+                      isLast ? 'rounded-b-md' : 'border-b-0',
+                    )}
+                  >
+                    <View className="p-sm sm:px-lg">
+                      <View className="flex-row items-center justify-between">
+                        <Text weight="medium" className="truncate text-base capitalize text-primary-normal">
+                          {template.name}
+                        </Text>
+                        <Anchor
+                          onPress={() => {
+                            navigation.navigate('TemplateEditor', { templateId: template.id });
+                          }}
+                        >
+                          Edit
+                        </Anchor>
+                      </View>
                     </View>
                   </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-        )}
+                );
+              })}
+            </ScrollView>
+          )}
+        </Layout.Content>
       </Layout>
     </SafeAreaView>
   );
