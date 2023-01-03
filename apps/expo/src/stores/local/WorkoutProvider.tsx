@@ -95,7 +95,7 @@ type WorkoutStore = WorkoutStoreState & WorkoutStoreAPI;
 const createWorkoutStore = (initProps?: Partial<WorkoutStoreProps>) => {
   let DEFAULT_PROPS: WorkoutStoreState = {
     id: initProps?.id || uuidv4(),
-    name: initProps?.name || '',
+    name: initProps?.name || 'Tester',
     changed: { name: false },
 
     isNew: !initProps?.id,
@@ -271,7 +271,7 @@ const createWorkoutStore = (initProps?: Partial<WorkoutStoreProps>) => {
               workoutId: workout.id,
               workoutExerciseId,
               type: 'working',
-              weight: 0,
+              weight: '',
               reps: '',
               userId: user.id,
               position: Object.keys(workout.workoutSets.all).length,
@@ -382,10 +382,17 @@ function useWorkoutContext<T>(selector: (state: WorkoutStore) => T, equalityFn?:
   return useStore(store, selector, equalityFn);
 }
 
-interface WorkoutProviderProps {
-  workout: WorkoutWithExercisesAndSets | null;
+interface WorkoutProviderWithWorkoutProps {
+  workout: WorkoutWithExercisesAndSets | undefined;
   isLoading: boolean;
 }
+
+interface WorkoutProviderWithoutWorkoutProps {
+  workout: null;
+  isLoading?: false;
+}
+
+type WorkoutProviderProps = WorkoutProviderWithWorkoutProps | WorkoutProviderWithoutWorkoutProps;
 
 export function WorkoutProvider({ children, workout, isLoading }: React.PropsWithChildren<WorkoutProviderProps>) {
   const storeRef = useRef<CreatedWorkoutStore>();
@@ -422,8 +429,10 @@ export const useWorkoutAPI = () => useWorkoutContext((s) => s.api);
 // Workout Info Hooks
 /** Subscribe to the value of the workout id */
 export const useWorkoutId = () => useWorkoutContext((s) => s.id);
+
 /** Subscribe to the value of the workout name */
 export const useWorkoutName = () => useWorkoutContext((s) => s.name);
+
 /** Subscribe to the value of the workout isNew variable */
 export const useWorkoutIsNew = () => useWorkoutContext((s) => s.isNew);
 
@@ -431,3 +440,20 @@ export const useWorkoutIsNew = () => useWorkoutContext((s) => s.isNew);
 /** Subscribe to the value of the workout exercises. (Ordered correctly by their position) */
 export const useWorkoutExercises = () =>
   useWorkoutContext((s) => Object.values(s.workoutExercises.all).sort((a, b) => a.position - b.position));
+
+/** Subscribe to the workout exercises that relate to the provided exercise id */
+export const useWorkoutExerciseIdsByExerciseId = (exerciseId: string): Set<string> | null =>
+  useWorkoutContext((s) => s.workoutExercises.filters.byExerciseId[exerciseId] ?? null);
+
+// Workout Set Hooks
+/** Subscribe to the value of the workout set */
+export const useWorkoutSet = (workoutSetId: string) =>
+  useWorkoutContext((s) => s.workoutSets.all[workoutSetId] ?? null);
+
+/** Subscribe to the value of the workout sets. (Ordered correctly by their position) */
+export const useWorkoutSets = () =>
+  useWorkoutContext((s) => Object.values(s.workoutSets.all).sort((a, b) => a.position - b.position));
+
+/** Subscribe to the workout sets that relate to the provided workout exercise id */
+export const useWorkoutSetIdsByWorkoutExerciseId = (workoutExerciseId: string): Set<string> | null =>
+  useWorkoutContext((s) => s.workoutSets.filters.byWorkoutExerciseId[workoutExerciseId] ?? null);

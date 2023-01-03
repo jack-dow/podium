@@ -421,8 +421,10 @@ export const useTemplateAPI = () => useTemplateContext((s) => s.api);
 // Template Info Hooks
 /** Subscribe to the value of the template id */
 export const useTemplateId = () => useTemplateContext((s) => s.id);
+
 /** Subscribe to the value of the template name */
 export const useTemplateName = () => useTemplateContext((s) => s.name);
+
 /** Subscribe to the value of the template isNew variable  */
 export const useTemplateIsNew = () => useTemplateContext((s) => s.isNew);
 

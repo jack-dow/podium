@@ -129,7 +129,7 @@ model WorkoutSet {
   userId            String          @db.Uuid
   reps              String          @default("'1'::text")
   type              set
-  weight            Float           @db.Real
+  weight            String
   profile           Profile         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workout           Workout         @relation(fields: [workoutId], references: [id], onDelete: NoAction, onUpdate: NoAction)

@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { ViewProps } from 'react-native';
 import { Keyboard, View } from 'react-native';
 import { styled } from 'nativewind';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
@@ -9,28 +8,30 @@ import { Button } from '@ui/buttons/Button';
 
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { PortalProvider } from '@gorhom/portal';
+import { useAtom } from 'jotai';
 import { Layout } from './ui/layout/Layout';
 import { Stepper } from './ui/navigation/Stepper';
-import { ExercisePreview } from './ActiveWorkout/ExercisePreview';
+import { ExercisePreview, activeWorkoutStepsCompletedAtom } from './ActiveWorkout/ExercisePreview';
+import { SetsAndRepsTab } from './ActiveWorkout/SetsAndReps';
 import { useBottomSheetBackHandler } from '@/hooks/useBottomSheetBackHandler';
+import { WorkoutProvider } from '@/stores/local/WorkoutProvider';
 
 const StyledBackdrop = styled(BottomSheetBackdrop);
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type ActiveWorkoutTabParamList = {
-  ExerciseSelect: { isTemplateNew: boolean };
-  SetsAndReps: { isTemplateNew: boolean };
+  ExerciseSelect: { isWorkoutNew: boolean };
+  SetsAndReps: { isWorkoutNew: boolean };
 };
 
 const Tab = createBottomTabNavigator<ActiveWorkoutTabParamList>();
 
 interface ActiveWorkoutProps {
   children: React.ReactNode;
-
-  style?: ViewProps['style'];
 }
 
-function ActiveWorkoutRoot({ children }: ActiveWorkoutProps) {
+export function ActiveWorkout({ children }: ActiveWorkoutProps) {
   const [isKeyboardShowing, setIsKeyboardShowing] = useState(false);
 
   const ref = useRef<GorhomBottomSheet>(null);
@@ -53,58 +54,67 @@ function ActiveWorkoutRoot({ children }: ActiveWorkoutProps) {
   }, []);
 
   return (
-    <>
-      <View className="relative flex-1 pb-[74px]">{children}</View>
-      <View className="absolute bottom-base w-full flex-1 bg-primary">
-        <View className="mx-base bg-primary">
-          <Button onPress={handleSheetOpen}>
-            <Button.Text>Active Workout</Button.Text>
-          </Button>
+    <WorkoutProvider workout={null}>
+      <PortalProvider>
+        <View className="relative flex-1 pb-[74px]">{children}</View>
+        <View className="absolute bottom-base w-full flex-1 bg-primary">
+          <View className="mx-base bg-primary">
+            <Button onPress={handleSheetOpen}>
+              <Button.Text>Active Workout</Button.Text>
+            </Button>
+          </View>
         </View>
-      </View>
-      <GorhomBottomSheet
-        ref={ref}
-        index={-1}
-        onClose={handleSheetClose}
-        snapPoints={snapPoints}
-        onChange={handleSheetPositionChange}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
-        android_keyboardInputMode="adjustResize"
-      >
-        <Layout>
-          <Layout.Header>
-            <Layout.Title>Active Workout</Layout.Title>
-            <Layout.Description>Slay</Layout.Description>
-          </Layout.Header>
-          <Layout.Content>
-            <Tab.Navigator
-              sceneContainerStyle={{ backgroundColor: 'transparent' }}
-              screenOptions={{ headerShown: false, tabBarStyle: { position: 'absolute' } }}
-              tabBar={(props) => <TabBars {...props} />}
-            >
-              <Tab.Screen name="ExerciseSelect" options={{ title: 'Preview Exercises' }}>
-                {() => <ExercisePreview setIsKeyboardShowing={setIsKeyboardShowing} />}
-              </Tab.Screen>
-              {/* <Tab.Screen
-                name="SetsAndReps"
-                component={SetsAndRepsTab}
-                options={{ title: 'Sets & Reps' }}
-                initialParams={{
-                  isTemplateNew: !!route?.params?.templateId,
-                }}
-              /> */}
-            </Tab.Navigator>
-          </Layout.Content>
-        </Layout>
-      </GorhomBottomSheet>
-    </>
+        <GorhomBottomSheet
+          ref={ref}
+          index={-1}
+          onClose={handleSheetClose}
+          snapPoints={snapPoints}
+          onChange={handleSheetPositionChange}
+          enablePanDownToClose
+          backdropComponent={renderBackdrop}
+          keyboardBehavior="interactive"
+          keyboardBlurBehavior="restore"
+          android_keyboardInputMode="adjustResize"
+        >
+          <Layout>
+            <Layout.Header>
+              <Layout.Title>Active Workout</Layout.Title>
+              <Layout.Description>Slay</Layout.Description>
+            </Layout.Header>
+            <Layout.Content>
+              <Tab.Navigator
+                sceneContainerStyle={{ backgroundColor: 'transparent' }}
+                screenOptions={{ headerShown: false, tabBarStyle: { position: 'absolute' } }}
+                tabBar={(props) => <TabBars {...props} />}
+              >
+                <Tab.Screen
+                  name="ExerciseSelect"
+                  options={{ title: 'Preview Exercises' }}
+                  component={ExercisePreview}
+                  initialParams={{
+                    isWorkoutNew: true,
+                  }}
+                />
+                <Tab.Screen
+                  name="SetsAndReps"
+                  component={SetsAndRepsTab}
+                  options={{ title: 'Sets & Reps' }}
+                  initialParams={{
+                    isWorkoutNew: true,
+                  }}
+                />
+              </Tab.Navigator>
+            </Layout.Content>
+          </Layout>
+        </GorhomBottomSheet>
+      </PortalProvider>
+    </WorkoutProvider>
   );
 }
 
 const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+  const [stepsCompleted] = useAtom(activeWorkoutStepsCompletedAtom);
+
   return (
     <View className="mt-sm px-base pb-base">
       <Stepper active={state.index} className="space-x-md">
@@ -122,8 +132,7 @@ const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
               onPress={() => navigation.navigate(route.name)}
               key={index}
               index={index}
-              allowStepSelect={true}
-              // allowStepSelect={stepsCompleted >= index}
+              allowStepSelect={stepsCompleted >= index}
             >
               {label}
             </Stepper.Step>
@@ -133,5 +142,3 @@ const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
     </View>
   );
 };
-
-export const ActiveWorkout = styled(ActiveWorkoutRoot);

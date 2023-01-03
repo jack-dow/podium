@@ -25,14 +25,14 @@ import { ExerciseSelectBottomSheet } from '@/components/ExerciseSelectBottomShee
 
 type ExerciseSelectTabProps = BottomTabScreenProps<TemplateEditorTabParamList, 'ExerciseSelect'>;
 
-export const stepsCompletedAtom = atom(0);
+export const templateEditorStepsCompletedAtom = atom(0);
 
 export const ExerciseSelectTab = ({ route, navigation }: ExerciseSelectTabProps) => {
   const name = useTemplateName();
   const { setName } = useTemplateAPI();
   const templateExerciseIds = useTemplateExercises();
 
-  const [, setStepsCompleted] = useAtom(stepsCompletedAtom);
+  const [, setStepsCompleted] = useAtom(templateEditorStepsCompletedAtom);
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [templateExercisesError, setExercisesError] = useState<string | null>(null);

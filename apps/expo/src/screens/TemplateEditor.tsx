@@ -15,7 +15,7 @@ import { Loader } from '@ui/feedback/Loader';
 import { Dialog } from '@ui/overlays/Dialog';
 import { Button } from '@ui/buttons/Button';
 
-import { ExerciseSelectTab, stepsCompletedAtom } from '@/components/TemplateEditor/ExerciseSelect';
+import { ExerciseSelectTab, templateEditorStepsCompletedAtom } from '@/components/TemplateEditor/ExerciseSelect';
 import { SetsAndRepsTab, templateSubmittedAtom } from '@/components/TemplateEditor/SetsAndReps';
 import type { RootStackParamList } from '@/_app';
 import { TemplateProvider } from '@/stores/local/TemplateProvider';
@@ -155,7 +155,7 @@ export const TemplateEditorScreen = ({ route, navigation }: Props) => {
 };
 
 const TabBars = ({ state, descriptors, navigation }: BottomTabBarProps) => {
-  const [stepsCompleted] = useAtom(stepsCompletedAtom);
+  const [stepsCompleted] = useAtom(templateEditorStepsCompletedAtom);
 
   return (
     <View className="mt-sm px-base pb-base">

@@ -39,26 +39,26 @@ type ButtonProps = ButtonOwnProps & Omit<React.ComponentPropsWithRef<'button'>, 
 const styles = {
   colors: {
     default: clsx(
-      'border-gray-300 bg-white text-gray-700 shadow-sm',
+      'border-gray-300 text-gray-700 bg-white shadow-sm',
       'hover:bg-gray-50 focus:ring-sky-600',
       'disabled:hover:bg-white',
     ),
     slate: clsx(
-      'border-transparent bg-slate-900 text-white ',
+      'bg-slate-900 border-transparent text-white ',
       'hover:bg-slate-700 focus:ring-slate-700',
       'disabled:hover:bg-slate-900',
     ),
     sky: clsx(
-      'border-transparent bg-sky-600 text-white',
+      'bg-sky-600 border-transparent text-white',
       'hover:bg-sky-800 focus:ring-sky-600',
       'disabled:hover:bg-sky-600',
     ),
   },
   sizes: {
-    xs: clsx('rounded-md py-2 px-2.5 text-sm'),
-    sm: clsx('rounded-md py-2.5 px-3 text-sm'),
-    md: clsx('rounded-md py-2.5 px-4 text-sm'),
-    lg: clsx('rounded-md py-2.5 px-4 text-base'),
+    xs: clsx('py-2 px-2.5 rounded-md text-sm'),
+    sm: clsx('py-2.5 px-3 rounded-md text-sm'),
+    md: clsx('py-2.5 px-4 rounded-md text-sm'),
+    lg: clsx('py-2.5 px-4 rounded-md text-base'),
   },
 };
 
