@@ -11,7 +11,7 @@ const Index = () => {
       <Stack.Screen options={{ title: "Home Page" }} />
       <View className="h-full w-full p-4">
         <Text className="mx-auto pb-2 text-5xl font-bold text-white">
-          Create <Text className="text-pink-400">T3</Text> Turbo
+          Create <Text className="text-pink-400">T3</Text> PeePoo
         </Text>
       </View>
     </SafeAreaView>

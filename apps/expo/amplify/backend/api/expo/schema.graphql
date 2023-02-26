@@ -1,0 +1,34 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY {
+  globalAuthRule: AuthRule = { allow: public }
+} # FOR TESTING ONLY!
+type Exercise @model {
+  id: ID!
+  name: String!
+  instructions: String
+  templateExercises: [TemplateExercise] @hasMany
+}
+
+type Template @model {
+  id: ID!
+  name: String!
+  templateExercises: [TemplateExercise] @hasMany
+  templateSets: [TemplateSet] @hasMany
+}
+
+type TemplateExercise @model {
+  id: ID!
+  notes: String
+  position: Int!
+  template: Template @belongsTo
+  exercise: Exercise @belongsTo
+  templateSets: [TemplateSet] @hasMany
+}
+
+type TemplateSet @model {
+  id: ID!
+  position: Int!
+  template: Template @belongsTo
+  templateExercise: TemplateExercise @belongsTo
+}

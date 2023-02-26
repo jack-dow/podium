@@ -1,4 +1,9 @@
 import { type ConfigContext, type ExpoConfig } from "@expo/config";
+import { Amplify } from "aws-amplify";
+
+import awsMobileConfig from "./src/aws-exports";
+
+Amplify.configure(awsMobileConfig);
 
 const defineConfig = (_ctx: ConfigContext): ExpoConfig => ({
   name: "expo",
