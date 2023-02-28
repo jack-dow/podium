@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import "@azure/core-asynciterator-polyfill";
 import React, { useCallback } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+
+import { TRPCProvider } from "~/api";
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 SplashScreen.preventAutoHideAsync();
@@ -35,14 +36,16 @@ const RootLayout = () => {
     return null;
   }
   return (
-    <SafeAreaProvider onLayout={onLayoutRootView}>
-      {/*
+    <TRPCProvider>
+      <SafeAreaProvider onLayout={onLayoutRootView}>
+        {/*
           The Stack component displays the current page.
           It also allows you to configure your screens 
         */}
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar />
-    </SafeAreaProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar />
+      </SafeAreaProvider>
+    </TRPCProvider>
   );
 };
 

@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo } from "react";
 import { View, type ViewProps } from "react-native";
-import { SpinnerIcon } from "@/assets/icons/Spinner";
 import clsx from "clsx";
 import { MotiPressable } from "moti/interactions";
 import { styled, variants, type VariantPropsWithoutNull } from "nativewind";
+import { SpinnerIcon } from "~/assets/icons/Spinner";
 import theme from "@podium/tailwind-config/theme";
 
 import { Text, type TextProps } from "../typography/Text";

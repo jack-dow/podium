@@ -4,9 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 
-import { Button } from "@/ui";
+import { Button } from "~/ui";
+import { api } from "~/api";
 
 const Index = () => {
+  const hello = api.example.hello.useQuery({ text: "from tRPC" });
   return (
     <SafeAreaView>
       {/* Changes page title visible on the header */}
@@ -18,6 +20,9 @@ const Index = () => {
         <Button>
           <Button.Text>Hello World</Button.Text>
         </Button>
+        <Text>
+          {hello.data ? hello.data.greeting : "Loading tRPC query..."}
+        </Text>
       </View>
     </SafeAreaView>
   );
