@@ -1,9 +1,4 @@
 import { type ConfigContext, type ExpoConfig } from "@expo/config";
-import { Amplify } from "aws-amplify";
-
-import awsMobileConfig from "./src/aws-exports";
-
-Amplify.configure(awsMobileConfig);
 
 const defineConfig = (_ctx: ConfigContext): ExpoConfig => ({
   name: "expo",
@@ -11,13 +6,7 @@ const defineConfig = (_ctx: ConfigContext): ExpoConfig => ({
   scheme: "expo",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  splash: {
-    image: "./assets/icon.png",
-    resizeMode: "contain",
-    backgroundColor: "#1F104A",
-  },
   updates: {
     fallbackToCacheTimeout: 0,
   },
@@ -25,12 +14,6 @@ const defineConfig = (_ctx: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "your.bundle.identifier",
-  },
-  android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/icon.png",
-      backgroundColor: "#1F104A",
-    },
   },
   extra: {
     eas: {

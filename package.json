@@ -6,6 +6,7 @@
   },
   "packageManager": "pnpm@7.27.1",
   "scripts": {
+    "expo:dev": "pnpm --filter expo dev",
     "build": "turbo build",
     "clean": "rm -rf node_modules",
     "clean:workspaces": "turbo clean",
