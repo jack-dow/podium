@@ -8,7 +8,7 @@ import { type AppRouter } from "@podium/expo-api";
 import { transformer } from "@podium/expo-api/transformer";
 
 /**
- * A set of typesafe hooks for consuming your API.
+ * A set of type-safe hooks for consuming your API.
  */
 export const api = createTRPCReact<AppRouter>();
 

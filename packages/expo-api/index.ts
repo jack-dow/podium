@@ -1,3 +1,3 @@
-export { appRouter, type AppRouter } from "./src/api/router";
-export { createTRPCContext } from "./src/api/trpc";
-export * from "./src/db";
+export { appRouter, type AppRouter } from "./src/router";
+export { createTRPCContext } from "./src/trpc";
+export * from "./src/prisma";

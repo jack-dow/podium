@@ -15,3 +15,69 @@ model Example {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+
+model Exercise {
+    id               String             @id @default(cuid())
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    name             String
+    instructions     String?
+    userId           String
+    profile          Profile            @relation(fields: [userId], references: [id])
+    TemplateExercise TemplateExercise[]
+}
+
+model Profile {
+    id               String             @id @default(cuid())
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    name             String
+    email            String?
+    Exercise         Exercise[]
+    Template         Template[]
+    TemplateExercise TemplateExercise[]
+    TemplateSet      TemplateSet[]
+}
+
+model Template {
+    id               String             @id @default(cuid())
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    name             String
+    userId           String
+    profile          Profile            @relation(fields: [userId], references: [id])
+    TemplateExercise TemplateExercise[]
+    TemplateSet      TemplateSet[]
+}
+
+model TemplateExercise {
+    id          String        @id @default(cuid())
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    exerciseId  String
+    exercise    Exercise      @relation(fields: [exerciseId], references: [id])
+    templateId  String
+    template    Template      @relation(fields: [templateId], references: [id])
+    userId      String
+    profile     Profile       @relation(fields: [userId], references: [id])
+    notes       String
+    order       Int
+    TemplateSet TemplateSet[]
+}
+
+model TemplateSet {
+    id                 String           @id @default(cuid())
+    createdAt          DateTime         @default(now())
+    updatedAt          DateTime         @updatedAt
+    templateExerciseId String
+    templateExercise   TemplateExercise @relation(fields: [templateExerciseId], references: [id])
+    templateId         String
+    template           Template         @relation(fields: [templateId], references: [id])
+    userId             String
+    profile            Profile          @relation(fields: [userId], references: [id])
+    comments           String
+    order              Int
+    type               String           @default("working")
+    repetitions        String           @default("1")
+    notes              String?
+}
