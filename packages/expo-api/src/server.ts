@@ -5,8 +5,22 @@ import fastify from "fastify";
 import { createTRPCContext } from "./context";
 import { appRouter } from "./router";
 
+const envToLogger = {
+  development: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: "HH:MM:ss Z",
+        ignore: "pid,hostname",
+      },
+    },
+  },
+  production: true,
+  test: false,
+};
+
 const server = fastify({
-  logger: true,
+  logger: envToLogger["development"] ?? true, // defaults to true if no entry matches in the map
   maxParamLength: 5000,
 });
 

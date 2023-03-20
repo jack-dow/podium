@@ -10,7 +10,26 @@ import { transformer } from "@podium/expo-api/transformer";
 /**
  * A set of type-safe hooks for consuming your API.
  */
-export const api = createTRPCReact<AppRouter>();
+export const api = createTRPCReact<AppRouter>({
+  unstable_overrides: {
+    useMutation: {
+      /**
+       * This function is called whenever a `.useMutation` succeeds
+       **/
+      async onSuccess(opts) {
+        /**
+         * @note that order here matters:
+         * The order here allows route changes in `onSuccess` without
+         * having a flash of content change whilst redirecting.
+         **/
+        // Calls the `onSuccess` defined in the `useQuery()`-options:
+        await opts.originalFn();
+        // Invalidate all queries in the react-query cache:
+        await opts.queryClient.invalidateQueries();
+      },
+    },
+  },
+});
 
 /**
  * Inference helpers for input types
@@ -34,12 +53,11 @@ const getBaseUrl = () => {
    * you'll have to manually set it. NOTE: Port 190001 should work for most but confirm
    * you don't have anything else running on it, or you'd have to change it.
    */
-  const localhost = Constants.manifest?.debuggerHost?.split(":")[0];
+  const localhost = "127.0.0.1" ?? Constants.manifest?.debuggerHost?.split(":")[0];
+
   if (!localhost) {
     // return "https://your-production-url.com";
-    throw new Error(
-      "Failed to get localhost. Please point to your production server.",
-    );
+    throw new Error("Failed to get localhost. Please point to your production server.");
   }
   return `http://${localhost}:19001`;
 };
@@ -48,9 +66,7 @@ const getBaseUrl = () => {
  * A wrapper for your app that provides the TRPC context.
  * Use only in _app.tsx
  */
-export const TRPCProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const TRPCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queryClient] = React.useState(() => new QueryClient());
   const [trpcClient] = React.useState(() =>
     api.createClient({

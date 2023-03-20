@@ -5,7 +5,9 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { ClerkProvider } from "@clerk/clerk-expo";
 
+import { OverlayManager } from "~/ui";
 import { TRPCProvider } from "~/api";
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -35,15 +37,20 @@ const RootLayout = () => {
   if (!isFontsLoaded) {
     return null;
   }
+
   return (
     <TRPCProvider>
       <SafeAreaProvider onLayout={onLayoutRootView}>
-        {/*
+        <ClerkProvider publishableKey="pk_test_Z3VpZGVkLXBpZ2Vvbi00MS5jbGVyay5hY2NvdW50cy5kZXYk">
+          <OverlayManager.Provider>
+            {/*
           The Stack component displays the current page.
           It also allows you to configure your screens 
         */}
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar />
+            <Stack screenOptions={{ headerShown: false }} />
+            <StatusBar />
+          </OverlayManager.Provider>
+        </ClerkProvider>
       </SafeAreaProvider>
     </TRPCProvider>
   );

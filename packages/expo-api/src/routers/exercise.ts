@@ -6,7 +6,7 @@ import { CreatedAt, Id, UpdatedAt } from "../schema-utils";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 const ExerciseName = z.string().min(1).max(64);
-const ExerciseInstructions = z.string().min(0).max(400).nullable();
+const ExerciseInstructions = z.string().min(0).max(400).optional();
 
 export const ExerciseSchema = z.object({
   id: Id,
@@ -14,20 +14,7 @@ export const ExerciseSchema = z.object({
   createdAt: CreatedAt,
   updatedAt: UpdatedAt,
   instructions: ExerciseInstructions,
-  userId: Id,
-});
-
-export const ExerciseCreateSchema = z.object({
-  id: Id.optional(),
-  userId: Id,
-  name: ExerciseName,
-  instructions: ExerciseInstructions,
-});
-
-export const ExerciseUpdateSchema = z.object({
-  id: Id,
-  name: ExerciseName.optional(),
-  instructions: ExerciseInstructions,
+  userId: Id.optional(),
 });
 
 /**
@@ -40,8 +27,22 @@ export const defaultExerciseSelect = Prisma.validator<Prisma.ExerciseSelect>()({
   id: true,
   name: true,
   createdAt: true,
+  updatedAt: true,
   instructions: true,
   userId: true,
+});
+
+export const ExerciseCreateSchema = z.object({
+  id: Id.optional(),
+  userId: Id.optional(),
+  name: ExerciseName,
+  instructions: ExerciseInstructions,
+});
+
+export const ExerciseUpdateSchema = z.object({
+  id: Id,
+  name: ExerciseName.optional(),
+  instructions: ExerciseInstructions,
 });
 
 /** Exercise router definition */
@@ -91,7 +92,7 @@ export const exerciseRouter = createTRPCRouter({
       };
     }),
 
-  byId: publicProcedure.input(z.object({ id: Id })).query(async ({ input }) => {
+  get: publicProcedure.input(z.object({ id: Id })).query(async ({ input }) => {
     const { id } = input;
 
     const exercise = await prisma.exercise.findUnique({
@@ -108,35 +109,29 @@ export const exerciseRouter = createTRPCRouter({
     return exercise;
   }),
 
-  create: publicProcedure
-    .input(ExerciseCreateSchema)
-    .mutation(async ({ input }) => {
-      const exercise = await prisma.exercise.create({
-        data: input,
-        select: defaultExerciseSelect,
-      });
+  create: publicProcedure.input(ExerciseCreateSchema).mutation(async ({ input }) => {
+    const exercise = await prisma.exercise.create({
+      data: input,
+      select: defaultExerciseSelect,
+    });
 
-      return exercise;
-    }),
+    return exercise;
+  }),
 
-  update: publicProcedure
-    .input(ExerciseUpdateSchema)
-    .mutation(async ({ input }) => {
-      const { id, ...updates } = input;
+  update: publicProcedure.input(ExerciseUpdateSchema).mutation(async ({ input }) => {
+    const { id, ...updates } = input;
 
-      const updatedExercise = await prisma.exercise.update({
-        where: { id },
-        data: updates,
-        select: defaultExerciseSelect,
-      });
+    const updatedExercise = await prisma.exercise.update({
+      where: { id },
+      data: updates,
+      select: defaultExerciseSelect,
+    });
 
-      return updatedExercise;
-    }),
+    return updatedExercise;
+  }),
 
-  delete: publicProcedure
-    .input(z.object({ id: Id }))
-    .mutation(async ({ input }) => {
-      await prisma.exercise.delete({ where: { id: input.id } });
-      return true;
-    }),
+  delete: publicProcedure.input(z.object({ id: Id })).mutation(async ({ input }) => {
+    await prisma.exercise.delete({ where: { id: input.id } });
+    return true;
+  }),
 });

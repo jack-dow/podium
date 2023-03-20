@@ -6,14 +6,7 @@
   "editor.formatOnSave": true,
   "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": [
-    "fastify",
-    "moti",
-    "nativewind",
-    "Pressable",
-    "tanstack",
-    "trpc"
-  ],
+  "cSpell.words": ["fastify", "moti", "nativewind", "Pressable", "SUPABASE", "tanstack", "trpc", "valtio"],
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   }

@@ -4,25 +4,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 
-import { Button } from "~/ui";
+import { Button, Dialog, OverlayManager } from "~/ui";
 import { api } from "~/api";
 
 const Index = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const router = useRouter();
   return (
     <SafeAreaView>
       {/* Changes page title visible on the header */}
       <Stack.Screen />
       <View className="h-full w-full p-md">
-        <Text className="mx-auto pb-sm text-5xl font-bold text-primary-normal">
-          Create <Text className="text-positive-normal">T3</Text> PeePoo
-        </Text>
-        <Button>
-          <Button.Text>Hello World</Button.Text>
+        <Text className="mx-auto pb-sm text-5xl font-bold text-primary-normal">Podium</Text>
+        <Button
+          onPress={() => {
+            router.push("/exercises");
+          }}
+        >
+          <Button.Text>Exercises</Button.Text>
         </Button>
-        <Text>
-          {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-        </Text>
       </View>
     </SafeAreaView>
   );
