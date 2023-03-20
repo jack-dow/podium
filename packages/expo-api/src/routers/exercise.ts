@@ -110,28 +110,23 @@ export const exerciseRouter = createTRPCRouter({
   }),
 
   create: publicProcedure.input(ExerciseCreateSchema).mutation(async ({ input }) => {
-    const exercise = await prisma.exercise.create({
+    await prisma.exercise.create({
       data: input,
       select: defaultExerciseSelect,
     });
-
-    return exercise;
   }),
 
   update: publicProcedure.input(ExerciseUpdateSchema).mutation(async ({ input }) => {
     const { id, ...updates } = input;
 
-    const updatedExercise = await prisma.exercise.update({
+    await prisma.exercise.update({
       where: { id },
       data: updates,
       select: defaultExerciseSelect,
     });
-
-    return updatedExercise;
   }),
 
   delete: publicProcedure.input(z.object({ id: Id })).mutation(async ({ input }) => {
     await prisma.exercise.delete({ where: { id: input.id } });
-    return true;
   }),
 });
