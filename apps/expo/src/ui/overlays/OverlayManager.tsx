@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { createContext, useContext } from "react";
 import { proxy, useSnapshot } from "valtio";
 
@@ -9,8 +8,6 @@ type OverlayManagerState = {
   visible: boolean;
   args: Record<string, any>;
   show: (args?: object) => void;
-  onShow: () => void;
-  onHide: () => void;
   hide: () => void;
 };
 
@@ -19,6 +16,8 @@ type OverlayManagerStore = {
 };
 
 const overlayManagerStore = proxy<OverlayManagerStore>({});
+// Used to prevent unnecessary re-render of all overlays when one overlay's props are changed
+const overlayManagerIdStore = proxy<Array<string>>([]);
 
 const OverlayManagerProvider = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -30,16 +29,28 @@ const OverlayManagerProvider = ({ children }: { children: React.ReactNode }) => 
 };
 
 const OverlayManagerPlaceholder = () => {
-  const snapshot = useSnapshot(overlayManagerStore);
-  const overlays = Object.values(snapshot);
+  const overlayIds = useSnapshot(overlayManagerIdStore);
 
   return (
     <>
-      {overlays.map((overlay) => {
-        return <overlay.component key={overlay.id} {...overlay.args} />;
+      {overlayIds.map((overlayId) => {
+        return <OverlayManagerPlaceholderComponent key={overlayId} overlayId={overlayId} />;
       })}
     </>
   );
+};
+
+const OverlayManagerPlaceholderComponent = ({ overlayId }: { overlayId: string }) => {
+  const snapshot = useSnapshot(overlayManagerStore);
+  const overlay = snapshot[overlayId];
+
+  console.log("Rendering from overlay:", overlayId);
+
+  if (!overlay) {
+    throw new Error("[OverlayManager] Could not find overlay with id: " + overlayId);
+  }
+
+  return <overlay.component {...overlay.args} />;
 };
 
 const OverlayManagerIdContext = createContext<string | null>(null);
@@ -75,21 +86,18 @@ const register = <P extends object>(Component: React.ComponentType<P>) => {
   Overlay.displayName = `${Component.displayName ?? Component.name ?? id}-Overlay`;
   const OverlayWithId = Object.assign(Overlay, { [symbolOverlayId]: id });
 
+  overlayManagerIdStore.push(id);
   overlayManagerStore[id] = {
     id,
     visible: false,
     component: OverlayWithId,
     args: {},
-    onShow: () => {},
     show: (args?: object) => {
       overlayManagerStore[id]!.visible = true;
       if (args) overlayManagerStore[id]!.args = args;
-      overlayManagerStore[id]!.onShow();
     },
-    onHide: () => {},
     hide: () => {
       overlayManagerStore[id]!.visible = false;
-      overlayManagerStore[id]!.onHide();
     },
   };
 
@@ -104,13 +112,9 @@ const useConfigOverlay = () => {
     throw new Error("[OverlayManager] An error occurred while trying to get the overlay config. ");
   }
 
-  const mutableConfig = overlayManagerStore[overlayId]!;
-
   return {
     id: config.id,
     visible: config.visible,
-    onShow: (onShowFn: () => void) => (mutableConfig.onShow = onShowFn),
-    onHide: (onHideFn: () => void) => (mutableConfig.onHide = onHideFn),
     hide: config.hide,
   };
 };
@@ -123,9 +127,11 @@ const useOverlay = <P extends object>(Component: ReactFCWithId<P>) => {
     throw new Error("[OverlayManager] An error occurred while trying to get the overlay config. ");
   }
 
+  type IsEmptyObject<Obj extends object> = [keyof Obj] extends [never] ? true : false;
+
   return {
     visible: config.visible,
-    show: config.show as (args: P) => void,
+    show: config.show as IsEmptyObject<P> extends false ? (args: P) => void : () => void,
     hide: config.hide,
   };
 };
