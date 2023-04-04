@@ -17,37 +17,37 @@ model Example {
 }
 
 model Exercise {
-    id               String             @id @default(cuid())
-    createdAt        DateTime           @default(now())
-    updatedAt        DateTime           @updatedAt
-    name             String
-    instructions     String?
-    userId           String?
-    TemplateExercise TemplateExercise[]
+    id                String             @id @default(cuid())
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+    name              String
+    instructions      String?
+    userId            String?
+    templateExercises TemplateExercise[]
 }
 
 model Template {
-    id               String             @id @default(cuid())
-    createdAt        DateTime           @default(now())
-    updatedAt        DateTime           @updatedAt
-    name             String
-    userId           String?
-    TemplateExercise TemplateExercise[]
-    TemplateSet      TemplateSet[]
+    id                String             @id @default(cuid())
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+    name              String
+    userId            String?
+    templateExercises TemplateExercise[]
+    templateSets      TemplateSet[]
 }
 
 model TemplateExercise {
-    id          String        @id @default(cuid())
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @updatedAt
-    exerciseId  String
-    exercise    Exercise      @relation(fields: [exerciseId], references: [id])
-    templateId  String
-    template    Template      @relation(fields: [templateId], references: [id])
-    userId      String?
-    notes       String?
-    order       Int
-    TemplateSet TemplateSet[]
+    id           String        @id @default(cuid())
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    exerciseId   String
+    exercise     Exercise      @relation(fields: [exerciseId], references: [id])
+    templateId   String
+    template     Template      @relation(fields: [templateId], references: [id])
+    userId       String?
+    notes        String?
+    order        Int
+    templateSets TemplateSet[]
 }
 
 model TemplateSet {

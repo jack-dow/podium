@@ -31,6 +31,7 @@ const config = {
         checksVoidReturn: false,
       },
     ],
+    "@typescript-eslint/no-explicit-any": ["error", { ignoreRestArgs: true }],
   },
   ignorePatterns: ["**/*.config.js", "**/*.config.cjs", "packages/config/**"],
   reportUnusedDisableDirectives: true,

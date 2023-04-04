@@ -7,12 +7,12 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 
 const TemplateSetRepetitions = z.string();
 const TemplateSetOrder = z.number();
-const TemplateSetType = z.enum(["warmup", "working", "failure", "dropset", "backoff", "cooldown"]);
+const TemplateSetType = z.string();
 const TemplateSetComments = z.string().min(0).max(1000).nullable();
 
 export const TemplateSetSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   templateId: Id,
   templateExerciseId: Id,
   createdAt: CreatedAt,
@@ -34,6 +34,7 @@ export const defaultTemplateSetSelect = Prisma.validator<Prisma.TemplateSetSelec
   templateId: true,
   templateExerciseId: true,
   createdAt: true,
+  updatedAt: true,
   order: true,
   type: true,
   repetitions: true,
@@ -42,7 +43,7 @@ export const defaultTemplateSetSelect = Prisma.validator<Prisma.TemplateSetSelec
 
 export const TemplateSetCreateSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   templateExerciseId: Id,
   templateId: Id,
   createdAt: CreatedAt,

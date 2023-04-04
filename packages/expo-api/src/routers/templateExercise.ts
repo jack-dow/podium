@@ -5,13 +5,14 @@ import { Prisma, prisma } from "../prisma";
 import { CreatedAt, Id } from "../schema-utils";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { ExerciseSchema, defaultExerciseSelect } from "./exercise";
+import { defaultTemplateSetSelect } from "./templateSet";
 
 const TemplateExerciseNotes = z.string().min(0).max(400).nullable();
 const TemplateExerciseOrder = z.number();
 
 export const TemplateExerciseSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   templateId: Id,
   exerciseId: Id,
   createdAt: CreatedAt,
@@ -32,14 +33,16 @@ export const defaultTemplateExerciseSelect = Prisma.validator<Prisma.TemplateExe
   templateId: true,
   exerciseId: true,
   createdAt: true,
+  updatedAt: true,
   order: true,
   notes: true,
   exercise: { select: defaultExerciseSelect },
+  templateSets: { select: defaultTemplateSetSelect },
 });
 
 export const TemplateExerciseCreateSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   templateId: Id,
   exerciseId: Id,
   createdAt: z.date(),
@@ -49,7 +52,7 @@ export const TemplateExerciseCreateSchema = z.object({
 
 export const TemplateExerciseUpdateSchema = z.object({
   id: Id,
-  notes: TemplateExerciseNotes,
+  notes: TemplateExerciseNotes.optional(),
   order: TemplateExerciseOrder.optional(),
 });
 

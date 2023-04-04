@@ -7,15 +7,21 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import {
   TemplateExerciseCreateSchema,
   TemplateExerciseSchema,
+  TemplateExerciseUpdateSchema,
   defaultTemplateExerciseSelect,
 } from "./templateExercise";
-import { TemplateSetCreateSchema, TemplateSetSchema, defaultTemplateSetSelect } from "./templateSet";
+import {
+  TemplateSetCreateSchema,
+  TemplateSetSchema,
+  TemplateSetUpdateSchema,
+  defaultTemplateSetSelect,
+} from "./templateSet";
 
 const TemplateName = z.string().min(1).max(64);
 
 export const TemplateCreateSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   name: TemplateName,
   templateExercises: z.array(TemplateExerciseSchema),
   templateSets: z.array(TemplateSetSchema),
@@ -31,29 +37,53 @@ export const defaultTemplateSelect = Prisma.validator<Prisma.TemplateSelect>()({
   id: true,
   name: true,
   createdAt: true,
+  updatedAt: true,
   userId: true,
 });
 
 export const TemplateUpdateSchema = z.object({
   id: Id,
-  userId: Id.optional(),
+  userId: Id.nullable(),
   name: TemplateName.optional(),
-  templateExercises: z.object({
-    new: z.array(TemplateExerciseSchema),
-    updated: z.array(TemplateExerciseSchema),
-    deleted: z.array(Id),
-  }),
-  templateSets: z.object({
-    new: z.array(TemplateSetSchema),
-    updated: z.array(TemplateSetSchema),
-    deleted: z.array(Id),
+  actions: z.object({
+    templateExercises: z.record(
+      z.discriminatedUnion("action", [
+        z.object({
+          action: z.literal("CREATE"),
+          payload: TemplateExerciseCreateSchema,
+        }),
+        z.object({
+          action: z.literal("UPDATE"),
+          payload: TemplateExerciseUpdateSchema,
+        }),
+        z.object({
+          action: z.literal("DELETE"),
+          payload: Id,
+        }),
+      ]),
+    ),
+    templateSets: z.record(
+      z.discriminatedUnion("action", [
+        z.object({
+          action: z.literal("CREATE"),
+          payload: TemplateSetCreateSchema,
+        }),
+        z.object({
+          action: z.literal("UPDATE"),
+          payload: TemplateSetUpdateSchema,
+        }),
+        z.object({
+          action: z.literal("DELETE"),
+          payload: Id,
+        }),
+      ]),
+    ),
   }),
 });
 
 const templateSelectWithRelations = {
   ...defaultTemplateSelect,
   templateExercises: { select: defaultTemplateExerciseSelect },
-  templateSets: { select: defaultTemplateSetSelect },
 };
 
 /** Template router definition */
@@ -142,72 +172,41 @@ export const templateRouter = createTRPCRouter({
   }),
 
   update: publicProcedure.input(TemplateUpdateSchema).mutation(async ({ input }) => {
-    const { templateExercises, templateSets, ...template } = input;
+    const { actions, ...template } = input;
 
     // Handle template updates
     if (template.name) {
       await prisma.template.update({ where: { id: template.id }, data: { name: template.name } });
     }
 
-    // Handle template exercise deletions
-    if (templateExercises.deleted) {
-      await prisma.templateExercise.deleteMany({ where: { id: { in: templateExercises.deleted } } });
-    }
-
-    // Handle template exercise updates
-    const templateExerciseUpdates = [];
-    for (const updatedTemplateExercise of templateExercises.updated) {
-      templateExerciseUpdates.push(
-        prisma.templateExercise.update({
-          where: { id: updatedTemplateExercise.id },
-          data: { notes: updatedTemplateExercise.notes, order: updatedTemplateExercise.order },
-        }),
-      );
-    }
-
-    await prisma.$transaction(templateExerciseUpdates);
-
-    // Handle template set deletions
-    if (templateSets.deleted) {
-      await prisma.templateSet.deleteMany({ where: { id: { in: templateSets.deleted } } });
-    }
-
-    // Handle template set updates
-    const templateSetUpdates = [];
-    for (const updatedTemplateSet of templateSets.updated) {
-      templateSetUpdates.push(
-        prisma.templateSet.update({
-          where: { id: updatedTemplateSet.id },
-          data: {
-            repetitions: updatedTemplateSet.repetitions,
-            order: updatedTemplateSet.order,
-            type: updatedTemplateSet.type,
-          },
-        }),
-      );
-    }
-
-    await prisma.$transaction(templateSetUpdates);
-
-    // Handle template exercise creations
-    if (templateExercises.new) {
-      const templateExerciseInserts = [];
-      for (const templateExercise of templateExercises.new) {
-        templateExerciseInserts.push(
-          prisma.templateExercise.create({ data: TemplateExerciseCreateSchema.parse(templateExercise) }),
-        );
-      }
-      await prisma.$transaction(templateExerciseInserts);
-    }
-
-    // Handle template set creations
-    if (templateSets.new) {
-      const templateSetInserts = [];
-      for (const templateSet of templateSets.new) {
-        templateSetInserts.push(prisma.templateSet.create({ data: TemplateSetCreateSchema.parse(templateSet) }));
-      }
-      await prisma.$transaction(templateSetInserts);
-    }
+    await prisma.$transaction([
+      ...Object.values(actions.templateExercises).map((action) => {
+        switch (action.action) {
+          case "CREATE":
+            return prisma.templateExercise.create({ data: TemplateExerciseCreateSchema.parse(action.payload) });
+          case "UPDATE":
+            return prisma.templateExercise.update({
+              where: { id: action.payload.id },
+              data: TemplateExerciseUpdateSchema.parse(action.payload),
+            });
+          case "DELETE":
+            return prisma.templateExercise.delete({ where: { id: action.payload } });
+        }
+      }),
+      ...Object.values(actions.templateSets).map((action) => {
+        switch (action.action) {
+          case "CREATE":
+            return prisma.templateSet.create({ data: TemplateSetCreateSchema.parse(action.payload) });
+          case "UPDATE":
+            return prisma.templateSet.update({
+              where: { id: action.payload.id },
+              data: TemplateSetUpdateSchema.parse(action.payload),
+            });
+          case "DELETE":
+            return prisma.templateSet.delete({ where: { id: action.payload } });
+        }
+      }),
+    ]);
   }),
 
   delete: publicProcedure.input(Id).mutation(async ({ input: id }) => {

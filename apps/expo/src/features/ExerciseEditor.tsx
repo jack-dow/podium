@@ -9,7 +9,7 @@ import { Alert, Anchor, Button, Dialog, Input, Label, Layout, Loader, OverlayMan
 import { api } from "~/api";
 
 const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: Exercise }) => {
-  const { visible, hide } = OverlayManager.useConfigOverlay();
+  const { visible, hide } = OverlayManager.useOverlay(ExerciseDeleteDialog);
 
   const deleteMutation = api.exercise.delete.useMutation();
 
@@ -61,8 +61,8 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
     error,
   } = api.exercise.get.useQuery({ id: exerciseId! }, { enabled: Boolean(exerciseId) });
 
-  const createMutation = api.exercise.create.useMutation();
-  const updateMutation = api.exercise.update.useMutation();
+  const createExerciseMutation = api.exercise.create.useMutation();
+  const updateExerciseMutation = api.exercise.update.useMutation();
 
   const {
     handleSubmit,
@@ -73,9 +73,9 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
 
   const onFormSubmit = handleSubmit((data) => {
     if (exercise) {
-      updateMutation.mutate({ ...exercise, ...data });
+      updateExerciseMutation.mutate({ ...exercise, ...data });
     } else {
-      createMutation.mutate({ ...data, userId: user?.id });
+      createExerciseMutation.mutate({ ...data, userId: user?.id ?? null });
     }
     router.back();
     reset();
@@ -89,6 +89,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
 
   return (
     <SafeAreaView>
+      {exercise && <ExerciseDeleteDialog exercise={exercise} />}
       <Layout>
         <Layout.Header>
           <Layout.BackButton />
@@ -169,6 +170,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
                         ref={instructionsRef}
                         multiline
                         numberOfLines={8}
+                        maxLength={500}
                         returnKeyType="next"
                         value={value ?? exercise?.instructions}
                         onBlur={onBlur}
@@ -183,13 +185,13 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
               <View className="flex-row justify-between">
                 <View />
                 <Button
-                  loading={updateMutation.isLoading || createMutation.isLoading}
+                  loading={updateExerciseMutation.isLoading || createExerciseMutation.isLoading}
                   disabled={!isDirty}
                   onPress={onFormSubmit}
                 >
                   <Button.Text>
-                    {exerciseId && (updateMutation.isLoading ? "Updating exercise..." : "Update exercise")}
-                    {!exerciseId && (createMutation.isLoading ? "Creating exercise..." : "Create exercise")}
+                    {exerciseId && (updateExerciseMutation.isLoading ? "Updating exercise..." : "Update exercise")}
+                    {!exerciseId && (createExerciseMutation.isLoading ? "Creating exercise..." : "Create exercise")}
                   </Button.Text>
                 </Button>
               </View>

@@ -14,7 +14,7 @@ export const ExerciseSchema = z.object({
   createdAt: CreatedAt,
   updatedAt: UpdatedAt,
   instructions: ExerciseInstructions,
-  userId: Id.optional(),
+  userId: Id.nullable(),
 });
 
 /**
@@ -34,7 +34,7 @@ export const defaultExerciseSelect = Prisma.validator<Prisma.ExerciseSelect>()({
 
 export const ExerciseCreateSchema = z.object({
   id: Id.optional(),
-  userId: Id.optional(),
+  userId: Id.nullable(),
   name: ExerciseName,
   instructions: ExerciseInstructions,
 });

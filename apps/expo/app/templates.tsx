@@ -6,9 +6,9 @@ import clsx from "clsx";
 import { Anchor, Layout, Loader, SafeAreaView, Text } from "~/ui";
 import { api } from "~/api";
 
-const Exercises = () => {
+const Templates = () => {
   const router = useRouter();
-  const { data, isLoading } = api.exercise.list.useQuery({ limit: 50 });
+  const { data, isLoading } = api.template.list.useQuery({ limit: 50 });
 
   return (
     <SafeAreaView>
@@ -16,11 +16,11 @@ const Exercises = () => {
         <Layout.Header>
           <Layout.BackButton />
           <View className="flex-row items-center justify-between">
-            <Layout.Title>Exercises</Layout.Title>
-            <Anchor onPress={() => router.push("/exercises/new")}>New exercise</Anchor>
+            <Layout.Title>Templates</Layout.Title>
+            <Anchor onPress={() => router.push("/template/new")}>New template</Anchor>
           </View>
           <Layout.Description>
-            Here you can manage the exercises that are referenced in your plans and single workouts
+            Here you can manage the templates that are referenced in your plans and workouts
           </Layout.Description>
         </Layout.Header>
         <Layout.Content>
@@ -29,13 +29,13 @@ const Exercises = () => {
               <Loader />
             </View>
           ) : (
-            <ScrollView className="my-base px-base">
-              {data?.items.map((exercise, index) => {
+            <ScrollView className="p-base">
+              {data?.items.map((template, index) => {
                 const isFirst = index === 0;
                 const isLast = index === data.items.length - 1;
                 return (
                   <View
-                    key={exercise.id}
+                    key={template.id}
                     className={clsx(
                       "border-2 border-primary-normal p-sm",
                       isFirst ? "rounded-t-md" : "",
@@ -45,9 +45,11 @@ const Exercises = () => {
                     <View className="p-sm sm:px-lg">
                       <View className="flex-row items-center justify-between">
                         <Text weight="medium" className="truncate text-base capitalize text-primary-normal">
-                          {exercise.name}
+                          {template.name}
                         </Text>
-                        <Anchor onPress={() => router.push(`/exercises/${exercise.id}`)}>Edit</Anchor>
+                        <View className="space-x-md">
+                          <Anchor onPress={() => router.push(`/template/${template.id}`)}>Edit</Anchor>
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -61,4 +63,4 @@ const Exercises = () => {
   );
 };
 
-export default Exercises;
+export default Templates;

@@ -15,9 +15,11 @@
     "db:push": "pnpm prisma db push --skip-generate"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^4.4.5",
     "@prisma/client": "^4.10.1",
     "@trpc/server": "^10.4.3",
     "@types/node": "^18.11.10",
+    "fast-text-encoding": "^1.0.6",
     "fastify": "^4.13.0",
     "superjson": "^1.12.2",
     "tsx": "^3.12.1"

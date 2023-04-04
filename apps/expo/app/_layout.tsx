@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import "fast-text-encoding";
 import React, { useCallback } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -6,6 +7,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import { OverlayManager } from "~/ui";
 import { TRPCProvider } from "~/api";
@@ -42,14 +44,14 @@ const RootLayout = () => {
     <TRPCProvider>
       <SafeAreaProvider onLayout={onLayoutRootView}>
         <ClerkProvider publishableKey="pk_test_Z3VpZGVkLXBpZ2Vvbi00MS5jbGVyay5hY2NvdW50cy5kZXYk">
-          <OverlayManager.Provider>
-            {/*
+          {/*
           The Stack component displays the current page.
           It also allows you to configure your screens 
         */}
+          <OverlayManager.PortalProvider>
             <Stack screenOptions={{ headerShown: false }} />
-            <StatusBar />
-          </OverlayManager.Provider>
+            <StatusBar translucent backgroundColor="transparent" />
+          </OverlayManager.PortalProvider>
         </ClerkProvider>
       </SafeAreaProvider>
     </TRPCProvider>

@@ -41,7 +41,10 @@ const InputRoot = forwardRef<TextInput, InputProps>(({ invalid, rightIcon, style
               ? "border-primary-active"
               : "border-primary-normal",
           )}
-          style={{ textAlignVertical: props.multiline ? "top" : "center" }}
+          style={{
+            textAlignVertical: props.multiline ? "top" : "center",
+            maxHeight: props.numberOfLines ? 20 * props.numberOfLines : undefined,
+          }}
           onBlur={(e) => {
             if (props?.onBlur) props.onBlur(e);
             setIsFocused(false);

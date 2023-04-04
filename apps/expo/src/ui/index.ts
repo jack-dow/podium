@@ -13,7 +13,9 @@ export * from "./inputs/Label";
 export * from "./inputs/PasswordInput";
 
 export * from "./navigation/Anchor";
+export * from "./navigation/Stepper";
 
+export * from "./overlays/BottomSheet";
 export * from "./overlays/Dialog";
 export * from "./overlays/OverlayManager";
 
