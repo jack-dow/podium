@@ -1,17 +1,22 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { View, type TextInput } from "react-native";
 import { useRouter } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { createId } from "@paralleldrive/cuid2";
 import { Controller, useForm } from "react-hook-form";
-import { type Exercise } from "@podium/expo-api";
 
 import { Alert, Anchor, Button, Dialog, Input, Label, Layout, Loader, OverlayManager, SafeAreaView } from "~/ui";
-import { api } from "~/api";
+import {
+  useExercise,
+  useExerciseDeleteMutation,
+  useExerciseInsertMutation,
+  useExerciseUpdateMutation,
+  type Exercise,
+} from "~/api";
 
 const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: Exercise }) => {
   const { visible, hide } = OverlayManager.useOverlay(ExerciseDeleteDialog);
 
-  const deleteMutation = api.exercise.delete.useMutation();
+  const deleteMutation = useExerciseDeleteMutation();
 
   return (
     <Dialog open={visible} onClose={hide} intent="danger">
@@ -24,11 +29,7 @@ const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: 
         </Dialog.Description>
       </Dialog.Content>
       <Dialog.Actions>
-        <Button
-          intent="danger"
-          onPress={() => deleteMutation.mutate({ id: exercise.id })}
-          loading={deleteMutation.isLoading}
-        >
+        <Button intent="danger" onPress={() => deleteMutation.mutate(exercise.id)} loading={deleteMutation.isLoading}>
           <Button.Text>{deleteMutation.isLoading ? "Deleting exercise..." : "Delete exercise"}</Button.Text>
         </Button>
         <Button intent="tertiary" onPress={hide} className="mt-md">
@@ -39,53 +40,34 @@ const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: 
   );
 });
 
-type ExerciseEditorProps = {
-  exerciseId?: string;
+export type ExerciseEditorFormProps = {
+  name: string;
+  instructions: string;
 };
 
-type FormProps = {
-  name: string;
-  equipment: string;
-  muscles: string[];
-  category: string;
-  instructions: string;
+type ExerciseEditorProps = {
+  exerciseId: string | undefined;
 };
 
 export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
   const router = useRouter();
+  const [error, setError] = useState("");
 
-  const { user } = useUser();
-  const {
-    data: exercise,
-    isLoading,
-    error,
-  } = api.exercise.get.useQuery({ id: exerciseId! }, { enabled: Boolean(exerciseId) });
+  const { data: exercise, isFetching } = useExercise(exerciseId);
 
-  const createExerciseMutation = api.exercise.create.useMutation();
-  const updateExerciseMutation = api.exercise.update.useMutation();
+  const insertExerciseMutation = useExerciseInsertMutation();
+  const updateExerciseMutation = useExerciseUpdateMutation(exerciseId);
 
   const {
     handleSubmit,
     control,
     reset,
     formState: { errors: formErrors, isDirty },
-  } = useForm<FormProps>({ criteriaMode: "all" });
-
-  const onFormSubmit = handleSubmit((data) => {
-    if (exercise) {
-      updateExerciseMutation.mutate({ ...exercise, ...data });
-    } else {
-      createExerciseMutation.mutate({ ...data, userId: user?.id ?? null });
-    }
-    router.back();
-    reset();
-  });
+  } = useForm<ExerciseEditorFormProps>({ criteriaMode: "all" });
 
   const exerciseDeleteDialogAPI = OverlayManager.useOverlay(ExerciseDeleteDialog);
 
   const instructionsRef = useRef<TextInput>(null);
-
-  console.log({ exercise });
 
   return (
     <SafeAreaView>
@@ -95,21 +77,21 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
           <Layout.BackButton />
           <View className="flex-row items-center justify-between">
             <Layout.Title>{exerciseId ? "Update Exercise" : "Create Exercise"}</Layout.Title>
-            {exercise && (
+            {exerciseId && (
               <Anchor onPress={() => exerciseDeleteDialogAPI.show({ exercise })} intent="danger">
                 Delete Exercise
               </Anchor>
             )}
           </View>
           <Layout.Description>
-            {exercise
+            {exerciseId
               ? "Here is where you can edit the exercises you've previously created which are referenced throughout the app"
               : "Here is where you can create the exercises that will be referenced throughout the app"}
           </Layout.Description>
         </Layout.Header>
 
         <Layout.Content className="my-base space-y-lg px-base">
-          {isLoading && exerciseId ? (
+          {isFetching ? (
             <View className="flex-1 items-center justify-center">
               <Loader />
             </View>
@@ -128,8 +110,8 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
               )}
               {!!error && (
                 <Alert intent="danger">
-                  <Alert.Title>An error occurred...</Alert.Title>
-                  <Alert.Description>{error.message}</Alert.Description>
+                  <Alert.Title>Failed to submit template...</Alert.Title>
+                  <Alert.Description>{error}</Alert.Description>
                 </Alert>
               )}
 
@@ -138,6 +120,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
                 <Controller
                   name="name"
                   control={control}
+                  defaultValue={exercise?.name}
                   rules={{
                     required: "Please provide a name for this exercise.",
                   }}
@@ -146,7 +129,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
                       <Label>Name</Label>
                       <Input
                         returnKeyType="next"
-                        value={value ?? exercise?.name}
+                        value={value}
                         invalid={!!fieldState.error}
                         onBlur={onBlur}
                         blurOnSubmit={false}
@@ -163,6 +146,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
                 <Controller
                   name="instructions"
                   control={control}
+                  defaultValue={exercise?.instructions ?? ""}
                   render={({ field: { value, onChange, onBlur } }) => (
                     <>
                       <Label>Instructions</Label>
@@ -185,13 +169,55 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
               <View className="flex-row justify-between">
                 <View />
                 <Button
-                  loading={updateExerciseMutation.isLoading || createExerciseMutation.isLoading}
+                  loading={updateExerciseMutation.isLoading || insertExerciseMutation.isLoading}
                   disabled={!isDirty}
-                  onPress={onFormSubmit}
+                  onPress={handleSubmit((data) => {
+                    if (exerciseId) {
+                      updateExerciseMutation.mutate(data, {
+                        onSuccess() {
+                          router.back();
+                          reset();
+                        },
+                        onError(error) {
+                          if (error instanceof Error) {
+                            setError(error.message);
+                          } else if (typeof error === "string") {
+                            setError(error);
+                          } else {
+                            setError("Failed to update exercise. Please try again later.");
+                          }
+                        },
+                      });
+                    } else {
+                      insertExerciseMutation.mutate(
+                        {
+                          id: createId(),
+                          createdAt: new Date(),
+                          updatedAt: new Date(),
+                          ...data,
+                        },
+                        {
+                          onSuccess() {
+                            router.back();
+                            reset();
+                          },
+                          onError(error) {
+                            if (error instanceof Error) {
+                              setError(error.message);
+                            } else if (typeof error === "string") {
+                              setError(error);
+                            } else {
+                              setError("Failed to create exercise. Please try again later.");
+                            }
+                          },
+                        },
+                      );
+                    }
+                  })}
                 >
                   <Button.Text>
                     {exerciseId && (updateExerciseMutation.isLoading ? "Updating exercise..." : "Update exercise")}
-                    {!exerciseId && (createExerciseMutation.isLoading ? "Creating exercise..." : "Create exercise")}
+                    {!exerciseId && (insertExerciseMutation.isLoading ? "Creating exercise..." : "Create exercise")}
                   </Button.Text>
                 </Button>
               </View>

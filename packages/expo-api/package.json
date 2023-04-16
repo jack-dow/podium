@@ -19,12 +19,17 @@
     "@prisma/client": "^4.10.1",
     "@trpc/server": "^10.4.3",
     "@types/node": "^18.11.10",
+    "better-sqlite3": "^8.2.0",
+    "drizzle-orm": "^0.23.6",
+    "drizzle-zod": "^0.2.1",
     "fast-text-encoding": "^1.0.6",
     "fastify": "^4.13.0",
     "superjson": "^1.12.2",
     "tsx": "^3.12.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.3",
+    "drizzle-kit": "^0.17.3",
     "eslint": "^8.34.0",
     "eslint-config-podium": "workspace:0.0.0",
     "pino-pretty": "^10.0.0",

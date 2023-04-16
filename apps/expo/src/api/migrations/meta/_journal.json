@@ -1,0 +1,18 @@
+{
+  "version": "5",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1680836784946,
+      "tag": "0000_supreme_rawhide_kid"
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1681443600083,
+      "tag": "0001_handy_secret_warriors"
+    }
+  ]
+}

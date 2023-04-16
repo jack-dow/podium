@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "sql": ["CREATE TABLE IF NOT EXISTS exercises (\n\tid text PRIMARY KEY NOT NULL,\n\tname text NOT NULL\n);\n"],
+      "folderMillis": 1680836784946,
+      "hash": "8f27886e574ac4bdd211ec5ef1f3076a12c54582bbcf0ccf0934cb6846c0da9a"
+    },
+    {
+      "sql": [
+        "ALTER TABLE exercises ADD `created_at` integer NOT NULL;\nALTER TABLE exercises ADD `updated_at` integer NOT NULL;\nALTER TABLE exercises ADD `instructions` text;\nALTER TABLE exercises ADD `user_id` text;"
+      ],
+      "folderMillis": 1681443600083,
+      "hash": "b71a0b63b5061793ed5f13e3be6449ea955a71c0418539c47eae2c36d1d45908"
+    }
+  ]
+}

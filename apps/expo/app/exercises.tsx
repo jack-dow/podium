@@ -4,11 +4,11 @@ import { useRouter } from "expo-router";
 import clsx from "clsx";
 
 import { Anchor, Layout, Loader, SafeAreaView, Text } from "~/ui";
-import { api } from "~/api";
+import { useExercises } from "~/api";
 
 const Exercises = () => {
   const router = useRouter();
-  const { data, isLoading } = api.exercise.list.useQuery({ limit: 50 });
+  const { data: exercises, isLoading } = useExercises();
 
   return (
     <SafeAreaView>
@@ -30,9 +30,9 @@ const Exercises = () => {
             </View>
           ) : (
             <ScrollView className="my-base px-base">
-              {data?.items.map((exercise, index) => {
+              {exercises?.map((exercise, index) => {
                 const isFirst = index === 0;
-                const isLast = index === data.items.length - 1;
+                const isLast = index === exercises.length - 1;
                 return (
                   <View
                     key={exercise.id}

@@ -6,7 +6,6 @@ import { FlashList } from "@shopify/flash-list";
 import clsx from "clsx";
 
 import { BottomSheet, Button, Dialog, OverlayManager, SafeAreaView } from "~/ui";
-import { api } from "~/api";
 
 const Index = () => {
   const router = useRouter();
