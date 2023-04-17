@@ -8,7 +8,7 @@ import type { Exercise } from "@podium/expo-api";
 import theme from "@podium/tailwind-config/theme";
 
 import { BottomSheet, Loader, Text } from "~/ui";
-import { api } from "~/api";
+import { useExercises } from "~/api";
 import { MinusSmallIcon, PlusSmallIcon, SearchIcon } from "~/assets/icons/mini";
 
 const StyledMotiPressable = styled(MotiPressable);
@@ -23,23 +23,20 @@ type ExerciseSelectBottomSheetRootProps = {
 const ExerciseSelectBottomSheetRoot = ({ renderItem, visible, hide }: ExerciseSelectBottomSheetRootProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [items, setItems] = useState<Exercise[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Exercise[]>([]);
-  const { isLoading, isError } = api.exercise.list.useQuery(
-    { limit: 50 },
-    {
-      onSuccess: (data) => {
-        setItems(data.items);
-        setFilteredItems(data.items);
-      },
-    },
-  );
+  const { data: exercises, isLoading, isError } = useExercises();
+  const [filteredExercises, setFilteredExercises] = useState<Exercise[] | null>(null);
 
   const ref = useRef<GorhomBottomSheet>(null);
 
+  useEffect(() => {
+    if (exercises && exercises.length > 0 && filteredExercises === null) {
+      setFilteredExercises(exercises);
+    }
+  }, [exercises, filteredExercises]);
+
   const handleSearchInput = (text: string) => {
     setSearchTerm(text);
-    setFilteredItems(items.filter((item) => item.name.toLowerCase().includes(text.toLowerCase())));
+    setFilteredExercises(exercises?.filter((e) => e.name.toLowerCase().includes(text.toLowerCase())) ?? []);
   };
 
   useEffect(() => {
@@ -75,7 +72,7 @@ const ExerciseSelectBottomSheetRoot = ({ renderItem, visible, hide }: ExerciseSe
           </View>
         )}
 
-        {filteredItems.map((exercise) => renderItem(exercise))}
+        {filteredExercises && filteredExercises.map((exercise) => renderItem(exercise))}
       </BottomSheet.Container>
     </BottomSheet>
   );

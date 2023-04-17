@@ -1,16 +1,1 @@
-{
-  "entries": [
-    {
-      "sql": ["CREATE TABLE IF NOT EXISTS exercises (\n\tid text PRIMARY KEY NOT NULL,\n\tname text NOT NULL\n);\n"],
-      "folderMillis": 1680836784946,
-      "hash": "8f27886e574ac4bdd211ec5ef1f3076a12c54582bbcf0ccf0934cb6846c0da9a"
-    },
-    {
-      "sql": [
-        "ALTER TABLE exercises ADD `created_at` integer NOT NULL;\nALTER TABLE exercises ADD `updated_at` integer NOT NULL;\nALTER TABLE exercises ADD `instructions` text;\nALTER TABLE exercises ADD `user_id` text;"
-      ],
-      "folderMillis": 1681443600083,
-      "hash": "b71a0b63b5061793ed5f13e3be6449ea955a71c0418539c47eae2c36d1d45908"
-    }
-  ]
-}
+{"entries":[{"sql":["CREATE TABLE `exercises` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\t`user_id` text,\n\t`name` text NOT NULL,\n\t`instructions` text\n);\n\nCREATE TABLE `template_exercises` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\t`user_id` text,\n\t`exercise_id` text NOT NULL,\n\t`template_id` text NOT NULL,\n\t`order` integer NOT NULL,\n\t`notes` text,\n\tFOREIGN KEY (`exercise_id`) REFERENCES `exercises`(`id`) ON DELETE cascade,\n\tFOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE cascade\n);\n\nCREATE TABLE `template_sets` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\t`user_id` text,\n\t`template_id` text NOT NULL,\n\t`template_exercise_id` text NOT NULL,\n\t`order` integer NOT NULL,\n\t`type` text NOT NULL,\n\t`repetitions` text NOT NULL,\n\t`comments` text,\n\tFOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE cascade,\n\tFOREIGN KEY (`template_exercise_id`) REFERENCES `template_exercises`(`id`) ON DELETE cascade\n);\n\nCREATE TABLE `templates` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\t`user_id` text,\n\t`name` text NOT NULL\n);\n"],"folderMillis":1681701384620,"hash":"4bee22cc57339478b6e9b35ca0477b5208c5851697fb356eac6a3ff1f3369d88"}]}

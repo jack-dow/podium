@@ -4,11 +4,11 @@ import { useRouter } from "expo-router";
 import clsx from "clsx";
 
 import { Anchor, Layout, Loader, SafeAreaView, Text } from "~/ui";
-import { api } from "~/api";
+import { useTemplates } from "~/api";
 
 const Templates = () => {
   const router = useRouter();
-  const { data, isLoading } = api.template.list.useQuery({ limit: 50 });
+  const { data: templates, isLoading } = useTemplates();
 
   return (
     <SafeAreaView>
@@ -30,9 +30,9 @@ const Templates = () => {
             </View>
           ) : (
             <ScrollView className="p-base">
-              {data?.items.map((template, index) => {
+              {templates?.map((template, index) => {
                 const isFirst = index === 0;
-                const isLast = index === data.items.length - 1;
+                const isLast = index === templates.length - 1;
                 return (
                   <View
                     key={template.id}

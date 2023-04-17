@@ -1,31 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { createId } from "@paralleldrive/cuid2";
-import { useFocusEffect } from "@react-navigation/native";
 import { proxy, useSnapshot } from "valtio";
 import { proxyMap } from "valtio/utils";
-import { type z } from "zod";
-import { type TemplateUpdateSchema } from "@podium/expo-api/src/routers/template";
 
-import type { RouterInputs, RouterOutputs } from "~/api";
+import {
+  type Exercise,
+  type Template,
+  type TemplateExercise,
+  type TemplateSet,
+  type UpdateTemplateExerciseSchema,
+  type UpdateTemplateSchema,
+  type UpdateTemplateSetSchema,
+} from "~/api";
 
-type Exercise = RouterOutputs["exercise"]["get"];
-export type Template = RouterOutputs["template"]["get"];
-export type TemplateExercise = RouterOutputs["templateExercise"]["get"];
-export type TemplateSet = RouterOutputs["templateSet"]["get"];
-
-export type TemplateStoreState = {
-  id: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string | null;
-  templateExercises: Map<
-    string,
-    Omit<RouterOutputs["templateExercise"]["get"], "templateSets"> & {
-      templateSets: Map<string, RouterOutputs["templateSet"]["get"]>;
-    }
-  >;
-  actions: z.infer<typeof TemplateUpdateSchema>["actions"];
+export type TemplateStoreState = Template & {
+  actions: UpdateTemplateSchema["actions"];
   handleSubmit: (template: Omit<TemplateStoreState, "handleSubmit">) => void;
 };
 
@@ -34,7 +23,7 @@ const createTemplateStore = ({
   template: initTemplate,
 }: {
   handleSubmit: TemplateStoreState["handleSubmit"];
-  template?: RouterOutputs["template"]["get"];
+  template?: Template;
 }) => {
   const DEFAULT_PROPS: TemplateStoreState = {
     id: initTemplate?.id || createId(),
@@ -42,7 +31,7 @@ const createTemplateStore = ({
     createdAt: initTemplate?.createdAt || new Date(),
     updatedAt: initTemplate?.updatedAt || new Date(),
     userId: initTemplate?.userId || null,
-    templateExercises: proxyMap(),
+    templateExercises: proxyMap(initTemplate?.templateExercises),
     actions: {
       templateExercises: {},
       templateSets: {},
@@ -63,7 +52,7 @@ const createTemplateStore = ({
       // Template Exercise API
       templateExercise: {
         create(exercise: Exercise) {
-          const templateExercise = {
+          const templateExercise: TemplateExercise = {
             id: createId(),
             exerciseId: exercise.id,
             exercise,
@@ -72,14 +61,14 @@ const createTemplateStore = ({
             updatedAt: new Date(),
             notes: "",
             userId: null,
-            templateSets: proxyMap<string, RouterOutputs["templateSet"]["get"]>(),
+            templateSets: proxyMap(),
             order: template.templateExercises.size,
           };
 
           template.templateExercises.set(templateExercise.id, templateExercise);
 
           template.actions.templateExercises[templateExercise.id] = {
-            action: "CREATE",
+            type: "INSERT",
             payload: templateExercise,
           };
 
@@ -88,22 +77,22 @@ const createTemplateStore = ({
           }
         },
 
-        update(updatedTemplateExercise: RouterInputs["templateExercise"]["update"]) {
-          const templateExercise = template.templateExercises.get(updatedTemplateExercise.id);
+        update(templateExerciseId: string, updatedTemplateExercise: UpdateTemplateExerciseSchema) {
+          const templateExercise = template.templateExercises.get(templateExerciseId);
 
           if (!templateExercise) return;
 
           const existingAction = template.actions.templateExercises[templateExercise.id];
 
-          if (existingAction?.action === "DELETE") {
+          if (existingAction && existingAction.type === "DELETE") {
             template.templateExercises.delete(templateExercise.id);
             return;
           }
 
-          Object.assign(templateExercise, { ...updatedTemplateExercise, updatedAt: new Date() });
+          Object.assign(templateExercise, updatedTemplateExercise);
 
           template.actions.templateExercises[templateExercise.id] = {
-            action: existingAction?.action ?? "UPDATE",
+            type: existingAction?.type ?? "UPDATE",
             payload: templateExercise,
           };
 
@@ -118,7 +107,7 @@ const createTemplateStore = ({
           template.templateExercises.delete(templateExerciseId);
 
           template.actions.templateExercises[templateExercise.id] = {
-            action: "DELETE",
+            type: "DELETE",
             payload: templateExercise.id,
           };
 
@@ -131,7 +120,7 @@ const createTemplateStore = ({
       // Template Set API
       templateSet: {
         create: (templateExerciseId: string) => {
-          const templateSet: RouterOutputs["templateSet"]["get"] = {
+          const templateSet: TemplateSet = {
             id: createId(),
             templateExerciseId,
             type: "working",
@@ -147,21 +136,19 @@ const createTemplateStore = ({
           template.templateExercises.get(templateExerciseId)?.templateSets.set(templateSet.id, templateSet);
 
           template.actions.templateSets[templateSet.id] = {
-            action: "CREATE",
+            type: "INSERT",
             payload: templateSet,
           };
         },
 
-        update: (templateExerciseId: string, updatedTemplateSet: RouterInputs["templateSet"]["update"]) => {
-          const templateSet = template.templateExercises
-            .get(templateExerciseId)
-            ?.templateSets.get(updatedTemplateSet.id);
+        update: (templateExerciseId: string, templateSetId: string, updatedTemplateSet: UpdateTemplateSetSchema) => {
+          const templateSet = template.templateExercises.get(templateExerciseId)?.templateSets.get(templateSetId);
 
           if (!templateSet) return;
 
           const existingAction = template.actions.templateSets[templateSet.id];
 
-          if (existingAction?.action === "DELETE") {
+          if (existingAction?.type === "DELETE") {
             template.templateExercises.get(templateExerciseId)?.templateSets.delete(templateSet.id);
             return;
           }
@@ -169,7 +156,7 @@ const createTemplateStore = ({
           Object.assign(templateSet, { ...updatedTemplateSet, updatedAt: new Date() });
 
           template.actions.templateSets[templateSet.id] = {
-            action: existingAction?.action ?? "UPDATE",
+            type: existingAction?.type ?? "UPDATE",
             payload: templateSet,
           };
         },
@@ -182,7 +169,7 @@ const createTemplateStore = ({
           template.templateExercises.get(templateExerciseId)?.templateSets.delete(templateSetId);
 
           template.actions.templateSets[templateSet.id] = {
-            action: "DELETE",
+            type: "DELETE",
             payload: templateSet.id,
           };
 

@@ -14,6 +14,7 @@ import {
 } from "~/api";
 
 const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: Exercise }) => {
+  const router = useRouter();
   const { visible, hide } = OverlayManager.useOverlay(ExerciseDeleteDialog);
 
   const deleteMutation = useExerciseDeleteMutation();
@@ -29,7 +30,18 @@ const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: 
         </Dialog.Description>
       </Dialog.Content>
       <Dialog.Actions>
-        <Button intent="danger" onPress={() => deleteMutation.mutate(exercise.id)} loading={deleteMutation.isLoading}>
+        <Button
+          intent="danger"
+          onPress={() =>
+            deleteMutation.mutate(exercise.id, {
+              onSuccess() {
+                hide();
+                router.back();
+              },
+            })
+          }
+          loading={deleteMutation.isLoading}
+        >
           <Button.Text>{deleteMutation.isLoading ? "Deleting exercise..." : "Delete exercise"}</Button.Text>
         </Button>
         <Button intent="tertiary" onPress={hide} className="mt-md">
@@ -41,6 +53,7 @@ const ExerciseDeleteDialog = OverlayManager.register(({ exercise }: { exercise: 
 });
 
 export type ExerciseEditorFormProps = {
+  id: string;
   name: string;
   instructions: string;
 };
@@ -63,7 +76,7 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
     control,
     reset,
     formState: { errors: formErrors, isDirty },
-  } = useForm<ExerciseEditorFormProps>({ criteriaMode: "all" });
+  } = useForm<ExerciseEditorFormProps>({ defaultValues: { id: exerciseId ?? createId() }, criteriaMode: "all" });
 
   const exerciseDeleteDialogAPI = OverlayManager.useOverlay(ExerciseDeleteDialog);
 
@@ -172,46 +185,25 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
                   loading={updateExerciseMutation.isLoading || insertExerciseMutation.isLoading}
                   disabled={!isDirty}
                   onPress={handleSubmit((data) => {
+                    function onSuccess() {
+                      router.back();
+                      reset();
+                    }
+
+                    function onError(error: unknown) {
+                      if (error instanceof Error) {
+                        setError(error.message);
+                      } else if (typeof error === "string") {
+                        setError(error);
+                      } else {
+                        setError(`Failed to ${exerciseId ? "update" : "create"} exercise. Please try again later.`);
+                      }
+                    }
+
                     if (exerciseId) {
-                      updateExerciseMutation.mutate(data, {
-                        onSuccess() {
-                          router.back();
-                          reset();
-                        },
-                        onError(error) {
-                          if (error instanceof Error) {
-                            setError(error.message);
-                          } else if (typeof error === "string") {
-                            setError(error);
-                          } else {
-                            setError("Failed to update exercise. Please try again later.");
-                          }
-                        },
-                      });
+                      updateExerciseMutation.mutate(data, { onSuccess, onError });
                     } else {
-                      insertExerciseMutation.mutate(
-                        {
-                          id: createId(),
-                          createdAt: new Date(),
-                          updatedAt: new Date(),
-                          ...data,
-                        },
-                        {
-                          onSuccess() {
-                            router.back();
-                            reset();
-                          },
-                          onError(error) {
-                            if (error instanceof Error) {
-                              setError(error.message);
-                            } else if (typeof error === "string") {
-                              setError(error);
-                            } else {
-                              setError("Failed to create exercise. Please try again later.");
-                            }
-                          },
-                        },
-                      );
+                      insertExerciseMutation.mutate(data, { onSuccess, onError });
                     }
                   })}
                 >

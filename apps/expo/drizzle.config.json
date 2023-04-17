@@ -1,4 +1,4 @@
 {
   "out": "./src/api/migrations",
-  "schema": "./src/api/schema.ts"
+  "schema": "./src/api/schema"
 }

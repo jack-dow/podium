@@ -1,21 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { and, asc, desc, eq, or } from "drizzle-orm/expressions";
+import { eq } from "drizzle-orm/expressions";
 
 import { db } from "../drizzle";
-import { exercises, updateExerciseSchema, type InsertExerciseSchema, type UpdateExerciseSchema } from "../schema";
+import {
+  defaultExerciseSelect,
+  exercises,
+  updateExerciseSchema,
+  type InsertExerciseSchema,
+  type UpdateExerciseSchema,
+} from "../schema/exercises";
+import { type QueryOutput } from "./types";
 
 export function useExercises() {
   return useQuery({
     queryKey: ["exercises"],
-    queryFn: async () => await db.select({ id: exercises.id, name: exercises.name }).from(exercises).all(),
+    queryFn: async () => {
+      const result = await db.select(defaultExerciseSelect).from(exercises).all();
+      return result;
+    },
   });
 }
+
+export type Exercise = QueryOutput<typeof useExercise>;
 
 export function useExercise(id?: string) {
   return useQuery({
     queryKey: ["exercise", id],
     enabled: Boolean(id),
-    queryFn: async () => await db.select().from(exercises).where(eq(exercises.id, id!)).get(),
+    queryFn: async () => {
+      const result = await db.select(defaultExerciseSelect).from(exercises).where(eq(exercises.id, id!)).get();
+      return result;
+    },
   });
 }
 
@@ -23,23 +38,32 @@ export function useExerciseInsertMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: InsertExerciseSchema) => await db.insert(exercises).values(input).run(),
+    mutationFn: async (input: InsertExerciseSchema) => {
+      await db
+        .insert(exercises)
+        .values({ ...input, createdAt: new Date(), updatedAt: new Date() })
+        .run();
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 }
 
-export function useExerciseUpdateMutation(id?: string) {
+export function useExerciseUpdateMutation(id: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (input: UpdateExerciseSchema) => {
-      if (!id) return null;
+      if (!id) return;
 
-      const fields = updateExerciseSchema.parse(input);
+      const updates = updateExerciseSchema.parse(input);
 
-      return await db.update(exercises).set(fields).where(eq(exercises.id, id)).run();
+      await db
+        .update(exercises)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(exercises.id, id))
+        .run();
     },
     onSuccess: async () => {
       if (!id) return;
@@ -54,7 +78,9 @@ export function useExerciseDeleteMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => await db.delete(exercises).where(eq(exercises.id, id)).run(),
+    mutationFn: async (id: string) => {
+      await db.delete(exercises).where(eq(exercises.id, id)).run();
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },

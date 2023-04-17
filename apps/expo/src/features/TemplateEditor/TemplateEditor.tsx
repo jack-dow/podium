@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import { Anchor, Layout, Loader, SafeAreaView } from "~/ui";
-import { api, type RouterOutputs } from "~/api";
+import { useTemplate } from "~/api";
 import { TemplateContext, type TemplateStoreState } from "~/contexts/TemplateContext";
 import { TemplateEditorExerciseSelectTab } from "./TemplateEditorExerciseSelectTab";
 import { TemplateEditorSetEditorTab } from "./TemplateEditorSetEditorTab";
@@ -24,11 +24,7 @@ type TemplateEditorProps = {
 export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
   const router = useRouter();
 
-  const {
-    data: template,
-    isLoading,
-    error,
-  } = api.template.get.useQuery({ id: templateId! }, { enabled: Boolean(templateId) });
+  const { data: template, isLoading, error } = useTemplate(templateId);
 
   const handleSubmit: TemplateStoreState["handleSubmit"] = (data) => {
     console.log("handleSubmit", data);

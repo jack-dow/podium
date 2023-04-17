@@ -7,7 +7,7 @@ import { dropDatabase, migrate } from "./migrate";
 const sqlite = SQLite.openDatabase("podium.db");
 
 // dropDatabase(sqlite);
-migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
+// migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
 
 const colors = {
   red: "\x1b[31m",

@@ -7,13 +7,11 @@ import { variants } from "nativewind";
 import theme from "@podium/tailwind-config/theme";
 
 import { Anchor, BottomSheet, Button, Dialog, Input, Label, OverlayManager, Text } from "~/ui";
+import { type TemplateSet } from "~/api";
 import { PencilIcon, TrashIcon } from "~/assets/icons/outline";
 import { EllipsisVerticalIcon } from "~/assets/icons/solid";
 import { TemplateContext } from "~/contexts/TemplateContext";
-import { createTypedEvent } from "~/services/createTypedEvent";
 import { type TemplateEditorTabParamList } from "./TemplateEditor";
-
-const setTypes = ["warmup", "working", "backoff", "dropset", "failure", "cooldown"] as const;
 
 type TemplateEditorSetEditorTabProps = BottomTabScreenProps<TemplateEditorTabParamList, "TemplateEditorSetEditor">;
 
@@ -58,6 +56,8 @@ const TemplateSetTypeChangeBottomSheet = OverlayManager.register(
 
     const ref = useRef<GorhomBottomSheet>(null);
 
+    const setTypes: Array<TemplateSet["type"]> = ["warmup", "working", "backoff", "dropset", "failure", "cooldown"];
+
     useEffect(() => {
       if (visible) {
         ref.current?.expand();
@@ -82,8 +82,7 @@ const TemplateSetTypeChangeBottomSheet = OverlayManager.register(
                   className="flex-row items-center space-x-md py-sm"
                   onPress={() => {
                     if (templateExerciseId && templateSetId) {
-                      templateAPI.templateSet.update(templateExerciseId, {
-                        id: templateSetId,
+                      templateAPI.templateSet.update(templateExerciseId, templateSetId, {
                         type: setType,
                       });
                     }
@@ -293,7 +292,7 @@ function TemplateExerciseCard({ templateExerciseId }: { templateExerciseId: stri
             returnKeyType="next"
             blurOnSubmit={false}
             onChangeText={(value) => {
-              templateAPI.templateExercise.update({ id: templateExercise.id, notes: value });
+              templateAPI.templateExercise.update(templateExercise.id, { notes: value });
             }}
           />
         </View>
@@ -332,7 +331,7 @@ function TemplateExerciseCardTemplateSet({
           weight="medium"
           className="text-sm"
           style={{
-            color: theme.textColor.set[(templateSet.type as keyof typeof theme.textColor.set) ?? "working"],
+            color: theme.textColor.set[templateSet.type ?? "working"],
           }}
         >
           {templateSet.type === "working" ? templateSetNumber + 1 : templateSet.type[0]?.toUpperCase()}
@@ -346,13 +345,12 @@ function TemplateExerciseCardTemplateSet({
           maxLength={7}
           value={templateSet.repetitions}
           onChangeText={(value) => {
-            templateAPI.templateSet.update(templateExerciseId, { id: templateSet.id, repetitions: value });
+            templateAPI.templateSet.update(templateExerciseId, templateSet.id, { repetitions: value });
           }}
           onBlur={() => {
             const validInput = templateSet?.repetitions?.match(/^([0-9]+-)?([0-9]+)$/);
             if (!validInput) {
-              templateAPI.templateSet.update(templateExerciseId, {
-                id: templateSet.id,
+              templateAPI.templateSet.update(templateExerciseId, templateSet.id, {
                 repetitions: "",
               });
             }
@@ -366,7 +364,7 @@ function TemplateExerciseCardTemplateSet({
           numberOfLines={6}
           maxLength={100}
           onChangeText={(value) => {
-            templateAPI.templateSet.update(templateExerciseId, { id: templateSetId, comments: value });
+            templateAPI.templateSet.update(templateExerciseId, templateSet.id, { comments: value });
           }}
         />
       </View>

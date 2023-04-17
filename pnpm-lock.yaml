@@ -45,14 +45,12 @@ importers:
       '@trpc/client': ^10.13.0
       '@trpc/react-query': ^10.13.0
       '@trpc/server': ^10.13.0
-      '@types/better-sqlite3': ^7.6.3
       '@types/node': ^18.0.0
       '@types/react': ^18.0.27
-      better-sqlite3: ^8.2.0
       clsx: ^1.2.1
-      drizzle-kit: ^0.17.3
-      drizzle-orm: ^0.23.6
-      drizzle-zod: ^0.2.1
+      drizzle-kit: ^0.17.4
+      drizzle-orm: ^0.23.13
+      drizzle-zod: ^0.3.0
       eslint: ^8.34.0
       eslint-config-podium: 0.0.0
       expo: ^48.0.4
@@ -66,7 +64,6 @@ importers:
       expo-splash-screen: ~0.18.1
       expo-sqlite: ~11.1.1
       expo-status-bar: ~1.4.4
-      kysely: ^0.24.2
       moti: ^0.23.7
       nativewind: 3.0.0-next.34
       postcss: ^8.4.21
@@ -100,10 +97,9 @@ importers:
       '@trpc/client': 10.13.0_@trpc+server@10.13.0
       '@trpc/react-query': 10.13.0_rdrc3kwtpssp5n4c2j5j4hbyvm
       '@trpc/server': 10.13.0
-      better-sqlite3: 8.2.0
       clsx: 1.2.1
-      drizzle-orm: 0.23.6_wqyikktq2wbbi36zk2klhoztma
-      drizzle-zod: 0.2.1_34lw7octkl2tljdbacvyg4jebq
+      drizzle-orm: 0.23.13
+      drizzle-zod: 0.3.0_qc3bmkrfxp4qvcxxkez2md752a
       expo: 48.0.4_@babel+core@7.20.12
       expo-asset: 8.9.1_expo@48.0.4
       expo-constants: 14.2.1_expo@48.0.4
@@ -115,7 +111,6 @@ importers:
       expo-splash-screen: 0.18.1_expo@48.0.4
       expo-sqlite: 11.1.1_expo@48.0.4
       expo-status-bar: 1.4.4
-      kysely: 0.24.2
       moti: 0.23.7_f5x4iswhqipmb554cfuobaldoq
       nativewind: 3.0.0-next.34_dmdrd7wro7is5ymtgffolhsaq4
       react: 18.2.0
@@ -136,10 +131,9 @@ importers:
       '@babel/preset-env': 7.20.2_@babel+core@7.20.12
       '@babel/runtime': 7.20.7
       '@expo/config-plugins': 6.0.0
-      '@types/better-sqlite3': 7.6.3
       '@types/node': 18.11.18
       '@types/react': 18.0.27
-      drizzle-kit: 0.17.3
+      drizzle-kit: 0.17.4
       eslint: 8.34.0
       eslint-config-podium: link:../../packages/config/eslint
       postcss: 8.4.21
@@ -5440,6 +5434,80 @@ packages:
       - supports-color
     dev: true
 
+  /drizzle-kit/0.17.4:
+    resolution: {integrity: sha512-9OuHsZBxS1IkWnF9vFeTWR5XH9UCv4SclfPaFt7he8TPVzDka5vpGmhNh9Oaj+OZg6Pf4PSV2Yt8X3c44ayHVA==}
+    hasBin: true
+    dependencies:
+      camelcase: 7.0.1
+      chalk: 5.2.0
+      commander: 9.5.0
+      esbuild: 0.15.18
+      esbuild-register: 3.4.2_esbuild@0.15.18
+      glob: 8.1.0
+      hanji: 0.0.5
+      json-diff: 0.9.0
+      zod: 3.20.6
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /drizzle-orm/0.23.13:
+    resolution: {integrity: sha512-lqPqpBwqVXBYpFKB7JaIkbKpEQpefjmvTdOTVHjFIB8YOhs0+3QMjsjTlZKEx6m8xab4ZGS8DUtFcbBEemZe7g==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@cloudflare/workers-types': '>=3'
+      '@libsql/client': '*'
+      '@neondatabase/serverless': '>=0.1'
+      '@planetscale/database': '>=1'
+      '@types/better-sqlite3': '*'
+      '@types/pg': '*'
+      '@types/sql.js': '*'
+      better-sqlite3: '>=7'
+      bun-types: '*'
+      knex: '*'
+      kysely: '*'
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      knex:
+        optional: true
+      kysely:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
+    dev: false
+
   /drizzle-orm/0.23.6_bt4gsn5lapaoikflfkpz27ptty:
     resolution: {integrity: sha512-bVJS5elA/36J//s5K8P8oyB0YDZiTidBQQEUzTtp6As/i4GNvuskByG3e+2NfbmF5KH9e4WpWuavXf0iSLnQPg==}
     peerDependencies:
@@ -5500,77 +5568,6 @@ packages:
       better-sqlite3: 8.2.0
     dev: false
 
-  /drizzle-orm/0.23.6_wqyikktq2wbbi36zk2klhoztma:
-    resolution: {integrity: sha512-bVJS5elA/36J//s5K8P8oyB0YDZiTidBQQEUzTtp6As/i4GNvuskByG3e+2NfbmF5KH9e4WpWuavXf0iSLnQPg==}
-    peerDependencies:
-      '@aws-sdk/client-rds-data': '>=3'
-      '@cloudflare/workers-types': '>=3'
-      '@libsql/client': '*'
-      '@neondatabase/serverless': '>=0.1'
-      '@planetscale/database': '>=1'
-      '@types/better-sqlite3': '*'
-      '@types/pg': '*'
-      '@types/sql.js': '*'
-      better-sqlite3: '>=7'
-      bun-types: '*'
-      knex: '*'
-      kysely: '*'
-      mysql2: '>=2'
-      pg: '>=8'
-      postgres: '>=3'
-      sql.js: '>=1'
-      sqlite3: '>=5'
-    peerDependenciesMeta:
-      '@aws-sdk/client-rds-data':
-        optional: true
-      '@cloudflare/workers-types':
-        optional: true
-      '@libsql/client':
-        optional: true
-      '@neondatabase/serverless':
-        optional: true
-      '@planetscale/database':
-        optional: true
-      '@types/better-sqlite3':
-        optional: true
-      '@types/pg':
-        optional: true
-      '@types/sql.js':
-        optional: true
-      better-sqlite3:
-        optional: true
-      bun-types:
-        optional: true
-      knex:
-        optional: true
-      kysely:
-        optional: true
-      mysql2:
-        optional: true
-      pg:
-        optional: true
-      postgres:
-        optional: true
-      sql.js:
-        optional: true
-      sqlite3:
-        optional: true
-    dependencies:
-      '@types/better-sqlite3': 7.6.3
-      better-sqlite3: 8.2.0
-      kysely: 0.24.2
-    dev: false
-
-  /drizzle-zod/0.2.1_34lw7octkl2tljdbacvyg4jebq:
-    resolution: {integrity: sha512-FmQ9Zdcuu2pRQXc3wWT95MpOlI/nNRchXD3fDnFQAogD0la9wfvi7tGW+/ecYJow4mTaVfj3n8Mq++pvSwOWNg==}
-    peerDependencies:
-      drizzle-orm: '>=0.17'
-      zod: '*'
-    dependencies:
-      drizzle-orm: 0.23.6_wqyikktq2wbbi36zk2klhoztma
-      zod: 3.20.6
-    dev: false
-
   /drizzle-zod/0.2.1_drizzle-orm@0.23.6:
     resolution: {integrity: sha512-FmQ9Zdcuu2pRQXc3wWT95MpOlI/nNRchXD3fDnFQAogD0la9wfvi7tGW+/ecYJow4mTaVfj3n8Mq++pvSwOWNg==}
     peerDependencies:
@@ -5578,6 +5575,16 @@ packages:
       zod: '*'
     dependencies:
       drizzle-orm: 0.23.6_bt4gsn5lapaoikflfkpz27ptty
+    dev: false
+
+  /drizzle-zod/0.3.0_qc3bmkrfxp4qvcxxkez2md752a:
+    resolution: {integrity: sha512-Up2X1ojUDFWifoSAuHEzZfplf247uu+yw1qP3bWnEJUbHoebAVjIHRGL4EzokGlGiZgaKQ+3kNo8gP6w34TIcw==}
+    peerDependencies:
+      drizzle-orm: '>=0.23.13'
+      zod: '*'
+    dependencies:
+      drizzle-orm: 0.23.13
+      zod: 3.20.6
     dev: false
 
   /duplexer3/0.1.5:
@@ -8217,11 +8224,6 @@ packages:
   /kleur/3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
-    dev: false
-
-  /kysely/0.24.2:
-    resolution: {integrity: sha512-+7eaTJNUYm2yRq1x+lEOZc+78TO35dTZ9b0dh49+Z9CTt2byMSbMiOKpwPlOyCAaHD4kILkAYWYZNywFlmBwRA==}
-    engines: {node: '>=14.0.0'}
     dev: false
 
   /language-subtag-registry/0.3.22:
