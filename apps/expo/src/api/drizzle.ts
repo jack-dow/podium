@@ -6,7 +6,12 @@ import { dropDatabase, migrate } from "./migrate";
 
 const sqlite = SQLite.openDatabase("podium.db");
 
-// dropDatabase(sqlite);
+// Turn on foreign keys, so that cascading deletes work
+sqlite.exec([{ sql: "PRAGMA foreign_keys = ON;", args: [] }], false, () => console.log("Foreign keys turned on"));
+
+// dropDatabase(sqlite).then(() => {
+//   migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
+// });
 // migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
 
 const colors = {
@@ -60,6 +65,7 @@ export const db = drizzle(async (sql, params, method) => {
             sql,
             params,
             (_, { rows: { _array } }) => {
+              console.log({ _array });
               resolve(_array.map((i: Record<string, unknown>) => Object.values(i)));
             },
             (_, error) => {

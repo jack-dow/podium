@@ -1,23 +1,79 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 
-import { Anchor, Layout, Loader, SafeAreaView, Text } from "~/ui";
+import { Anchor, Button, Dialog, Layout, Loader, OverlayManager, SafeAreaView, Text } from "~/ui";
 import { useTemplates } from "~/api";
+import { db } from "~/api/drizzle";
+import { templates } from "~/api/schema/templates";
+
+const TemplateClearConfirmDialog = OverlayManager.register(() => {
+  const { visible, hide } = OverlayManager.useOverlay(TemplateClearConfirmDialog);
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      await db.delete(templates).all();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(["templates"]);
+    },
+  });
+
+  return (
+    <Dialog open={visible} onClose={hide} intent="danger">
+      <Dialog.Icon />
+      <Dialog.Content>
+        <Dialog.Title>Clear all templates? (DEV ONLY)</Dialog.Title>
+        <Dialog.Description>
+          Are you sure? This will delete all of the templates in your database. This action cannot be undone.
+        </Dialog.Description>
+      </Dialog.Content>
+      <Dialog.Actions>
+        <Button
+          intent="danger"
+          onPress={() =>
+            mutation.mutate(undefined, {
+              onSuccess() {
+                hide();
+              },
+            })
+          }
+          loading={mutation.isLoading}
+        >
+          <Button.Text>{mutation.isLoading ? "Deleting templates..." : "Delete exercise"}</Button.Text>
+        </Button>
+        <Button intent="tertiary" onPress={hide} className="mt-md">
+          <Button.Text>Cancel</Button.Text>
+        </Button>
+      </Dialog.Actions>
+    </Dialog>
+  );
+});
 
 const Templates = () => {
   const router = useRouter();
   const { data: templates, isLoading } = useTemplates();
 
+  const TemplateClearConfirmDialogAPI = OverlayManager.useOverlayAPI(TemplateClearConfirmDialog);
+
   return (
     <SafeAreaView>
+      <TemplateClearConfirmDialog />
       <Layout>
         <Layout.Header>
           <Layout.BackButton />
           <View className="flex-row items-center justify-between">
             <Layout.Title>Templates</Layout.Title>
-            <Anchor onPress={() => router.push("/template/new")}>New template</Anchor>
+            <View>
+              <Anchor intent="danger" onPress={() => TemplateClearConfirmDialogAPI.show()}>
+                Clear Templates (DEV ONLY)
+              </Anchor>
+              <Anchor onPress={() => router.push("/template/new")}>New template</Anchor>
+            </View>
           </View>
           <Layout.Description>
             Here you can manage the templates that are referenced in your plans and workouts

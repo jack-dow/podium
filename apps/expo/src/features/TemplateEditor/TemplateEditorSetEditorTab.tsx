@@ -25,7 +25,7 @@ const TemplateExerciseDeleteDialog = OverlayManager.register(
       <Dialog open={visible} onClose={hide} intent="danger">
         <Dialog.Icon />
         <Dialog.Content>
-          <Dialog.Title>Delete {`"${templateExercise?.exercise.name ?? "Template Exercise"}"`}</Dialog.Title>
+          <Dialog.Title>Delete {`"${templateExercise?.name ?? "Template Exercise"}"`}</Dialog.Title>
           <Dialog.Description>
             Are you sure you want to delete this exercise? This action cannot be undone.
           </Dialog.Description>
@@ -227,7 +227,7 @@ function TemplateExerciseCard({ templateExerciseId }: { templateExerciseId: stri
       >
         <View className="flex-row items-center justify-between">
           <Text weight="medium" className="text-lg">
-            {templateExercise.exercise.name}
+            {templateExercise.name}
           </Text>
 
           <Anchor intent="danger" onPress={() => TemplateExerciseDeleteDialogAPI.show({ templateExerciseId })}>

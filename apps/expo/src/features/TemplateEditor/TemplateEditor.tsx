@@ -39,10 +39,8 @@ export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
     }
 
     if (templateId) {
-      console.log("Updating Template...");
       templateUpdateMutation.mutate(data, { onSuccess, onError });
     } else {
-      console.log("Inserting Template...");
       templateInsertMutation.mutate(data, { onSuccess, onError });
     }
   };

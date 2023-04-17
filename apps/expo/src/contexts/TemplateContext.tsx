@@ -55,7 +55,8 @@ const createTemplateStore = ({
           const templateExercise: TemplateExercise = {
             id: createId(),
             exerciseId: exercise.id,
-            exercise,
+            name: exercise.name,
+            instructions: exercise.instructions,
             templateId: template.id,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -219,7 +220,7 @@ const TemplateProvider = ({
   }
 
   useEffect(() => {
-    if (isLoading && template && store.current.id !== template.id) {
+    if (!isLoading && template && store.current.id !== template.id) {
       store.current = createTemplateStore({ handleSubmit, template });
     }
   }, [isLoading, template, handleSubmit]);

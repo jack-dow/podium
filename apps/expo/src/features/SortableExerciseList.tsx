@@ -30,9 +30,7 @@ function clamp(value: number, lowerBound: number, upperBound: number) {
 type RequiredExerciseProps = {
   id: string;
   order: number;
-  exercise: {
-    name: string;
-  };
+  name: string;
 };
 
 type SortableExerciseListProps = {
@@ -199,13 +197,13 @@ function MoveableExerciseItem({ order, useExercise, exerciseId, onDragEnd }: Mov
           <View className="flex-row items-center" style={{ height: EXERCISE_ITEM_HEIGHT }}>
             <Animated.View className="shadow" style={animatedCardStyle}>
               <Text weight="bold" className="text-xl text-primary-normal">
-                {exercise.exercise.name[0]?.toUpperCase()}
+                {exercise.name[0]?.toUpperCase()}
               </Text>
             </Animated.View>
 
             <View className="ml-sm">
               <Text weight="semibold" className="text-base text-primary-normal">
-                {exercise.exercise.name} - {exercise.order}
+                {exercise.name} - {exercise.order}
               </Text>
             </View>
           </View>

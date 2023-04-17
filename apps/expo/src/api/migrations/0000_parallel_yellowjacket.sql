@@ -16,8 +16,8 @@ CREATE TABLE `template_exercises` (
 	`template_id` text NOT NULL,
 	`order` integer NOT NULL,
 	`notes` text,
-	FOREIGN KEY (`exercise_id`) REFERENCES `exercises`(`id`) ON DELETE cascade,
-	FOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE cascade
+	FOREIGN KEY (`exercise_id`) REFERENCES `exercises`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `template_sets` (
@@ -31,8 +31,8 @@ CREATE TABLE `template_sets` (
 	`type` text NOT NULL,
 	`repetitions` text NOT NULL,
 	`comments` text,
-	FOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE cascade,
-	FOREIGN KEY (`template_exercise_id`) REFERENCES `template_exercises`(`id`) ON DELETE cascade
+	FOREIGN KEY (`template_id`) REFERENCES `templates`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`template_exercise_id`) REFERENCES `template_exercises`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `templates` (

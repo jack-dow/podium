@@ -29,6 +29,13 @@ export function useTemplates() {
     queryKey: ["templates"],
     queryFn: async () => {
       const result = await db.select({ id: templates.id, name: templates.name }).from(templates).all();
+
+      const t = await db.select().from(templates).all();
+      const tExercises = await db.select().from(templateExercises).all();
+      const tSets = await db.select().from(templateSets).all();
+
+      console.log({ t: t.length, tExercises: tExercises.length, tSets: tSets.length });
+
       return result;
     },
   });
@@ -45,40 +52,45 @@ export function useTemplate(id?: string) {
     queryFn: async () => {
       const template = await db.select(defaultTemplateSelect).from(templates).where(eq(templates.id, id!)).get();
 
+
       const tExercises = await db
         .select({
           ...defaultTemplateExerciseSelect,
-          exercise: defaultExerciseSelect,
-          templateSet: defaultTemplateSetSelect,
+          name: exercises.name,
+          instructions: exercises.instructions,
         })
         .from(templateExercises)
-        .leftJoin(exercises, eq(exercises.id, templateExercises.exerciseId))
-        .leftJoin(templateSets, eq(templateSets.id, templateExercises.id))
+        .innerJoin(exercises, eq(exercises.id, templateExercises.exerciseId))
         .where(eq(templateExercises.templateId, id!))
         .all();
 
-      type _TemplateExercise = InferColumnsDataTypes<typeof defaultTemplateExerciseSelect>;
-      type _TemplateSet = InferColumnsDataTypes<typeof defaultTemplateSetSelect>;
+      const tSets = await db
+        .select(defaultTemplateSetSelect)
+        .from(templateSets)
+        .where(eq(templateSets.templateId, id!))
+        .all();
 
-      const aggregatedTemplateExercises = tExercises.reduce((acc, curr) => {
-        if (!curr.exercise) return acc;
-
-        if (!acc.get(curr.id)) {
-          acc.set(curr.id, {
-            ...curr,
-            exercise: curr.exercise,
-            templateSets: new Map(),
-          });
+      const tSetsByTemplateExerciseId = tSets.reduce((acc, curr) => {
+        if (!acc.get(curr.templateExerciseId)) {
+          acc.set(curr.templateExerciseId, new Map());
         }
 
-        if (!curr.templateSet) return acc;
-
-        acc.get(curr.id)!.templateSets.set(curr.templateSet.id, curr.templateSet);
+        acc.get(curr.templateExerciseId)!.set(curr.id, curr);
 
         return acc;
-      }, new Map() as Map<string, _TemplateExercise & { exercise: Exercise; templateSets: Map<string, _TemplateSet> }>);
+      }, new Map<string, Map<string, typeof tSets[number]>>());
 
-      return { ...template, templateExercises: aggregatedTemplateExercises };
+      return {
+        ...template,
+        templateExercises: tExercises.reduce((acc, curr) => {
+          acc.set(curr.id, {
+            ...curr,
+            templateSets: tSetsByTemplateExerciseId.get(curr.id) || new Map<string, typeof tSets[number]>(),
+          });
+
+          return acc;
+        }, new Map<string, typeof tExercises[number] & { templateSets: Map<string, typeof tSets[number]> }>()),
+      };
     },
   });
 }
