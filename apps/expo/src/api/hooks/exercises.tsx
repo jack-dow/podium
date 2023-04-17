@@ -5,6 +5,7 @@ import { db } from "../drizzle";
 import {
   defaultExerciseSelect,
   exercises,
+  insertExerciseSchema,
   updateExerciseSchema,
   type InsertExerciseSchema,
   type UpdateExerciseSchema,
@@ -41,7 +42,7 @@ export function useExerciseInsertMutation() {
     mutationFn: async (input: InsertExerciseSchema) => {
       await db
         .insert(exercises)
-        .values({ ...input, createdAt: new Date(), updatedAt: new Date() })
+        .values({ ...insertExerciseSchema.parse(input), createdAt: new Date(), updatedAt: new Date() })
         .run();
     },
     onSuccess: async () => {

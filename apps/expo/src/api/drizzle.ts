@@ -26,19 +26,19 @@ const logColor = (text: string, color: keyof typeof colors): string => {
 };
 
 export const db = drizzle(async (sql, params, method) => {
+  console.log(
+    `${logColor(`[SQL ${method} REQUEST]`, "cyan")} ${logColor(sql, "white")} - ${logColor(
+      `[${params.join(",")}]`,
+      "magenta",
+    )}`,
+  );
   try {
-    console.log(
-      `${logColor(`[SQL ${method} REQUEST]`, "cyan")} ${logColor(sql, "white")} - ${logColor(
-        `[${params.join(",")}]`,
-        "magenta",
-      )}`,
-    );
-
     if (method === "run") {
       const result: unknown[] = await new Promise((resolve, reject) => {
         sqlite.transaction((tx) => {
           tx.executeSql(
-            sql,
+            // Fixes a sql bug that prevents transactions from working because it thinks one is already in progress
+            sql === "begin" ? "END TRANSACTION; begin" : sql,
             params,
             (_, { rows: { _array } }) => {
               resolve(_array.map((i: Record<string, unknown>) => Object.values(i)));

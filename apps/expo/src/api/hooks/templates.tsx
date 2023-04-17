@@ -8,12 +8,16 @@ import {
   defaultTemplateExerciseSelect,
   defaultTemplateSelect,
   defaultTemplateSetSelect,
+  insertTemplateExerciseSchema,
+  insertTemplateSchema,
+  insertTemplateSetSchema,
   templateExercises,
   templateSets,
   templates,
   type InsertTemplateExerciseSchema,
   type InsertTemplateSchema,
   type InsertTemplateSetSchema,
+  type InsertTemplateWithTemplateExercisesSchema,
   type UpdateTemplateExerciseSchema,
   type UpdateTemplateSchema,
 } from "../schema/templates";
@@ -83,25 +87,30 @@ export function useTemplateInsertMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: InsertTemplateSchema) => {
-      const { templateExercises: templateExercisesWithTemplateSets, ...template } = input;
+    mutationFn: async (input: InsertTemplateWithTemplateExercisesSchema) => {
+      const { templateExercises: templateExercisesWithTemplateSets, ...t } = input;
+      const template = insertTemplateSchema.parse(t);
 
       const tExercises: Array<InsertTemplateExerciseSchema> = [];
       const tSets: Array<InsertTemplateSetSchema> = [];
 
       templateExercisesWithTemplateSets.forEach((tExercise) => {
         const { templateSets, ...templateExercise } = tExercise;
-        tExercises.push(templateExercise);
+        tExercises.push(insertTemplateExerciseSchema.parse(templateExercise));
 
         templateSets.forEach((tSet) => {
-          tSets.push(tSet);
+          tSets.push(insertTemplateSetSchema.parse(tSet));
         });
       });
 
       await db.transaction(async (tx) => {
         await tx
           .insert(templates)
-          .values({ ...template, createdAt: new Date(), updatedAt: new Date() })
+          .values({
+            ...template,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
           .run();
 
         await tx

@@ -108,15 +108,17 @@ export const defaultTemplateSelect = validator(templates, {
   name: true,
 });
 
-export const insertTemplateSchema = createInsertSchema(templates)
-  .omit({ createdAt: true, updatedAt: true })
-  .extend({
-    templateExercises: z.map(
-      z.string(),
-      insertTemplateExerciseSchema.extend({ templateSets: z.map(z.string(), insertTemplateSetSchema) }),
-    ),
-  });
+export const insertTemplateSchema = createInsertSchema(templates).omit({ createdAt: true, updatedAt: true });
+
 export type InsertTemplateSchema = z.infer<typeof insertTemplateSchema>;
+
+export const insertTemplateWithTemplateExercisesSchema = insertTemplateSchema.extend({
+  templateExercises: z.map(
+    z.string(),
+    insertTemplateExerciseSchema.extend({ templateSets: z.map(z.string(), insertTemplateSetSchema) }),
+  ),
+});
+export type InsertTemplateWithTemplateExercisesSchema = z.infer<typeof insertTemplateWithTemplateExercisesSchema>;
 
 export const updateTemplateSchema = createInsertSchema(templates)
   .pick({ name: true })

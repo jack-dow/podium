@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import { Anchor, Layout, Loader, SafeAreaView } from "~/ui";
-import { useTemplate } from "~/api";
+import { useTemplate, useTemplateInsertMutation, useTemplateUpdateMutation } from "~/api";
 import { TemplateContext, type TemplateStoreState } from "~/contexts/TemplateContext";
 import { TemplateEditorExerciseSelectTab } from "./TemplateEditorExerciseSelectTab";
 import { TemplateEditorSetEditorTab } from "./TemplateEditorSetEditorTab";
@@ -26,8 +26,25 @@ export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
 
   const { data: template, isLoading, error } = useTemplate(templateId);
 
+  const templateInsertMutation = useTemplateInsertMutation();
+  const templateUpdateMutation = useTemplateUpdateMutation(templateId);
+
   const handleSubmit: TemplateStoreState["handleSubmit"] = (data) => {
-    console.log("handleSubmit", data);
+    function onSuccess() {
+      router.back();
+    }
+
+    function onError(error: unknown) {
+      console.log("Failed to submit template", { error });
+    }
+
+    if (templateId) {
+      console.log("Updating Template...");
+      templateUpdateMutation.mutate(data, { onSuccess, onError });
+    } else {
+      console.log("Inserting Template...");
+      templateInsertMutation.mutate(data, { onSuccess, onError });
+    }
   };
 
   return (
