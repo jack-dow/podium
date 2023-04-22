@@ -12,7 +12,7 @@ sqlite.exec([{ sql: "PRAGMA foreign_keys = ON;", args: [] }], false, () => conso
 // dropDatabase(sqlite).then(() => {
 //   migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
 // });
-// migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
+migrate(sqlite).catch((e: unknown) => console.error("[Drizzle Migrate] Failed to migrate", { e }));
 
 const colors = {
   red: "\x1b[31m",
@@ -31,14 +31,14 @@ const logColor = (text: string, color: keyof typeof colors): string => {
 };
 
 export const db = drizzle(async (sql, params, method) => {
-  console.log(
-    `${logColor(`[SQL ${method} REQUEST]`, "cyan")} ${logColor(sql, "white")} - ${logColor(
-      `[${params.join(",")}]`,
-      "magenta",
-    )}`,
-  );
   try {
     if (method === "run") {
+      console.log(
+        `${logColor(`[SQL ${method} REQUEST]`, "cyan")} ${logColor(sql, "white")} - ${logColor(
+          `[${params.join(",")}]`,
+          "magenta",
+        )}`,
+      );
       const result: unknown[] = await new Promise((resolve, reject) => {
         sqlite.transaction((tx) => {
           tx.executeSql(
@@ -65,7 +65,6 @@ export const db = drizzle(async (sql, params, method) => {
             sql,
             params,
             (_, { rows: { _array } }) => {
-              console.log({ _array });
               resolve(_array.map((i: Record<string, unknown>) => Object.values(i)));
             },
             (_, error) => {

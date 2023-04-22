@@ -3,18 +3,20 @@ import "fast-text-encoding";
 import React, { useCallback } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { withLayoutContext } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { TransitionPresets, createStackNavigator, type StackNavigationOptions } from "@react-navigation/stack";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { OverlayManager } from "~/ui";
-import { TRPCProvider } from "~/api";
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 SplashScreen.preventAutoHideAsync();
+
+const NativeStackNavigator = createStackNavigator().Navigator;
+const Stack = withLayoutContext<StackNavigationOptions, typeof NativeStackNavigator>(NativeStackNavigator);
 
 const queryClient = new QueryClient();
 
@@ -52,7 +54,7 @@ const RootLayout = () => {
           It also allows you to configure your screens 
         */}
           <OverlayManager.PortalProvider>
-            <Stack screenOptions={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }} />
             <StatusBar translucent backgroundColor="transparent" />
           </OverlayManager.PortalProvider>
         </ClerkProvider>

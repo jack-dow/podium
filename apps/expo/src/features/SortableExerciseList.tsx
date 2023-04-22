@@ -36,9 +36,10 @@ type RequiredExerciseProps = {
 type SortableExerciseListProps = {
   style?: ViewProps["style"];
   exerciseIds: Array<string>;
-  useExercise: (exerciseId: string) => RequiredExerciseProps;
+  useExercise: (exerciseId: string) => RequiredExerciseProps | null;
   onDragEnd: (newOrder: Record<string, number>) => void;
 };
+
 function SortableExerciseListRoot({ style, exerciseIds, useExercise, onDragEnd }: SortableExerciseListProps) {
   const order = useSharedValue<Record<string, number>>(
     exerciseIds.reduce((acc, exerciseId, index) => {
@@ -107,7 +108,7 @@ type MoveableExerciseItemProps = {
   order: SharedValue<Record<string, number>>;
   scrollY: SharedValue<number>;
   exerciseId: string;
-  useExercise: (exerciseId: string) => RequiredExerciseProps;
+  useExercise: (exerciseId: string) => RequiredExerciseProps | null;
   scrollViewRef: RefObject<Animated.ScrollView>;
   onDragEnd: (newOrder: Record<string, number>) => void;
 };
@@ -197,13 +198,13 @@ function MoveableExerciseItem({ order, useExercise, exerciseId, onDragEnd }: Mov
           <View className="flex-row items-center" style={{ height: EXERCISE_ITEM_HEIGHT }}>
             <Animated.View className="shadow" style={animatedCardStyle}>
               <Text weight="bold" className="text-xl text-primary-normal">
-                {exercise.name[0]?.toUpperCase()}
+                {exercise?.name[0]?.toUpperCase()}
               </Text>
             </Animated.View>
 
             <View className="ml-sm">
               <Text weight="semibold" className="text-base text-primary-normal">
-                {exercise.name} - {exercise.order}
+                {exercise?.name} - {exercise?.order}
               </Text>
             </View>
           </View>

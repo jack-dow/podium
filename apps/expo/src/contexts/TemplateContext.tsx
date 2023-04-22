@@ -25,6 +25,10 @@ const createTemplateStore = ({
   handleSubmit: TemplateStoreState["handleSubmit"];
   template?: Template;
 }) => {
+  initTemplate?.templateExercises.forEach((templateExercise) => {
+    templateExercise.templateSets = proxyMap(templateExercise.templateSets);
+  });
+
   const DEFAULT_PROPS: TemplateStoreState = {
     id: initTemplate?.id || createId(),
     name: initTemplate?.name || "Legs 1",
@@ -46,6 +50,11 @@ const createTemplateStore = ({
       template: {
         setName(name: string) {
           template.name = name;
+
+          template.actions.template = {
+            type: "UPDATE",
+            payload: { name },
+          };
         },
       },
 
@@ -154,7 +163,7 @@ const createTemplateStore = ({
             return;
           }
 
-          Object.assign(templateSet, { ...updatedTemplateSet, updatedAt: new Date() });
+          Object.assign(templateSet, updatedTemplateSet);
 
           template.actions.templateSets[templateSet.id] = {
             type: existingAction?.type ?? "UPDATE",

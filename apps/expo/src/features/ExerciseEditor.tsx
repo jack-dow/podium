@@ -4,7 +4,19 @@ import { useRouter } from "expo-router";
 import { createId } from "@paralleldrive/cuid2";
 import { Controller, useForm } from "react-hook-form";
 
-import { Alert, Anchor, Button, Dialog, Input, Label, Layout, Loader, OverlayManager, SafeAreaView } from "~/ui";
+import {
+  Alert,
+  Anchor,
+  Button,
+  Dialog,
+  Fallback,
+  Input,
+  Label,
+  Layout,
+  Loader,
+  OverlayManager,
+  SafeAreaView,
+} from "~/ui";
 import {
   useExercise,
   useExerciseDeleteMutation,
@@ -103,119 +115,120 @@ export const ExerciseEditor = ({ exerciseId }: ExerciseEditorProps) => {
           </Layout.Description>
         </Layout.Header>
 
-        <Layout.Content className="my-base space-y-lg px-base">
-          {isFetching ? (
+        <Fallback
+          isLoading={isFetching}
+          fallback={
             <View className="flex-1 items-center justify-center">
               <Loader />
             </View>
-          ) : (
-            <>
-              {/* Displaying errors */}
-              {Object.keys(formErrors).length > 0 && (
-                <Alert intent="danger">
-                  <Alert.Title>There&apos;s a problem with your exercise</Alert.Title>
-                  {Object.keys(formErrors).map((fieldId) => (
-                    <Alert.ListItem key={fieldId}>
-                      {formErrors[fieldId as keyof typeof formErrors]?.message}
-                    </Alert.ListItem>
-                  ))}
-                </Alert>
-              )}
-              {!!error && (
-                <Alert intent="danger">
-                  <Alert.Title>Failed to submit template...</Alert.Title>
-                  <Alert.Description>{error}</Alert.Description>
-                </Alert>
-              )}
+          }
+        >
+          <Layout.Content className="my-base space-y-lg px-base">
+            {/* Displaying errors */}
+            {Object.keys(formErrors).length > 0 && (
+              <Alert intent="danger">
+                <Alert.Title>There&apos;s a problem with your exercise</Alert.Title>
+                {Object.keys(formErrors).map((fieldId) => (
+                  <Alert.ListItem key={fieldId}>
+                    {formErrors[fieldId as keyof typeof formErrors]?.message}
+                  </Alert.ListItem>
+                ))}
+              </Alert>
+            )}
+            {!!error && (
+              <Alert intent="danger">
+                <Alert.Title>Failed to submit template...</Alert.Title>
+                <Alert.Description>{error}</Alert.Description>
+              </Alert>
+            )}
 
-              {/* Form */}
-              <View>
-                <Controller
-                  name="name"
-                  control={control}
-                  defaultValue={exercise?.name}
-                  rules={{
-                    required: "Please provide a name for this exercise.",
-                  }}
-                  render={({ field: { value, onChange, onBlur }, fieldState }) => (
-                    <>
-                      <Label>Name</Label>
-                      <Input
-                        returnKeyType="next"
-                        value={value}
-                        invalid={!!fieldState.error}
-                        onBlur={onBlur}
-                        blurOnSubmit={false}
-                        onChangeText={onChange}
-                        onSubmitEditing={() => instructionsRef.current?.focus()}
-                      />
-                      {fieldState.error?.message && <Input.ErrorText>{fieldState.error.message}</Input.ErrorText>}
-                    </>
-                  )}
-                />
-              </View>
+            {/* Form */}
+            <View>
+              <Controller
+                name="name"
+                control={control}
+                defaultValue={exercise?.name}
+                rules={{
+                  required: "Please provide a name for this exercise.",
+                }}
+                render={({ field: { onChange, onBlur, value }, fieldState }) => (
+                  <>
+                    <Label>Name</Label>
+                    <Input
+                      returnKeyType="next"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      invalid={!!fieldState.error}
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => instructionsRef.current?.focus()}
+                    />
+                    {fieldState.error?.message && <Input.ErrorText>{fieldState.error.message}</Input.ErrorText>}
+                  </>
+                )}
+              />
+            </View>
 
-              <View>
-                <Controller
-                  name="instructions"
-                  control={control}
-                  defaultValue={exercise?.instructions ?? ""}
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <>
-                      <Label>Instructions</Label>
-                      <Input
-                        ref={instructionsRef}
-                        multiline
-                        numberOfLines={8}
-                        maxLength={500}
-                        returnKeyType="next"
-                        value={value ?? exercise?.instructions}
-                        onBlur={onBlur}
-                        blurOnSubmit={false}
-                        onChangeText={onChange}
-                      />
-                    </>
-                  )}
-                />
-              </View>
+            <View>
+              <Controller
+                name="instructions"
+                control={control}
+                defaultValue={exercise?.instructions || ""}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <>
+                    <Label>Instructions</Label>
+                    <Input
+                      ref={instructionsRef}
+                      multiline
+                      numberOfLines={8}
+                      maxLength={500}
+                      returnKeyType="next"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      blurOnSubmit={false}
+                    />
+                  </>
+                )}
+              />
+            </View>
 
-              <View className="flex-row justify-between">
-                <View />
-                <Button
-                  loading={updateExerciseMutation.isLoading || insertExerciseMutation.isLoading}
-                  disabled={!isDirty}
-                  onPress={handleSubmit((data) => {
-                    function onSuccess() {
-                      router.back();
-                      reset();
-                    }
+            <View className="flex-row justify-between">
+              <View />
+              <Button
+                loading={updateExerciseMutation.isLoading || insertExerciseMutation.isLoading}
+                disabled={!isDirty}
+                onPress={handleSubmit((data) => {
+                  function onSuccess() {
+                    router.back();
+                    reset();
+                  }
 
-                    function onError(error: unknown) {
-                      if (error instanceof Error) {
-                        setError(error.message);
-                      } else if (typeof error === "string") {
-                        setError(error);
-                      } else {
-                        setError(`Failed to ${exerciseId ? "update" : "create"} exercise. Please try again later.`);
-                      }
-                    }
-
-                    if (exerciseId) {
-                      updateExerciseMutation.mutate(data, { onSuccess, onError });
+                  function onError(error: unknown) {
+                    if (error instanceof Error) {
+                      setError(error.message);
+                    } else if (typeof error === "string") {
+                      setError(error);
                     } else {
-                      insertExerciseMutation.mutate(data, { onSuccess, onError });
+                      setError(`Failed to ${exerciseId ? "update" : "create"} exercise. Please try again later.`);
                     }
-                  })}
-                >
-                  <Button.Text>
-                    {exerciseId && (updateExerciseMutation.isLoading ? "Updating exercise..." : "Update exercise")}
-                    {!exerciseId && (insertExerciseMutation.isLoading ? "Creating exercise..." : "Create exercise")}
-                  </Button.Text>
-                </Button>
-              </View>
-            </>
-          )}
-        </Layout.Content>
+                  }
+
+                  if (exerciseId) {
+                    updateExerciseMutation.mutate(data, { onSuccess, onError });
+                  } else {
+                    insertExerciseMutation.mutate(data, { onSuccess, onError });
+                  }
+                })}
+              >
+                <Button.Text>
+                  {exerciseId && (updateExerciseMutation.isLoading ? "Updating exercise..." : "Update exercise")}
+                  {!exerciseId && (insertExerciseMutation.isLoading ? "Creating exercise..." : "Create exercise")}
+                </Button.Text>
+              </Button>
+            </View>
+          </Layout.Content>
+        </Fallback>
       </Layout>
     </SafeAreaView>
   );

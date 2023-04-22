@@ -120,42 +120,46 @@ export const insertTemplateWithTemplateExercisesSchema = insertTemplateSchema.ex
 });
 export type InsertTemplateWithTemplateExercisesSchema = z.infer<typeof insertTemplateWithTemplateExercisesSchema>;
 
-export const updateTemplateSchema = createInsertSchema(templates)
-  .pick({ name: true })
-  .extend({
-    actions: z.object({
-      templateExercises: z.record(
-        z.discriminatedUnion("type", [
-          z.object({
-            type: z.literal("INSERT"),
-            payload: insertTemplateExerciseSchema,
-          }),
-          z.object({
-            type: z.literal("UPDATE"),
-            payload: updateTemplateExerciseSchema,
-          }),
-          z.object({
-            type: z.literal("DELETE"),
-            payload: z.string().cuid2(),
-          }),
-        ]),
-      ),
-      templateSets: z.record(
-        z.discriminatedUnion("type", [
-          z.object({
-            type: z.literal("INSERT"),
-            payload: insertTemplateSetSchema,
-          }),
-          z.object({
-            type: z.literal("UPDATE"),
-            payload: updateTemplateSetSchema,
-          }),
-          z.object({
-            type: z.literal("DELETE"),
-            payload: z.string().cuid2(),
-          }),
-        ]),
-      ),
-    }),
-  });
+export const updateTemplateSchema = z.object({
+  actions: z.object({
+    template: z
+      .object({
+        type: z.literal("UPDATE"),
+        payload: z.object({ name: z.string() }),
+      })
+      .optional(),
+    templateExercises: z.record(
+      z.discriminatedUnion("type", [
+        z.object({
+          type: z.literal("INSERT"),
+          payload: insertTemplateExerciseSchema,
+        }),
+        z.object({
+          type: z.literal("UPDATE"),
+          payload: updateTemplateExerciseSchema,
+        }),
+        z.object({
+          type: z.literal("DELETE"),
+          payload: z.string().cuid2(),
+        }),
+      ]),
+    ),
+    templateSets: z.record(
+      z.discriminatedUnion("type", [
+        z.object({
+          type: z.literal("INSERT"),
+          payload: insertTemplateSetSchema,
+        }),
+        z.object({
+          type: z.literal("UPDATE"),
+          payload: updateTemplateSetSchema,
+        }),
+        z.object({
+          type: z.literal("DELETE"),
+          payload: z.string().cuid2(),
+        }),
+      ]),
+    ),
+  }),
+});
 export type UpdateTemplateSchema = z.infer<typeof updateTemplateSchema>;

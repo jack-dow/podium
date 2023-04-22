@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 
-import { Anchor, Button, Dialog, Layout, Loader, OverlayManager, SafeAreaView, Text } from "~/ui";
+import { Anchor, Button, Dialog, Fallback, Layout, Loader, OverlayManager, SafeAreaView, Text } from "~/ui";
 import { useTemplates } from "~/api";
 import { db } from "~/api/drizzle";
 import { templates } from "~/api/schema/templates";
@@ -79,12 +79,15 @@ const Templates = () => {
             Here you can manage the templates that are referenced in your plans and workouts
           </Layout.Description>
         </Layout.Header>
-        <Layout.Content>
-          {isLoading ? (
+        <Fallback
+          isLoading={isLoading}
+          fallback={
             <View className="h-full w-full flex-1 items-center justify-center">
               <Loader />
             </View>
-          ) : (
+          }
+        >
+          <Layout.Content>
             <ScrollView className="p-base">
               {templates?.map((template, index) => {
                 const isFirst = index === 0;
@@ -112,8 +115,8 @@ const Templates = () => {
                 );
               })}
             </ScrollView>
-          )}
-        </Layout.Content>
+          </Layout.Content>
+        </Fallback>
       </Layout>
     </SafeAreaView>
   );

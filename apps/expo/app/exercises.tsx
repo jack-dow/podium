@@ -3,7 +3,7 @@ import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import clsx from "clsx";
 
-import { Anchor, Layout, Loader, SafeAreaView, Text } from "~/ui";
+import { Anchor, Fallback, Layout, Loader, SafeAreaView, Text } from "~/ui";
 import { useExercises } from "~/api";
 
 const Exercises = () => {
@@ -23,12 +23,15 @@ const Exercises = () => {
             Here you can manage the exercises that are referenced in your plans and workouts
           </Layout.Description>
         </Layout.Header>
-        <Layout.Content>
-          {isLoading ? (
+        <Fallback
+          isLoading={isLoading}
+          fallback={
             <View className="h-full w-full flex-1 items-center justify-center">
               <Loader />
             </View>
-          ) : (
+          }
+        >
+          <Layout.Content>
             <ScrollView className="my-base px-base">
               {exercises?.map((exercise, index) => {
                 const isFirst = index === 0;
@@ -54,8 +57,8 @@ const Exercises = () => {
                 );
               })}
             </ScrollView>
-          )}
-        </Layout.Content>
+          </Layout.Content>
+        </Fallback>
       </Layout>
     </SafeAreaView>
   );

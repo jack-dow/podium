@@ -1,6 +1,7 @@
 export * from "./buttons/Button";
 
 export * from "./feedback/Alert";
+export * from "./feedback/Fallback";
 export * from "./feedback/Loader";
 
 export * from "./layout/Layout";

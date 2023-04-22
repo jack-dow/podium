@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { useSearchParams } from "expo-router";
 import type GorhomBottomSheet from "@gorhom/bottom-sheet";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import clsx from "clsx";
 import { variants } from "nativewind";
+import { Controller, useForm } from "react-hook-form";
 import theme from "@podium/tailwind-config/theme";
 
 import { Anchor, BottomSheet, Button, Dialog, Input, Label, OverlayManager, Text } from "~/ui";
@@ -11,6 +13,7 @@ import { type TemplateSet } from "~/api";
 import { PencilIcon, TrashIcon } from "~/assets/icons/outline";
 import { EllipsisVerticalIcon } from "~/assets/icons/solid";
 import { TemplateContext } from "~/contexts/TemplateContext";
+import { createTypedEvent } from "../../services/createTypedEvent";
 import { type TemplateEditorTabParamList } from "./TemplateEditor";
 
 type TemplateEditorSetEditorTabProps = BottomTabScreenProps<TemplateEditorTabParamList, "TemplateEditorSetEditor">;
@@ -181,9 +184,12 @@ const TemplateSetOptionsBottomSheet = OverlayManager.register(
   },
 );
 
+const onSubmitEvent = createTypedEvent();
+
 export const TemplateEditorSetEditorTab = (_: TemplateEditorSetEditorTabProps) => {
   const templateExerciseIds = TemplateContext.hooks.templateExercises.useIds();
   const handleSubmit = TemplateContext.hooks.useSubmit();
+  const { templateId } = useSearchParams();
 
   return (
     <>
@@ -200,8 +206,13 @@ export const TemplateEditorSetEditorTab = (_: TemplateEditorSetEditorTabProps) =
 
         <View className="flex-row justify-between px-base pb-base">
           <View />
-          <Button onPress={handleSubmit}>
-            <Button.Text>Create Template</Button.Text>
+          <Button
+            onPress={() => {
+              handleSubmit();
+              onSubmitEvent.emit();
+            }}
+          >
+            <Button.Text>{templateId ? "Update Template" : "Create Template"}</Button.Text>
           </Button>
         </View>
       </ScrollView>
@@ -214,6 +225,20 @@ function TemplateExerciseCard({ templateExerciseId }: { templateExerciseId: stri
   const templateAPI = TemplateContext.hooks.useAPI();
 
   const TemplateExerciseDeleteDialogAPI = OverlayManager.useOverlayAPI(TemplateExerciseDeleteDialog);
+
+  const { control, reset } = useForm<{ notes: string }>({
+    criteriaMode: "all",
+  });
+
+  useEffect(() => {
+    const { dispose } = onSubmitEvent.on(() => {
+      reset();
+    });
+
+    return () => {
+      dispose();
+    };
+  }, [reset]);
 
   if (!templateExercise) return null;
 
@@ -284,15 +309,29 @@ function TemplateExerciseCard({ templateExerciseId }: { templateExerciseId: stri
         </View>
 
         <View>
-          <Label>Notes</Label>
-          <Input
-            multiline
-            numberOfLines={8}
-            maxLength={200}
-            returnKeyType="next"
-            blurOnSubmit={false}
-            onChangeText={(value) => {
-              templateAPI.templateExercise.update(templateExercise.id, { notes: value });
+          <Controller
+            name="notes"
+            control={control}
+            defaultValue={templateExercise.notes || ""}
+            render={({ field: { onChange, onBlur, value } }) => {
+              return (
+                <>
+                  <Label>Notes</Label>
+                  <Input
+                    onChangeText={(text) => {
+                      onChange(text);
+                      if (text !== templateExercise.notes) {
+                        templateAPI.templateExercise.update(templateExercise.id, { notes: text });
+                      }
+                    }}
+                    onBlur={onBlur}
+                    value={value}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={200}
+                  />
+                </>
+              );
             }}
           />
         </View>
@@ -319,6 +358,23 @@ function TemplateExerciseCardTemplateSet({
   const TemplateSetTypeChangeBottomSheetAPI = OverlayManager.useOverlayAPI(TemplateSetTypeChangeBottomSheet);
   const TemplateSetOptionsBottomSheetAPI = OverlayManager.useOverlayAPI(TemplateSetOptionsBottomSheet);
 
+  const { control, reset, setValue } = useForm<{ repetitions: string; comments: string }>({
+    criteriaMode: "all",
+    mode: "onBlur",
+  });
+
+  const commentsRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const { dispose } = onSubmitEvent.on(() => {
+      reset();
+    });
+
+    return () => {
+      dispose();
+    };
+  }, [reset]);
+
   if (!templateSet) return <></>;
 
   return (
@@ -339,32 +395,62 @@ function TemplateExerciseCardTemplateSet({
       </Pressable>
 
       <View className={clsx([rowStyles({ type: "reps" })])}>
-        <TextInput
-          placeholder="10-12"
-          className="w-full rounded-md bg-tertiary py-sm px-md text-center text-sm"
-          maxLength={7}
-          value={templateSet.repetitions}
-          onChangeText={(value) => {
-            templateAPI.templateSet.update(templateExerciseId, templateSet.id, { repetitions: value });
-          }}
-          onBlur={() => {
-            const validInput = templateSet?.repetitions?.match(/^([0-9]+-)?([0-9]+)$/);
-            if (!validInput) {
-              templateAPI.templateSet.update(templateExerciseId, templateSet.id, {
-                repetitions: "",
-              });
-            }
+        <Controller
+          name="repetitions"
+          control={control}
+          defaultValue={templateSet.repetitions}
+          render={({ field: { onChange, onBlur, value } }) => {
+            return (
+              <TextInput
+                returnKeyType="next"
+                placeholder="10-12"
+                className="w-full rounded-md bg-tertiary py-sm px-md text-center text-sm"
+                maxLength={7}
+                value={value}
+                onChangeText={(text) => {
+                  onChange(text);
+                  if (value !== templateSet.repetitions) {
+                    templateAPI.templateSet.update(templateExerciseId, templateSet.id, { repetitions: text });
+                  }
+                }}
+                onBlur={onBlur}
+                onEndEditing={() => {
+                  const validInput = value.match(/^([0-9]+-)?([0-9]+)$/);
+                  if (!validInput) {
+                    setValue("repetitions", "");
+                    templateAPI.templateSet.update(templateExerciseId, templateSet.id, { repetitions: "" });
+                    return;
+                  }
+                }}
+                blurOnSubmit={false}
+                onSubmitEditing={() => commentsRef.current?.focus()}
+              />
+            );
           }}
         />
       </View>
 
       <View className={clsx([rowStyles({ type: "comments" })])}>
-        <Input
-          multiline={true}
-          numberOfLines={6}
-          maxLength={100}
-          onChangeText={(value) => {
-            templateAPI.templateSet.update(templateExerciseId, templateSet.id, { comments: value });
+        <Controller
+          name="comments"
+          control={control}
+          defaultValue={templateSet.comments || ""}
+          render={({ field: { onChange, onBlur, value } }) => {
+            return (
+              <Input
+                ref={commentsRef}
+                onChangeText={(text) => {
+                  onChange(text);
+                  if (text !== templateSet.comments) {
+                    templateAPI.templateSet.update(templateExerciseId, templateSet.id, { comments: value });
+                  }
+                }}
+                onBlur={onBlur}
+                value={value}
+                multiline
+                maxLength={100}
+              />
+            );
           }}
         />
       </View>

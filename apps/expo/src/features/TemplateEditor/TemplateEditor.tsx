@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-import { Anchor, Layout, Loader, SafeAreaView } from "~/ui";
+import { Anchor, Fallback, Layout, Loader, SafeAreaView } from "~/ui";
 import { useTemplate, useTemplateInsertMutation, useTemplateUpdateMutation } from "~/api";
 import { TemplateContext, type TemplateStoreState } from "~/contexts/TemplateContext";
 import { TemplateEditorExerciseSelectTab } from "./TemplateEditorExerciseSelectTab";
@@ -24,7 +24,7 @@ type TemplateEditorProps = {
 export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
   const router = useRouter();
 
-  const { data: template, isLoading, error } = useTemplate(templateId);
+  const { data: template, isLoading, error, isFetching } = useTemplate(templateId);
 
   const templateInsertMutation = useTemplateInsertMutation();
   const templateUpdateMutation = useTemplateUpdateMutation(templateId);
@@ -57,12 +57,15 @@ export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
             </View>
             <Layout.Description>Configure this workout template</Layout.Description>
           </Layout.Header>
-          <Layout.Content>
-            {isLoading && templateId ? (
+          <Fallback
+            isLoading={isFetching}
+            fallback={
               <View className="flex-1 items-center justify-center">
                 <Loader />
               </View>
-            ) : (
+            }
+          >
+            <Layout.Content>
               <Tab.Navigator
                 sceneContainerStyle={{ backgroundColor: "transparent" }}
                 screenOptions={{ headerShown: false, tabBarStyle: { position: "absolute" } }}
@@ -79,8 +82,8 @@ export const TemplateEditor = ({ templateId }: TemplateEditorProps) => {
                   options={{ title: "Sets & Reps" }}
                 />
               </Tab.Navigator>
-            )}
-          </Layout.Content>
+            </Layout.Content>
+          </Fallback>
         </Layout>
       </SafeAreaView>
     </TemplateContext.Provider>

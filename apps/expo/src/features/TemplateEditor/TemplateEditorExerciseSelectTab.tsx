@@ -156,10 +156,10 @@ function TemplateSortableExerciseList() {
   return (
     <SortableExerciseList
       exerciseIds={templateExerciseIds}
-      useExercise={(exerciseId) => TemplateContext.hooks.templateExercises.useTemplateExercise(exerciseId)!}
+      useExercise={(exerciseId) => TemplateContext.hooks.templateExercises.useTemplateExercise(exerciseId)}
       onDragEnd={(newOrder) => {
         template.templateExercises.forEach((templateExercise) => {
-          if (newOrder[templateExercise.id] && templateExercise.order !== newOrder[templateExercise.id]) {
+          if (newOrder[templateExercise.id] !== null && templateExercise.order !== newOrder[templateExercise.id]) {
             templateAPI.templateExercise.update(templateExercise.id, { order: newOrder[templateExercise.id]! });
           }
         });

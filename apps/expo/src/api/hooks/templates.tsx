@@ -14,12 +14,16 @@ import {
   templateExercises,
   templateSets,
   templates,
+  updateTemplateExerciseSchema,
+  updateTemplateSchema,
+  updateTemplateSetSchema,
   type InsertTemplateExerciseSchema,
   type InsertTemplateSchema,
   type InsertTemplateSetSchema,
   type InsertTemplateWithTemplateExercisesSchema,
   type UpdateTemplateExerciseSchema,
   type UpdateTemplateSchema,
+  type UpdateTemplateSetSchema,
 } from "../schema/templates";
 import { type Exercise } from "./exercises";
 import { type ExtractMapEntryType, type QueryOutput } from "./types";
@@ -29,12 +33,6 @@ export function useTemplates() {
     queryKey: ["templates"],
     queryFn: async () => {
       const result = await db.select({ id: templates.id, name: templates.name }).from(templates).all();
-
-      const t = await db.select().from(templates).all();
-      const tExercises = await db.select().from(templateExercises).all();
-      const tSets = await db.select().from(templateSets).all();
-
-      console.log({ t: t.length, tExercises: tExercises.length, tSets: tSets.length });
 
       return result;
     },
@@ -51,7 +49,6 @@ export function useTemplate(id?: string) {
     enabled: Boolean(id),
     queryFn: async () => {
       const template = await db.select(defaultTemplateSelect).from(templates).where(eq(templates.id, id!)).get();
-
 
       const tExercises = await db
         .select({
@@ -78,18 +75,18 @@ export function useTemplate(id?: string) {
         acc.get(curr.templateExerciseId)!.set(curr.id, curr);
 
         return acc;
-      }, new Map<string, Map<string, typeof tSets[number]>>());
+      }, new Map<string, Map<string, (typeof tSets)[number]>>());
 
       return {
         ...template,
         templateExercises: tExercises.reduce((acc, curr) => {
           acc.set(curr.id, {
             ...curr,
-            templateSets: tSetsByTemplateExerciseId.get(curr.id) || new Map<string, typeof tSets[number]>(),
+            templateSets: tSetsByTemplateExerciseId.get(curr.id) || new Map<string, (typeof tSets)[number]>(),
           });
 
           return acc;
-        }, new Map<string, typeof tExercises[number] & { templateSets: Map<string, typeof tSets[number]> }>()),
+        }, new Map<string, (typeof tExercises)[number] & { templateSets: Map<string, (typeof tSets)[number]> }>()),
       };
     },
   });
@@ -148,19 +145,28 @@ export function useTemplateUpdateMutation(id: string | undefined) {
   return useMutation({
     mutationFn: async (input: UpdateTemplateSchema) => {
       if (!id) return;
-      const { actions, ...template } = input;
 
-      const templateExerciseInsert: Array<InsertTemplateExerciseSchema> = [];
-      const templateExerciseUpdate: Array<UpdateTemplateExerciseSchema & { id: string }> = [];
+      const { actions } = updateTemplateSchema.parse(input);
+
+      const templateExerciseInsert: Array<InsertTemplateExerciseSchema & { createdAt: Date; updatedAt: Date }> = [];
+      const templateExerciseUpdate: Array<UpdateTemplateExerciseSchema & { id: string; updatedAt: Date }> = [];
       const templateExerciseDelete: Array<string> = [];
 
-      for (const [id, action] of Object.entries(actions.templateExercises)) {
+      for (const [templateExerciseId, action] of Object.entries(actions.templateExercises)) {
         switch (action.type) {
           case "INSERT":
-            templateExerciseInsert.push(action.payload);
+            templateExerciseInsert.push({
+              ...action.payload,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
             break;
           case "UPDATE":
-            templateExerciseUpdate.push({ id, ...action.payload });
+            templateExerciseUpdate.push({
+              ...action.payload,
+              id: templateExerciseId,
+              updatedAt: new Date(),
+            });
             break;
           case "DELETE":
             templateExerciseDelete.push(action.payload);
@@ -168,17 +174,25 @@ export function useTemplateUpdateMutation(id: string | undefined) {
         }
       }
 
-      const templateSetInsert: Array<InsertTemplateSetSchema> = [];
-      const templateSetUpdate: Array<UpdateTemplateExerciseSchema & { id: string }> = [];
+      const templateSetInsert: Array<InsertTemplateSetSchema & { createdAt: Date; updatedAt: Date }> = [];
+      const templateSetUpdate: Array<UpdateTemplateSetSchema & { id: string; updatedAt: Date }> = [];
       const templateSetDelete: Array<string> = [];
 
-      for (const action of Object.values(actions.templateSets)) {
+      for (const [templateSetId, action] of Object.entries(actions.templateSets)) {
         switch (action.type) {
           case "INSERT":
-            templateSetInsert.push(action.payload);
+            templateSetInsert.push({
+              ...action.payload,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
             break;
           case "UPDATE":
-            templateSetUpdate.push({ id, ...action.payload });
+            templateSetUpdate.push({
+              ...action.payload,
+              id: templateSetId,
+              updatedAt: new Date(),
+            });
             break;
           case "DELETE":
             templateSetDelete.push(action.payload);
@@ -188,43 +202,39 @@ export function useTemplateUpdateMutation(id: string | undefined) {
 
       await db.transaction(async (tx) => {
         // Template
-        await tx
-          .update(templates)
-          .set({ ...template, updatedAt: new Date() })
-          .where(eq(templates.id, id))
-          .run();
+        if (actions.template) {
+          await tx
+            .update(templates)
+            .set({ ...actions.template.payload, updatedAt: new Date() })
+            .where(eq(templates.id, id))
+            .run();
+        }
 
         // Template Exercises
-        await tx
-          .insert(templateExercises)
-          .values(templateExerciseInsert.map((e) => ({ ...e, createdAt: new Date(), updatedAt: new Date() })))
-          .run();
+        if (templateExerciseInsert.length > 0) {
+          await tx.insert(templateExercises).values(templateExerciseInsert).run();
+        }
 
         for (const update of templateExerciseUpdate) {
-          await tx
-            .update(templateExercises)
-            .set({ ...update, updatedAt: new Date() })
-            .where(eq(templateExercises.id, update.id))
-            .run();
+          await tx.update(templateExercises).set(update).where(eq(templateExercises.id, update.id)).run();
         }
 
-        await tx.delete(templateExercises).where(inArray(templateExercises.id, templateExerciseDelete)).run();
+        if (templateExerciseDelete.length > 0) {
+          await tx.delete(templateExercises).where(inArray(templateExercises.id, templateExerciseDelete)).run();
+        }
 
         // Template Sets
-        await tx
-          .insert(templateSets)
-          .values(templateSetInsert.map((s) => ({ ...s, createdAt: new Date(), updatedAt: new Date() })))
-          .run();
-
-        for (const update of templateSetUpdate) {
-          await tx
-            .update(templateSets)
-            .set({ ...update, updatedAt: new Date() })
-            .where(eq(templateSets.id, update.id))
-            .run();
+        if (templateSetInsert.length > 0) {
+          await tx.insert(templateSets).values(templateSetInsert).run();
         }
 
-        await tx.delete(templateSets).where(inArray(templateSets.id, templateSetDelete)).run();
+        for (const update of templateSetUpdate) {
+          await tx.update(templateSets).set(update).where(eq(templateSets.id, update.id)).run();
+        }
+
+        if (templateSetDelete.length > 0) {
+          await tx.delete(templateSets).where(inArray(templateSets.id, templateSetDelete)).run();
+        }
       });
     },
     onSuccess: async () => {
